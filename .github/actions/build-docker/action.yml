@@ -1,0 +1,36 @@
+name: Build Docker Image
+description: Build Docker image for frontend application
+inputs:
+  image-name:
+    description: 'Docker image name'
+    required: true
+  image-tag:
+    description: 'Docker image tag'
+    required: true
+
+outputs:
+  image-name:
+    description: 'The built Docker image name'
+    value: ${{ steps.build.outputs.image_name }}
+  image-tag:
+    description: 'The built Docker image tag'
+    value: ${{ steps.build.outputs.image_tag }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build Docker image
+      id: build
+      shell: bash
+      env:
+        IMAGE_NAME: ${{ inputs.image-name }}
+        IMAGE_TAG: ${{ inputs.image-tag }}
+      run: |
+        echo "Building Docker image: $IMAGE_NAME:$IMAGE_TAG"
+        
+        docker build -t $IMAGE_NAME:$IMAGE_TAG .
+        
+        echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+        echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        
+        echo "Docker image built successfully: $IMAGE_NAME:$IMAGE_TAG"

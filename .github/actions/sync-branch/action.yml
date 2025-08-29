@@ -1,0 +1,62 @@
+name: Sync Branch
+description: Sync develop branch with main after production deployment
+inputs:
+  source-branch:
+    description: 'Source branch to merge from'
+    required: false
+    default: 'main'
+  target-branch:
+    description: 'Target branch to merge into'
+    required: false
+    default: 'develop'
+  auth-token:
+    description: 'Authentication token for git operations'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Sync branches
+      shell: bash
+      env:
+        SOURCE_BRANCH: ${{ inputs.source-branch }}
+        TARGET_BRANCH: ${{ inputs.target-branch }}
+      run: |
+        echo "🔄 Syncing $TARGET_BRANCH branch with $SOURCE_BRANCH..."
+
+        # Fetch all branches
+        git fetch origin
+
+        # Check if target branch exists
+        if git show-ref --verify --quiet refs/remotes/origin/$TARGET_BRANCH; then
+          echo "✅ $TARGET_BRANCH branch exists, proceeding with sync..."
+          
+          # Switch to target branch
+          git checkout $TARGET_BRANCH
+          
+          # Merge source into target
+          MERGE_MESSAGE="🔄 Sync $TARGET_BRANCH with $SOURCE_BRANCH after production deployment"
+          if git merge origin/$SOURCE_BRANCH --no-ff -m "$MERGE_MESSAGE"; then
+            echo "✅ Successfully merged $SOURCE_BRANCH into $TARGET_BRANCH"
+            
+            # Push the updated target branch
+            git push origin $TARGET_BRANCH
+            echo "✅ Successfully pushed updated $TARGET_BRANCH branch"
+          else
+            echo "❌ Merge conflict detected. Manual intervention required."
+            echo "Please resolve conflicts manually and merge $SOURCE_BRANCH into $TARGET_BRANCH."
+            exit 1
+          fi
+        else
+          echo "⚠️  $TARGET_BRANCH branch does not exist. Skipping sync."
+        fi
+
+    - name: Summary
+      shell: bash
+      env:
+        SOURCE_BRANCH: ${{ inputs.source-branch }}
+        TARGET_BRANCH: ${{ inputs.target-branch }}
+      run: |
+        echo "🎉 Branch sync completed successfully!"
+        echo "- $SOURCE_BRANCH branch: ${{ github.sha }}"
+        echo "- $TARGET_BRANCH branch: Updated to match $SOURCE_BRANCH"

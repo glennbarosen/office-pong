@@ -1,0 +1,27 @@
+.rk-header-link {
+    position: relative;
+
+    .jkl-link__content {
+        color: var(--jkl-color-text-default);
+        text-decoration: none;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: -1px;
+        height: 1px;
+        width: 0;
+        background-color: var(--jkl-color-text-default);
+        transition: all 300ms;
+    }
+
+    &:hover::after {
+        width: 100%;
+    }
+
+    &--active::after {
+        width: 100%;
+    }
+}

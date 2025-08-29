@@ -1,0 +1,82 @@
+name: Calculate semantic version
+description: Calculate the next semantic version based on the increment type
+inputs:
+    increment-type:
+        description: 'Version increment type (patch, minor, major)'
+        required: true
+        default: 'patch'
+outputs:
+    new-version:
+        description: 'The new semantic version (e.g., 1.2.3)'
+        value: ${{ steps.calc-version.outputs.new_version }}
+    new-tag:
+        description: 'The new git tag (e.g., v1.2.3)'
+        value: ${{ steps.calc-version.outputs.new_tag }}
+    previous-tag:
+        description: 'The previous git tag (e.g., v1.2.2)'
+        value: ${{ steps.get-latest-tag.outputs.latest_tag }}
+    increment-type:
+        description: 'The increment type used'
+        value: ${{ steps.calc-version.outputs.increment_type }}
+
+runs:
+    using: 'composite'
+    steps:
+        - name: Get latest release tag
+          id: get-latest-tag
+          shell: bash
+          run: |
+              # Get the latest release tag, if any
+              LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n1)
+              if [ -z "$LATEST_TAG" ]; then
+                echo "No previous tags found, starting with v0.0.0"
+                echo "latest_tag=v0.0.0" >> $GITHUB_OUTPUT
+              else
+                echo "Latest tag found: $LATEST_TAG"
+                echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+              fi
+
+        - name: Calculate new version
+          id: calc-version
+          shell: bash
+          run: |
+              LATEST_TAG="${{ steps.get-latest-tag.outputs.latest_tag }}"
+              INCREMENT_TYPE="${{ inputs.increment-type }}"
+
+              # Remove 'v' prefix and split version
+              VERSION=${LATEST_TAG#v}
+              if [ "$VERSION" = "0.0.0" ] && [ "$LATEST_TAG" = "v0.0.0" ]; then
+                # First release
+                MAJOR=1
+                MINOR=0
+                PATCH=0
+              else
+                IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+              fi
+
+              # Increment version based on type
+              case $INCREMENT_TYPE in
+                "major")
+                  MAJOR=$((MAJOR + 1))
+                  MINOR=0
+                  PATCH=0
+                  ;;
+                "minor")
+                  MINOR=$((MINOR + 1))
+                  PATCH=0
+                  ;;
+                "patch")
+                  PATCH=$((PATCH + 1))
+                  ;;
+              esac
+
+              NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+              NEW_TAG="v$NEW_VERSION"
+
+              echo "Previous version: $LATEST_TAG"
+              echo "Increment type: $INCREMENT_TYPE"
+              echo "New version: $NEW_TAG"
+
+              echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+              echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+              echo "increment_type=$INCREMENT_TYPE" >> $GITHUB_OUTPUT

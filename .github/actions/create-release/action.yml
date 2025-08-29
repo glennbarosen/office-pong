@@ -1,0 +1,73 @@
+name: Create GitHub release
+description: Create a GitHub release for production deployments
+inputs:
+    tag:
+        description: 'Git tag for the release (e.g., v1.2.3)'
+        required: true
+    version:
+        description: 'Semantic version (e.g., 1.2.3)'
+        required: true
+    previous-tag:
+        description: 'Previous git tag (e.g., v1.2.2)'
+        required: true
+    increment-type:
+        description: 'Version increment type (patch, minor, major)'
+        required: true
+    image-ref:
+        description: 'Docker image reference'
+        required: true
+    github-token:
+        description: 'GitHub token for creating releases (can be default GitHub token or chore-bot token)'
+        required: true
+    pr-url:
+        description: 'URL of the pull request associated with this release'
+        required: false
+    teams-webhook-url:
+        description: 'Teams webhook URL for release notifications'
+        required: false
+
+runs:
+    using: 'composite'
+    steps:
+        - name: Get current date
+          id: date
+          shell: bash
+          run: echo "date=$(date +'%d.%m.%Y %H:%M:%S')" >> $GITHUB_OUTPUT
+
+        - name: Create GitHub Release
+          shell: bash
+          env:
+              GITHUB_TOKEN: ${{ inputs.github-token }}
+          run: |
+              gh release create "${{ inputs.tag }}" \
+                --title "Release ${{ inputs.tag }}" \
+                --notes "🚀 **Ny versjon klar for produksjon**
+                👇 **Merge i app-configrepo for å deploye til produksjon** 👇
+                ➡️ [Pull request i app-configrepo](${{ inputs.pr-url }})
+
+                **Detaljer:**
+                - **Versjon:** ${{ inputs.version }}
+                - **Type:** ${{ inputs.increment-type }}
+                - **Forrige versjon:** ${{ inputs.previous-tag }}
+                - **Build:** ${{ github.run_number }}
+                - **Commit SHA:** ${{ github.sha }}
+                - **Branch:** ${{ github.ref_name }}
+                - **Docker image:** ${{ inputs.image-ref }}
+                - **Tidspunkt:** ${{ steps.date.outputs.date }}
+
+                **Endringer:**
+                - Vis commit: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+                - Sammenlign endringer: ${{ github.server_url }}/${{ github.repository }}/compare/${{ inputs.previous-tag }}...${{ inputs.tag }}
+
+                🤖 Denne releasen ble automatisk opprettet ved deploy til produksjon."
+
+        - name: Send Teams notification
+          uses: ./.github/actions/teams-notification
+          if: inputs.teams-webhook-url
+          with:
+              webhook-url: ${{ inputs.teams-webhook-url }}
+              app-name: ${{ github.event.repository.name }}
+              version: ${{ inputs.version }}
+              message: '- 🎉 **${{ github.event.repository.name }}@${{ inputs.version }}** er klar for produksjon!\r- ⬇️ Husk å merge pull request i app-configrepo'
+              pr-url: ${{ inputs.pr-url }}
+              release-url: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ inputs.tag }}

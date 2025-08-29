@@ -1,0 +1,47 @@
+name: Determine Environment
+description: Determine the target environment based on branch and inputs
+inputs:
+  manual-environment:
+    description: 'Manually specified environment from workflow_dispatch'
+    required: false
+  branch:
+    description: 'Git branch name'
+    required: true
+  event-name:
+    description: 'GitHub event name'
+    required: true
+
+outputs:
+  environment:
+    description: 'The determined environment'
+    value: ${{ steps.determine.outputs.environment }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine environment
+      id: determine
+      shell: bash
+      run: |
+        BRANCH="${{ inputs.branch }}"
+        EVENT_NAME="${{ inputs.event-name }}"
+        MANUAL_ENV="${{ inputs.manual-environment }}"
+        
+        # Determine environment based on priority: manual input > branch/event logic
+        if [ -n "$MANUAL_ENV" ]; then
+          ENVIRONMENT="$MANUAL_ENV"
+          echo "Using manually specified environment: $ENVIRONMENT"
+        elif [ "$BRANCH" = "main" ] && [ "$EVENT_NAME" = "push" ]; then
+          ENVIRONMENT="prod"
+          echo "Determined environment from main branch push: $ENVIRONMENT"
+        elif [ "$BRANCH" = "develop" ] && [ "$EVENT_NAME" = "push" ]; then
+          ENVIRONMENT="test"
+          echo "Determined environment from develop branch push: $ENVIRONMENT"
+        else
+          ENVIRONMENT="test"
+          echo "Default environment: $ENVIRONMENT"
+        fi
+        
+        echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+        
+        echo "Final environment: $ENVIRONMENT"
