@@ -2,8 +2,8 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Container } from '../components/layout/Container'
 import { RootErrorComponent } from '../components/errors/RootErrorComponent'
+import { BottomNavigation } from '../components/navigation/BottomNavigation'
 
-import '../components/links/header-link.scss'
 import type { QueryClient } from '@tanstack/react-query'
 
 interface RouterContext {
@@ -18,9 +18,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function Root() {
     return (
         <Container>
-            <main className="mb-64">
+            <main className="mb-20 pb-4">
                 <Outlet />
             </main>
+            <BottomNavigation />
             <TanStackRouterDevtools />
         </Container>
     )

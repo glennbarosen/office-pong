@@ -6,33 +6,15 @@ import { routeTree } from './routeTree.gen'
 
 import './styles/global.scss'
 
-import { startMSW } from './mocks'
-import { QueryClient, QueryClientProvider, QueryCache } from '@tanstack/react-query'
-import { getUserOptions } from './types/@tanstack/react-query.gen'
-
-if (import.meta.env.VITE_MOCK_ENABLED === 'true') {
-    startMSW()
-}
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            retry: (failureCount, error) => {
-                if (error.message === 'Authorization required.') return false
-                return failureCount < 3
-            },
+            retry: 3,
+            staleTime: 5 * 60 * 1000, // 5 minutes
         },
     },
-    queryCache: new QueryCache({
-        onError: (error) => {
-            if (error.message === 'Authorization required.') {
-                // Invalidate user query to force re-authentication
-                queryClient.invalidateQueries({
-                    queryKey: getUserOptions().queryKey,
-                })
-            }
-        },
-    }),
 })
 
 // Declare router context types before creating the router

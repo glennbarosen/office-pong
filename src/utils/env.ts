@@ -12,5 +12,4 @@ const isPlaceHolder = (value: string) => value.startsWith('__') && value.endsWit
 const hasNoWindow = typeof window === 'undefined' || !window.ENV
 const hasPlaceHolder = window.ENV && Object.values(window.ENV).some(isPlaceHolder)
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 export const env = hasNoWindow || hasPlaceHolder ? LOCAL_DEFAULTS : window.ENV!

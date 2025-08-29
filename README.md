@@ -1,26 +1,28 @@
-# RK Admin Frontend
+# Office Pong Leaderboard
 
-| This is an application for managing system messages across the advisor apps 🚨
+A mobile-first ping pong leaderboard app for the office! 🏓
 
-## Prerequisites
+_Vibe coded for maximum fun and minimal complexity._
 
-- Node.js 18+
-- PNPM package manager
-- SSL certificates in `./certs/` directory (for HTTPS development)
+## Overview
 
-## Set up SSL
+This app helps you keep track of ping pong matches and rankings at the office with a trust-based system. Players can register match results themselves, and the system automatically calculates ELO ratings.
 
-If using a Mac, make sure you have installed the "ALLOW - Sudo commands" application in SelfService. If you are having issues, try reinstalling it.
+## Features
 
-Edit your hosts file to add an entry for our local domain
+- 📱 **Mobile-first design** with bottom navigation
+- 🏆 **ELO-based leaderboard** requiring minimum 5 matches
+- 👤 **Player profiles** with stats and match history
+- ⚡ **Quick match registration** with automatic player creation
+- 🎯 **Trust-based system** - no complicated authentication
+- 🇳🇴 **Norwegian text** throughout the app (because why not)
 
-```
-sudo /usr/bin/vi /etc/hosts
-```
+## Rules
 
-Add the line
-
-127.0.0.1 local.test.sparebank1.no
+- First to 11 points wins
+- Must win by at least 2 points
+- New players start with 1200 ELO
+- Minimum 5 matches to appear on leaderboard
 
 ## Quick Start
 
@@ -31,73 +33,46 @@ pnpm install
 # Start development server
 pnpm dev
 
-# Start with mock data (no backend required)
-pnpm dev:mock
+# Check TypeScript
+pnpm types:check
 
-# Build for production
-pnpm build
+# Format code
+pnpm prettier
 ```
 
-The app will be available at `https://local.test.sparebank1.no` (requires SSL certificates in `./certs/`).
+## Tech Stack
+
+- **React 18** with TypeScript
+- **TanStack Router** for file-based routing
+- **TanStack Query** for state management
+- **Jøkul Design System** for UI components
+- **Tailwind CSS** for styling
+- **Vite** for fast development
 
 ## Project Structure
 
 ```
 src/
-├── components/          # Reusable UI components
-│   ├── cards/          # Message cards
-│   ├── form-fields/    # Form input components
-│   ├── header/         # Navigation header
-│   └── tags/           # Status/type tags
-├── hooks/              # Custom React hooks for API calls
-├── pages/              # Main page components
-├── routes/             # TanStack Router route definitions
-│   ├── _auth/          # Protected routes requiring authentication
-│   └── __root.tsx      # Root layout
-├── mocks/              # MSW mock data for development
-├── types/              # Auto-generated TypeScript types from OpenAPI
-└── utils/              # Helper functions and constants
+├── components/         # Reusable UI components
+│   ├── navigation/    # Bottom navigation
+│   ├── header/        # Top header
+│   ├── layout/        # Layout components
+│   └── links/         # Router links
+├── hooks/             # Custom React hooks
+├── pages/             # Main pages
+│   ├── Leaderboard.tsx # Rankings
+│   ├── Profile.tsx     # Player profile
+│   └── NewMatch.tsx    # Register new match
+├── routes/            # TanStack Router routes
+├── types/             # TypeScript types
+├── data/              # Local JSON database
+└── utils/             # Helper functions
 ```
-
-## Key Technologies
-
-- **React 18** with TypeScript
-- **TanStack Router** for file-based routing with authentication guards
-- **TanStack Query** for server state management and caching
-- **MSW** for API mocking during development
-- **Vite** for fast development and building
-
-## Authentication Flow
-
-1. Protected routes are under `/_auth/` and require user authentication
-2. User data is fetched once and cached globally
-3. 401 responses automatically invalidate user cache and redirect to login
-4. Authenticate by having a active session in `porten.test` or by running backend with `AUTH_BYPASS=true`
 
 ## Development
 
-```bash
-# Generate types from OpenAPI spec
-pnpm types:gen
+The app uses a local JSON file (`src/data/db.json`) as a database for rapid prototyping. In the future, this can be replaced with Supabase or another backend.
 
-# Check for Typescript errors
-pnpm types:check
+## Contributing
 
-# Run tests
-pnpm test
-
-# Format code
-pnpm prettier
-
-# Check formatting
-pnpm prettier:check
-
-# Lint code
-pnpm lint
-```
-
-## API Integration
-
-- In development, the app proxies `/api/*` requests to `http://localhost:8080` for backend integration
-- Use `pnpm dev:mock` to run with mock data (MSW) when backend is unavailable
-- API types are auto-generated from OpenAPI spec using `pnpm types:gen`
+This is an internal office app - contributions and improvement suggestions are welcome!

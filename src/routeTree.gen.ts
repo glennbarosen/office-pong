@@ -11,174 +11,98 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as IkkeAutorisertImport } from './routes/ikke-autorisert'
-import { Route as AuthImport } from './routes/_auth'
-import { Route as AuthIndexImport } from './routes/_auth/index'
-import { Route as AuthOpprettImport } from './routes/_auth/opprett'
-import { Route as AuthArkivImport } from './routes/_auth/arkiv'
-import { Route as AuthEndreIdImport } from './routes/_auth/endre.$id'
+import { Route as NyKampImport } from './routes/ny-kamp'
+import { Route as IndexImport } from './routes/index'
+import { Route as ProfilIdImport } from './routes/profil.$id'
 
 // Create/Update Routes
 
-const IkkeAutorisertRoute = IkkeAutorisertImport.update({
-  id: '/ikke-autorisert',
-  path: '/ikke-autorisert',
+const NyKampRoute = NyKampImport.update({
+  id: '/ny-kamp',
+  path: '/ny-kamp',
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthRoute = AuthImport.update({
-  id: '/_auth',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AuthIndexRoute = AuthIndexImport.update({
+const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthRoute,
+  getParentRoute: () => rootRoute,
 } as any)
 
-const AuthOpprettRoute = AuthOpprettImport.update({
-  id: '/opprett',
-  path: '/opprett',
-  getParentRoute: () => AuthRoute,
-} as any)
-
-const AuthArkivRoute = AuthArkivImport.update({
-  id: '/arkiv',
-  path: '/arkiv',
-  getParentRoute: () => AuthRoute,
-} as any)
-
-const AuthEndreIdRoute = AuthEndreIdImport.update({
-  id: '/endre/$id',
-  path: '/endre/$id',
-  getParentRoute: () => AuthRoute,
+const ProfilIdRoute = ProfilIdImport.update({
+  id: '/profil/$id',
+  path: '/profil/$id',
+  getParentRoute: () => rootRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_auth': {
-      id: '/_auth'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthImport
-      parentRoute: typeof rootRoute
-    }
-    '/ikke-autorisert': {
-      id: '/ikke-autorisert'
-      path: '/ikke-autorisert'
-      fullPath: '/ikke-autorisert'
-      preLoaderRoute: typeof IkkeAutorisertImport
-      parentRoute: typeof rootRoute
-    }
-    '/_auth/arkiv': {
-      id: '/_auth/arkiv'
-      path: '/arkiv'
-      fullPath: '/arkiv'
-      preLoaderRoute: typeof AuthArkivImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/opprett': {
-      id: '/_auth/opprett'
-      path: '/opprett'
-      fullPath: '/opprett'
-      preLoaderRoute: typeof AuthOpprettImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/': {
-      id: '/_auth/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthIndexImport
-      parentRoute: typeof AuthImport
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
     }
-    '/_auth/endre/$id': {
-      id: '/_auth/endre/$id'
-      path: '/endre/$id'
-      fullPath: '/endre/$id'
-      preLoaderRoute: typeof AuthEndreIdImport
-      parentRoute: typeof AuthImport
+    '/ny-kamp': {
+      id: '/ny-kamp'
+      path: '/ny-kamp'
+      fullPath: '/ny-kamp'
+      preLoaderRoute: typeof NyKampImport
+      parentRoute: typeof rootRoute
+    }
+    '/profil/$id': {
+      id: '/profil/$id'
+      path: '/profil/$id'
+      fullPath: '/profil/$id'
+      preLoaderRoute: typeof ProfilIdImport
+      parentRoute: typeof rootRoute
     }
   }
 }
 
 // Create and export the route tree
 
-interface AuthRouteChildren {
-  AuthArkivRoute: typeof AuthArkivRoute
-  AuthOpprettRoute: typeof AuthOpprettRoute
-  AuthIndexRoute: typeof AuthIndexRoute
-  AuthEndreIdRoute: typeof AuthEndreIdRoute
-}
-
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthArkivRoute: AuthArkivRoute,
-  AuthOpprettRoute: AuthOpprettRoute,
-  AuthIndexRoute: AuthIndexRoute,
-  AuthEndreIdRoute: AuthEndreIdRoute,
-}
-
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
 export interface FileRoutesByFullPath {
-  '': typeof AuthRouteWithChildren
-  '/ikke-autorisert': typeof IkkeAutorisertRoute
-  '/arkiv': typeof AuthArkivRoute
-  '/opprett': typeof AuthOpprettRoute
-  '/': typeof AuthIndexRoute
-  '/endre/$id': typeof AuthEndreIdRoute
+  '/': typeof IndexRoute
+  '/ny-kamp': typeof NyKampRoute
+  '/profil/$id': typeof ProfilIdRoute
 }
 
 export interface FileRoutesByTo {
-  '/ikke-autorisert': typeof IkkeAutorisertRoute
-  '/arkiv': typeof AuthArkivRoute
-  '/opprett': typeof AuthOpprettRoute
-  '/': typeof AuthIndexRoute
-  '/endre/$id': typeof AuthEndreIdRoute
+  '/': typeof IndexRoute
+  '/ny-kamp': typeof NyKampRoute
+  '/profil/$id': typeof ProfilIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/_auth': typeof AuthRouteWithChildren
-  '/ikke-autorisert': typeof IkkeAutorisertRoute
-  '/_auth/arkiv': typeof AuthArkivRoute
-  '/_auth/opprett': typeof AuthOpprettRoute
-  '/_auth/': typeof AuthIndexRoute
-  '/_auth/endre/$id': typeof AuthEndreIdRoute
+  '/': typeof IndexRoute
+  '/ny-kamp': typeof NyKampRoute
+  '/profil/$id': typeof ProfilIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | ''
-    | '/ikke-autorisert'
-    | '/arkiv'
-    | '/opprett'
-    | '/'
-    | '/endre/$id'
+  fullPaths: '/' | '/ny-kamp' | '/profil/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/ikke-autorisert' | '/arkiv' | '/opprett' | '/' | '/endre/$id'
-  id:
-    | '__root__'
-    | '/_auth'
-    | '/ikke-autorisert'
-    | '/_auth/arkiv'
-    | '/_auth/opprett'
-    | '/_auth/'
-    | '/_auth/endre/$id'
+  to: '/' | '/ny-kamp' | '/profil/$id'
+  id: '__root__' | '/' | '/ny-kamp' | '/profil/$id'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  AuthRoute: typeof AuthRouteWithChildren
-  IkkeAutorisertRoute: typeof IkkeAutorisertRoute
+  IndexRoute: typeof IndexRoute
+  NyKampRoute: typeof NyKampRoute
+  ProfilIdRoute: typeof ProfilIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  AuthRoute: AuthRouteWithChildren,
-  IkkeAutorisertRoute: IkkeAutorisertRoute,
+  IndexRoute: IndexRoute,
+  NyKampRoute: NyKampRoute,
+  ProfilIdRoute: ProfilIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -191,37 +115,19 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_auth",
-        "/ikke-autorisert"
+        "/",
+        "/ny-kamp",
+        "/profil/$id"
       ]
     },
-    "/_auth": {
-      "filePath": "_auth.tsx",
-      "children": [
-        "/_auth/arkiv",
-        "/_auth/opprett",
-        "/_auth/",
-        "/_auth/endre/$id"
-      ]
+    "/": {
+      "filePath": "index.tsx"
     },
-    "/ikke-autorisert": {
-      "filePath": "ikke-autorisert.tsx"
+    "/ny-kamp": {
+      "filePath": "ny-kamp.tsx"
     },
-    "/_auth/arkiv": {
-      "filePath": "_auth/arkiv.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/opprett": {
-      "filePath": "_auth/opprett.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/": {
-      "filePath": "_auth/index.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/endre/$id": {
-      "filePath": "_auth/endre.$id.tsx",
-      "parent": "/_auth"
+    "/profil/$id": {
+      "filePath": "profil.$id.tsx"
     }
   }
 }
