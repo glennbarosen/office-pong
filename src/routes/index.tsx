@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Leaderboard } from '../pages/Leaderboard'
+import { Overview } from '../pages/Overview'
 
 export const Route = createFileRoute('/')({
-    component: Leaderboard,
+    component: Overview,
 })

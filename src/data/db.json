@@ -39,6 +39,56 @@
             "losses": 2,
             "createdAt": "2024-02-10T15:00:00Z",
             "lastPlayedAt": "2024-02-12T17:30:00Z"
+        },
+        {
+            "id": "5",
+            "name": "Maja Solberg",
+            "eloRating": 1250,
+            "matchesPlayed": 7,
+            "wins": 3,
+            "losses": 4,
+            "createdAt": "2024-02-14T09:00:00Z",
+            "lastPlayedAt": "2024-02-19T10:00:00Z"
+        },
+        {
+            "id": "6",
+            "name": "Sindre Olsen",
+            "eloRating": 1305,
+            "matchesPlayed": 10,
+            "wins": 5,
+            "losses": 5,
+            "createdAt": "2024-02-05T08:30:00Z",
+            "lastPlayedAt": "2024-02-20T09:30:00Z"
+        },
+        {
+            "id": "7",
+            "name": "Julie Berg",
+            "eloRating": 1280,
+            "matchesPlayed": 6,
+            "wins": 2,
+            "losses": 4,
+            "createdAt": "2024-02-11T12:00:00Z",
+            "lastPlayedAt": "2024-02-18T15:00:00Z"
+        },
+        {
+            "id": "8",
+            "name": "Martin Haugen",
+            "eloRating": 1225,
+            "matchesPlayed": 4,
+            "wins": 1,
+            "losses": 3,
+            "createdAt": "2024-02-13T13:00:00Z",
+            "lastPlayedAt": "2024-02-17T11:00:00Z"
+        },
+        {
+            "id": "9",
+            "name": "Silje Kristoffersen",
+            "eloRating": 1275,
+            "matchesPlayed": 9,
+            "wins": 4,
+            "losses": 5,
+            "createdAt": "2024-02-09T10:30:00Z",
+            "lastPlayedAt": "2024-02-20T13:00:00Z"
         }
     ],
     "matches": [

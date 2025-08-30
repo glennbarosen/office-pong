@@ -1,4 +1,4 @@
-import { Card, Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul'
+import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul'
 import { usePlayers } from '../hooks/usePlayers'
 import { RATING_CONFIG, type Match } from '../types/pong'
 import { useMatches } from '../hooks/useMatches'
@@ -16,10 +16,10 @@ export function Profile({ id }: ProfileProps) {
     if (!player) {
         return (
             <div className="py-6 mx-auto max-w-md px-4">
-                <Card className="p-6 text-center">
-                    <h1 className="text-xl mb-2 font-bold">Spiller ikke funnet</h1>
-                    <p className="text-gray-600">Spilleren du leter etter finnes ikke.</p>
-                </Card>
+                <div className="p-6 text-center">
+                    <h1 className="heading-3 mb-2">Spiller ikke funnet</h1>
+                    <p className="text-text-subdued">Spilleren du leter etter finnes ikke.</p>
+                </div>
             </div>
         )
     }
@@ -39,37 +39,37 @@ export function Profile({ id }: ProfileProps) {
     return (
         <div className="py-6 mx-auto max-w-2xl px-4">
             <div className="mb-6 text-center">
-                <h1 className="text-2xl mb-2 font-bold">{player.name}</h1>
-                <div className="text-sm text-gray-600 flex items-center justify-center gap-4">
+                <h1 className="heading-2 mb-2">{player.name}</h1>
+                <div className="small flex items-center justify-center gap-4 text-text-subdued">
                     <span>Medlem siden {new Date(player.createdAt).toLocaleDateString('no-NO')}</span>
                 </div>
             </div>
 
             {/* Stats Overview */}
-            <Card className="p-6 mb-6">
-                <h2 className="text-lg font-semibold mb-4">Statistikk</h2>
+            <div className="p-6 mb-6">
+                <h2 className="heading-4 mb-4">Statistikk</h2>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                     <div className="text-center">
-                        <div className="text-2xl text-blue-600 font-bold">{player.eloRating}</div>
-                        <div className="text-sm text-gray-600">ELO Rating</div>
+                        <div className="heading-3 text-text-interactive">{player.eloRating}</div>
+                        <div className="small text-text-subdued">ELO Rating</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl text-green-600 font-bold">{player.wins}</div>
-                        <div className="text-sm text-gray-600">Seire</div>
+                        <div className="heading-3 text-text-interactive">{player.wins}</div>
+                        <div className="small text-text-subdued">Seire</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl text-red-600 font-bold">{player.losses}</div>
-                        <div className="text-sm text-gray-600">Tap</div>
+                        <div className="heading-3 text-text-interactive">{player.losses}</div>
+                        <div className="small text-text-subdued">Tap</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold">{winRate.toFixed(0)}%</div>
-                        <div className="text-sm text-gray-600">Seiersprosent</div>
+                        <div className="heading-3">{winRate.toFixed(0)}%</div>
+                        <div className="small text-text-subdued">Seiersprosent</div>
                     </div>
                 </div>
 
                 {!isEligibleForRanking && (
-                    <div className="p-3 bg-yellow-50 mt-4 rounded-lg">
-                        <p className="text-sm text-yellow-800">
+                    <div className="p-3 mt-4 rounded-lg bg-background-alert-warning">
+                        <p className="small text-text-on-alert">
                             Spill {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING - player.matchesPlayed} kamper til for å
                             komme på ranglisten
                         </p>
@@ -78,13 +78,15 @@ export function Profile({ id }: ProfileProps) {
 
                 {recentForm.length > 0 && (
                     <div className="mt-4">
-                        <h3 className="text-sm font-medium mb-2">Siste form:</h3>
+                        <h3 className="heading-5 mb-2">Seneste form</h3>
                         <div className="gap-1 flex">
-                            {recentForm.map((result: string, index: number) => (
+                            {recentForm.map((result, index) => (
                                 <span
                                     key={index}
-                                    className={`w-6 h-6 text-xs text-white flex items-center justify-center rounded-full font-bold ${
-                                        result === 'W' ? 'bg-green-500' : 'bg-red-500'
+                                    className={`w-6 h-6 text-xs font-medium flex items-center justify-center rounded ${
+                                        result === 'W'
+                                            ? 'bg-background-alert-success text-text-on-alert'
+                                            : 'bg-background-alert-error text-text-on-alert'
                                     }`}
                                 >
                                     {result}
@@ -93,10 +95,15 @@ export function Profile({ id }: ProfileProps) {
                         </div>
                     </div>
                 )}
-            </Card>
+            </div>
 
             {/* Match History */}
-            <Card className="p-6">
+            <div className="p-6">
+                <h2 className="heading-4 mb-4">Kamphistorikk</h2>
+            </div>
+
+            {/* Match History */}
+            <div className="p-6">
                 <h2 className="text-lg font-semibold mb-4">Kamphistorikk</h2>
                 {playerMatches.length > 0 ? (
                     <Table caption="Spillerens kamphistorikk">
@@ -124,18 +131,18 @@ export function Profile({ id }: ProfileProps) {
                                         </TableCell>
                                         <TableCell>
                                             <span
-                                                className={`font-medium ${isWin ? 'text-green-600' : 'text-red-600'}`}
+                                                className={`body ${isWin ? 'text-text-interactive' : 'text-text-subdued'}`}
                                             >
                                                 {isWin ? 'Seier' : 'Tap'}
                                             </span>
                                         </TableCell>
                                         <TableCell>
-                                            <span className="font-mono">
+                                            <span className="body">
                                                 {playerScore}-{opponentScore}
                                             </span>
                                         </TableCell>
                                         <TableCell>
-                                            <span className="text-sm text-gray-600">
+                                            <span className="small text-text-subdued">
                                                 {new Date(match.playedAt).toLocaleDateString('no-NO')}
                                             </span>
                                         </TableCell>
@@ -146,10 +153,10 @@ export function Profile({ id }: ProfileProps) {
                     </Table>
                 ) : (
                     <div className="py-8 text-center">
-                        <p className="text-gray-500">Ingen kamper spilt ennå</p>
+                        <p className="text-text-subdued">Ingen kamper spilt ennå</p>
                     </div>
                 )}
-            </Card>
+            </div>
         </div>
     )
 }

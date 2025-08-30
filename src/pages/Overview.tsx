@@ -1,13 +1,25 @@
-import { Card, Table, TableHead, TableRow, TableHeader, TableBody, TableCell, Tag } from '@fremtind/jokul'
+import {
+    Table,
+    TableHead,
+    TableRow,
+    TableHeader,
+    TableBody,
+    TableCell,
+    Tag,
+    Button,
+    Card,
+    WarningTag,
+} from '@fremtind/jokul'
 import { RATING_CONFIG, type Player } from '../types/pong'
 import { usePlayers } from '../hooks/usePlayers'
+import { Link } from '@tanstack/react-router'
 
 interface LeaderboardEntry extends Player {
     winRate: number
     isEligibleForRanking: boolean
 }
 
-export function Leaderboard() {
+export function Overview() {
     const { data: players = [], isLoading } = usePlayers()
 
     // Filter and sort players for leaderboard
@@ -27,6 +39,19 @@ export function Leaderboard() {
     const eligiblePlayers = leaderboardData.filter((player: LeaderboardEntry) => player.isEligibleForRanking)
     const pendingPlayers = leaderboardData.filter((player: LeaderboardEntry) => !player.isEligibleForRanking)
 
+    const getRankIcon = (rank: number) => {
+        switch (rank) {
+            case 1:
+                return '🥇'
+            case 2:
+                return '🥈'
+            case 3:
+                return '🥉'
+            default:
+                return `${rank}.`
+        }
+    }
+
     if (isLoading) {
         return (
             <div className="flex min-h-64 items-center justify-center">
@@ -36,18 +61,50 @@ export function Leaderboard() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="py-6 px-4">
-                <h1 className="text-2xl mb-2 text-center font-bold">Bordtennis Rangliste</h1>
-                <p className="text-sm text-gray-600 text-center">
-                    Basert på tillitsbasert rapportering av kampresultater
-                </p>
+        <>
+            <div className="flex justify-end">
+                <Button as={Link} to="/ny-kamp" variant="primary">
+                    Ny kamp
+                </Button>
+            </div>
+            <div className="flex flex-col gap-12">
+                <h2 className="heading-4">Topp 5</h2>
+                {leaderboardData.slice(0, 5).map((player, i) => {
+                    return (
+                        <Card key={player.id} variant="low" padding="xl" clickable asChild>
+                            <Link to="/profil/$id" params={{ id: player.id }} className="no-underline">
+                                <div className="flex items-start gap-12">
+                                    <div className="body">{getRankIcon(i + 1)}</div>
+                                    <div className="flex flex-1 flex-col">
+                                        <div className="flex items-center justify-between">
+                                            <div className="body">{player.name}</div>
+                                            {player.isEligibleForRanking ? (
+                                                <div className="body font-bold">{player.eloRating}</div>
+                                            ) : (
+                                                <WarningTag>Mangler kamper</WarningTag>
+                                            )}
+                                        </div>
+                                        <div className="text-text-subdued">
+                                            {player.wins} seire - {player.losses} tap ({player.winRate.toFixed(0)}%
+                                            seier)
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        </Card>
+                    )
+                })}
+                <div className="flex justify-center">
+                    <Button as={Link} to="/ledertavle" variant="secondary">
+                        Se alle
+                    </Button>
+                </div>
             </div>
 
-            {eligiblePlayers.length > 0 && (
-                <Card className="mx-4">
-                    <div className="p-4">
-                        <h2 className="text-lg font-semibold mb-4">Offisiell rangliste</h2>
+            {leaderboardData.length > 0 && (
+                <div className="mx-4">
+                    <div className="mb-6">
+                        <h2 className="heading-4 mb-4">Offisiell rangliste</h2>
                         <Table caption="Spillere på ranglisten">
                             <TableHead>
                                 <TableRow>
@@ -84,14 +141,14 @@ export function Leaderboard() {
                             </TableBody>
                         </Table>
                     </div>
-                </Card>
+                </div>
             )}
 
             {pendingPlayers.length > 0 && (
-                <Card className="mx-4">
-                    <div className="p-4">
-                        <h2 className="text-lg font-semibold mb-2">Ventende spillere</h2>
-                        <p className="text-sm text-gray-600 mb-4">
+                <div className="mx-4">
+                    <div className="mb-6">
+                        <h2 className="heading-4 mb-2">Ventende spillere</h2>
+                        <p className="small mb-4 text-text-subdued">
                             Må spille minst {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper for å komme på ranglisten
                         </p>
                         <Table caption="Spillere som venter på å komme på ranglisten">
@@ -128,15 +185,15 @@ export function Leaderboard() {
                             </TableBody>
                         </Table>
                     </div>
-                </Card>
+                </div>
             )}
 
             {players.length === 0 && (
                 <div className="px-4 py-12 text-center">
-                    <p className="text-gray-500 mb-4">Ingen spillere registrert ennå</p>
-                    <p className="text-sm text-gray-400">Start ved å registrere en ny kamp</p>
+                    <p className="mb-4 text-text-subdued">Ingen spillere registrert ennå</p>
+                    <p className="small text-text-subdued">Start ved å registrere en ny kamp</p>
                 </div>
             )}
-        </div>
+        </>
     )
 }
