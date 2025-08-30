@@ -1,4 +1,4 @@
-import { useBrowserPreferences } from '@fremtind/jokul'
+import { useBrowserPreferences } from '@fremtind/jokul/hooks'
 import { useEffect, useState } from 'react'
 
 export const useTheme = () => {

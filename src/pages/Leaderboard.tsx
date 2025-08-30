@@ -1,14 +1,7 @@
-import {
-    Table,
-    TableHead,
-    TableRow,
-    TableHeader,
-    TableBody,
-    TableCell,
-    WarningTag,
-    Button,
-    useScreen,
-} from '@fremtind/jokul'
+import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
+import { WarningTag } from '@fremtind/jokul/tag'
+import { Button } from '@fremtind/jokul/button'
+import { useScreen } from '@fremtind/jokul/hooks'
 import { RATING_CONFIG, type Player } from '../types/pong'
 import { usePlayers } from '../hooks/usePlayers'
 import { Link } from '@tanstack/react-router'
@@ -76,14 +69,14 @@ export function Leaderboard() {
 
             {eligiblePlayers.length > 0 && (
                 <div>
-                    <h2 className="heading-4 mb-4">Offisiell rangliste</h2>
+                    <h2 className="heading-4 mb-4">Offisiell ledetavle</h2>
                     <p className="small mb-4 text-text-subdued">
                         Spillere som har spilt minst {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper
                     </p>
-                    <Table caption="Offisiell rangliste" collapseToList={!isSmallDevice}>
+                    <Table caption="Offisiell ledetavle" collapseToList={!isSmallDevice}>
                         <TableHead>
                             <TableRow>
-                                <TableHeader>Rang</TableHeader>
+                                <TableHeader>Plassering</TableHeader>
                                 <TableHeader>Spiller</TableHeader>
                                 <TableHeader>ELO rating</TableHeader>
                                 <TableHeader>Kamper</TableHeader>
@@ -96,7 +89,7 @@ export function Leaderboard() {
                         <TableBody>
                             {eligiblePlayers.map((player: LeaderboardEntry, index: number) => (
                                 <TableRow key={player.id}>
-                                    <TableCell data-th="Rang">
+                                    <TableCell data-th="Plassering">
                                         <div className="flex items-center gap-2">
                                             <span className="text-lg">{getRankIcon(index + 1)}</span>
                                         </div>
@@ -105,6 +98,7 @@ export function Leaderboard() {
                                         <Button
                                             as={Link}
                                             to="/profil/$id"
+                                            // @ts-expect-error buggy
                                             params={{ id: player.id }}
                                             variant="ghost"
                                             className="font-medium p-0"
@@ -149,9 +143,9 @@ export function Leaderboard() {
                 <div>
                     <h2 className="heading-4 mb-2">Ventende spillere</h2>
                     <p className="small mb-4 text-text-subdued">
-                        Må spille minst {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper for å komme på ranglisten
+                        Må spille minst {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper for å komme på ledetavlen
                     </p>
-                    <Table caption="Spillere som venter på å komme på ranglisten" collapseToList={!isSmallDevice}>
+                    <Table caption="Spillere som venter på å komme på ledetavlen" collapseToList={!isSmallDevice}>
                         <TableHead>
                             <TableRow>
                                 <TableHeader>Spiller</TableHeader>
@@ -170,6 +164,7 @@ export function Leaderboard() {
                                         <Button
                                             as={Link}
                                             to="/profil/$id"
+                                            // @ts-expect-error buggy
                                             params={{ id: player.id }}
                                             variant="ghost"
                                             className="font-medium p-0"

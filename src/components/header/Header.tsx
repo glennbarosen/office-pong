@@ -1,4 +1,5 @@
-import { Button, Icon } from '@fremtind/jokul'
+import { Button } from '@fremtind/jokul/button'
+import { Icon } from '@fremtind/jokul/icon'
 import { useTheme } from '../../hooks/useTheme'
 
 export const Header = () => {

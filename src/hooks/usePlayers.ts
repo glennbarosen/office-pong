@@ -1,13 +1,34 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Player } from '../types/pong'
-import dbData from '../data/db.json'
+import { DataService } from '../lib/dataService'
 
 export function usePlayers() {
     return useQuery({
         queryKey: ['players'],
-        queryFn: (): Promise<Player[]> => {
-            // Simulate API call with local JSON data
-            return Promise.resolve(dbData.players)
+        queryFn: DataService.getPlayers,
+    })
+}
+
+export function useAddPlayer() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: DataService.addPlayer,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['players'] })
+        },
+    })
+}
+
+export function useUpdatePlayer() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: async ({ id, ...updates }: Partial<Player> & { id: string }) => {
+            return DataService.updatePlayer(id, updates)
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['players'] })
         },
     })
 }

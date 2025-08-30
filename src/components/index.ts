@@ -1,5 +1,4 @@
 // Export components for easier imports
-export * from './navigation/BottomNavigation'
 export * from './header/Header'
 export * from './layout/Container'
 export * from './layout/FullBleed'

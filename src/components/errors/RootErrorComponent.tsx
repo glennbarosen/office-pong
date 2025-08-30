@@ -1,4 +1,4 @@
-import { Button } from '@fremtind/jokul'
+import { Button } from '@fremtind/jokul/button'
 import { Container } from '../layout/Container'
 import { ErrorDetails } from './ErrorDetails'
 

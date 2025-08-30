@@ -1,17 +1,9 @@
-import {
-    Table,
-    TableHead,
-    TableRow,
-    TableHeader,
-    TableBody,
-    TableCell,
-    Tag,
-    Button,
-    Card,
-    WarningTag,
-} from '@fremtind/jokul'
+import { Button } from '@fremtind/jokul/button'
+import { Card } from '@fremtind/jokul/card'
+import { WarningTag } from '@fremtind/jokul/tag'
 import { RATING_CONFIG, type Player } from '../types/pong'
 import { usePlayers } from '../hooks/usePlayers'
+import { useMatches } from '../hooks/useMatches'
 import { Link } from '@tanstack/react-router'
 
 interface LeaderboardEntry extends Player {
@@ -20,7 +12,14 @@ interface LeaderboardEntry extends Player {
 }
 
 export function Overview() {
-    const { data: players = [], isLoading } = usePlayers()
+    const { data: players = [], isLoading: isLoadingPlayers } = usePlayers()
+    const { data: matches = [], isLoading: isLoadingMatches } = useMatches()
+
+    // Create a map for quick player lookup
+    const playerMap = new Map<string, Player>()
+    players.forEach((player) => {
+        playerMap.set(player.id, player)
+    })
 
     // Filter and sort players for leaderboard
     const leaderboardData: LeaderboardEntry[] = players
@@ -36,8 +35,23 @@ export function Overview() {
             return b.eloRating - a.eloRating
         })
 
-    const eligiblePlayers = leaderboardData.filter((player: LeaderboardEntry) => player.isEligibleForRanking)
-    const pendingPlayers = leaderboardData.filter((player: LeaderboardEntry) => !player.isEligibleForRanking)
+    // Get recent matches with player names
+    const recentMatches = matches
+        .slice()
+        .sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
+        .slice(0, 5)
+        .map((match) => {
+            const player1 = playerMap.get(match.player1Id)
+            const player2 = playerMap.get(match.player2Id)
+            const winner = playerMap.get(match.winnerId)
+
+            return {
+                ...match,
+                player1Name: player1?.name || 'Ukjent',
+                player2Name: player2?.name || 'Ukjent',
+                winnerName: winner?.name || 'Ukjent',
+            }
+        })
 
     const getRankIcon = (rank: number) => {
         switch (rank) {
@@ -52,7 +66,7 @@ export function Overview() {
         }
     }
 
-    if (isLoading) {
+    if (isLoadingPlayers || isLoadingMatches) {
         return (
             <div className="flex min-h-64 items-center justify-center">
                 <div>Laster...</div>
@@ -101,92 +115,49 @@ export function Overview() {
                 </div>
             </div>
 
-            {leaderboardData.length > 0 && (
-                <div className="mx-4">
-                    <div className="mb-6">
-                        <h2 className="heading-4 mb-4">Offisiell rangliste</h2>
-                        <Table caption="Spillere på ranglisten">
-                            <TableHead>
-                                <TableRow>
-                                    <TableHeader>Rang</TableHeader>
-                                    <TableHeader>Spiller</TableHeader>
-                                    <TableHeader>ELO</TableHeader>
-                                    <TableHeader>Seire</TableHeader>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {eligiblePlayers.map((player: LeaderboardEntry, index: number) => (
-                                    <TableRow key={player.id}>
-                                        <TableCell>
-                                            <div className="flex items-center">
-                                                <span className="text-lg font-bold">#{index + 1}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div>
-                                                <div className="font-medium">{player.name}</div>
-                                                <div className="text-sm text-gray-500">
-                                                    {player.wins}-{player.losses} ({player.winRate.toFixed(0)}%)
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-lg font-mono">{player.eloRating}</span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="font-semibold text-green-600">{player.wins}</span>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
+            <div className="flex flex-col gap-12">
+                <h2 className="heading-4">Siste 5 kamper</h2>
+                {recentMatches.map((match) => {
+                    const isPlayer1Winner = match.winnerId === match.player1Id
+                    return (
+                        <Card key={match.id} variant="low" padding="xl">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <Link
+                                            to="/profil/$id"
+                                            params={{ id: match.player1Id }}
+                                            className="font-medium text-text-interactive hover:underline"
+                                        >
+                                            {match.player1Name}
+                                        </Link>
+                                        {isPlayer1Winner && <span className="text-green-600">🏆</span>}
+                                    </div>
+                                    <span className="text-text-subdued">vs</span>
+                                    <div className="flex items-center gap-2">
+                                        <Link
+                                            to="/profil/$id"
+                                            params={{ id: match.player2Id }}
+                                            className="font-medium text-text-interactive hover:underline"
+                                        >
+                                            {match.player2Name}
+                                        </Link>
+                                        {!isPlayer1Winner && <span className="text-green-600">🏆</span>}
+                                    </div>
+                                </div>
+                                <div className="body font-bold">
+                                    {match.player1Score} - {match.player2Score}
+                                </div>
+                            </div>
+                        </Card>
+                    )
+                })}
+                <div className="flex justify-center">
+                    <Button as={Link} to="/kamper" variant="secondary">
+                        Se alle
+                    </Button>
                 </div>
-            )}
-
-            {pendingPlayers.length > 0 && (
-                <div className="mx-4">
-                    <div className="mb-6">
-                        <h2 className="heading-4 mb-2">Ventende spillere</h2>
-                        <p className="small mb-4 text-text-subdued">
-                            Må spille minst {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper for å komme på ranglisten
-                        </p>
-                        <Table caption="Spillere som venter på å komme på ranglisten">
-                            <TableHead>
-                                <TableRow>
-                                    <TableHeader>Spiller</TableHeader>
-                                    <TableHeader>ELO</TableHeader>
-                                    <TableHeader>Kamper</TableHeader>
-                                    <TableHeader>Status</TableHeader>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {pendingPlayers.map((player: LeaderboardEntry) => (
-                                    <TableRow key={player.id}>
-                                        <TableCell>
-                                            <div>
-                                                <div className="font-medium">{player.name}</div>
-                                                <div className="text-sm text-gray-500">
-                                                    {player.wins}-{player.losses}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="font-mono">{player.eloRating}</span>
-                                        </TableCell>
-                                        <TableCell>{player.matchesPlayed}</TableCell>
-                                        <TableCell>
-                                            <Tag>
-                                                {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING - player.matchesPlayed} igjen
-                                            </Tag>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </div>
-            )}
+            </div>
 
             {players.length === 0 && (
                 <div className="px-4 py-12 text-center">

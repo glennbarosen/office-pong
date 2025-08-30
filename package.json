@@ -14,7 +14,8 @@
         "prettier:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,scss,json}\""
     },
     "dependencies": {
-        "@fremtind/jokul": "^0.62.0",
+        "@fremtind/jokul": "1.2.2",
+        "@supabase/supabase-js": "^2.56.1",
         "@tanstack/react-query": "^5.76.1",
         "@tanstack/react-router": "^1.120.3",
         "@tanstack/react-router-devtools": "^1.120.3",

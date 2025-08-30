@@ -1,11 +1,11 @@
 export interface EnvironmentVariables {
-    API_BASE_URL: string
-    ENVIRONMENT: 'localhost' | 'test' | 'prod'
+    SUPABASE_URL: string
+    SUPABASE_ANON_KEY: string
 }
 
 const LOCAL_DEFAULTS: EnvironmentVariables = {
-    API_BASE_URL: 'http://localhost:5173',
-    ENVIRONMENT: 'localhost',
+    SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || '',
+    SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
 }
 
 const isPlaceHolder = (value: string) => value.startsWith('__') && value.endsWith('__')

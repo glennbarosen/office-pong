@@ -1,4 +1,6 @@
-import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell, Button, Tag } from '@fremtind/jokul'
+import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
+import { Button } from '@fremtind/jokul/button'
+import { Tag } from '@fremtind/jokul/tag'
 import { useMatches } from '../hooks/useMatches'
 import { usePlayers } from '../hooks/usePlayers'
 import { Link } from '@tanstack/react-router'
@@ -55,26 +57,14 @@ export function Matches() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="heading-3">Alle kamper</h1>
-                <div className="gap-3 flex">
-                    <Button as={Link} to="/ledertavle" variant="secondary">
-                        Se ledertavle
-                    </Button>
-                    <Button as={Link} to="/ny-kamp" variant="primary">
-                        Ny kamp
-                    </Button>
-                </div>
-            </div>
-
+        <>
             {matchesWithNames.length > 0 && (
                 <div>
                     <p className="small mb-4 text-text-subdued">
                         Viser {matchesWithNames.length} kamp{matchesWithNames.length !== 1 ? 'er' : ''}, sortert etter
                         dato (nyeste først)
                     </p>
-                    <Table caption="Oversikt over alle kamper">
+                    <Table caption="Oversikt over alle kamper" fullWidth>
                         <TableHead>
                             <TableRow>
                                 <TableHeader>Dato</TableHeader>
@@ -109,6 +99,7 @@ export function Matches() {
                                         <Button
                                             as={Link}
                                             to="/profil/$id"
+                                            // @ts-expect-error buggy
                                             params={{ id: match.player1Id }}
                                             variant="ghost"
                                             className="font-medium p-0"
@@ -120,6 +111,7 @@ export function Matches() {
                                         <Button
                                             as={Link}
                                             to="/profil/$id"
+                                            // @ts-expect-error buggy
                                             params={{ id: match.player2Id }}
                                             variant="ghost"
                                             className="font-medium p-0"
@@ -175,6 +167,6 @@ export function Matches() {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     )
 }
