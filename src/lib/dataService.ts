@@ -1,6 +1,7 @@
 import type { Player, Match } from '../types/pong'
 import { supabase } from './supabase'
 import { transformPlayerFromDb, transformPlayerToDb, transformMatchFromDb, transformMatchToDb } from './transformers'
+import { EloService } from './eloService'
 
 export class DataService {
     /**
@@ -79,5 +80,70 @@ export class DataService {
         }
 
         return transformMatchFromDb(data)
+    }
+
+    /**
+     * Add a new match and update player ratings in a transaction
+     */
+    static async addMatchWithPlayerUpdates(
+        matchData: Omit<Match, 'id'>,
+        winnerData: Player,
+        loserData: Player
+    ): Promise<Match> {
+        // Calculate ELO changes
+        const eloCalculation = EloService.calculateEloChanges(winnerData, loserData)
+        
+        // Update match data with calculated ELO changes
+        const matchWithElo = {
+            ...matchData,
+            eloChanges: {
+                [winnerData.id]: eloCalculation.winnerChange,
+                [loserData.id]: eloCalculation.loserChange,
+            },
+        }
+
+        // Calculate player updates
+        const winnerUpdates = EloService.calculatePlayerUpdates(
+            winnerData,
+            true,
+            eloCalculation.winnerNewRating
+        )
+        const loserUpdates = EloService.calculatePlayerUpdates(
+            loserData,
+            false,
+            eloCalculation.loserNewRating
+        )
+
+        // Start transaction
+        const { data: matchResult, error: matchError } = await supabase
+            .from('matches')
+            .insert([transformMatchToDb(matchWithElo)])
+            .select()
+            .single()
+
+        if (matchError) {
+            throw new Error(`Failed to add match: ${matchError.message}`)
+        }
+
+        // Update both players
+        const { error: winnerUpdateError } = await supabase
+            .from('players')
+            .update(transformPlayerToDb({ ...winnerData, ...winnerUpdates }))
+            .eq('id', winnerData.id)
+
+        if (winnerUpdateError) {
+            throw new Error(`Failed to update winner: ${winnerUpdateError.message}`)
+        }
+
+        const { error: loserUpdateError } = await supabase
+            .from('players')
+            .update(transformPlayerToDb({ ...loserData, ...loserUpdates }))
+            .eq('id', loserData.id)
+
+        if (loserUpdateError) {
+            throw new Error(`Failed to update loser: ${loserUpdateError.message}`)
+        }
+
+        return transformMatchFromDb(matchResult)
     }
 }

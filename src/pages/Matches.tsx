@@ -1,10 +1,13 @@
 import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
-import { Button } from '@fremtind/jokul/button'
 import { Tag } from '@fremtind/jokul/tag'
 import { useMatches } from '../hooks/useMatches'
 import { usePlayers } from '../hooks/usePlayers'
-import { Link } from '@tanstack/react-router'
-import type { Match, Player } from '../types/pong'
+import type { Match } from '../types/pong'
+import { createPlayerMap } from '../utils/gameUtils'
+import { PlayerLink } from '../components/common/PlayerLink'
+import { DateDisplay } from '../components/common/DateDisplay'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { EmptyState } from '../components/common/EmptyState'
 
 interface MatchWithPlayerNames extends Match {
     player1Name: string
@@ -18,10 +21,7 @@ export function Matches() {
     const { data: players = [], isLoading: isLoadingPlayers } = usePlayers()
 
     // Create a map for quick player lookup
-    const playerMap = new Map<string, Player>()
-    players.forEach((player) => {
-        playerMap.set(player.id, player)
-    })
+    const playerMap = createPlayerMap(players)
 
     // Enrich matches with player names
     const matchesWithNames: MatchWithPlayerNames[] = matches
@@ -49,11 +49,7 @@ export function Matches() {
     const isLoading = isLoadingMatches || isLoadingPlayers
 
     if (isLoading) {
-        return (
-            <div className="flex min-h-64 items-center justify-center">
-                <div>Laster...</div>
-            </div>
-        )
+        return <LoadingSpinner />
     }
 
     return (
@@ -79,45 +75,13 @@ export function Matches() {
                             {matchesWithNames.map((match) => (
                                 <TableRow key={match.id}>
                                     <TableCell>
-                                        <div className="text-sm">
-                                            <div>
-                                                {new Date(match.playedAt).toLocaleDateString('no-NO', {
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                    year: 'numeric',
-                                                })}
-                                            </div>
-                                            <div className="text-xs text-text-subdued">
-                                                {new Date(match.playedAt).toLocaleTimeString('no-NO', {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </div>
-                                        </div>
+                                        <DateDisplay dateString={match.playedAt} includeTime />
                                     </TableCell>
                                     <TableCell>
-                                        <Button
-                                            as={Link}
-                                            to="/profil/$id"
-                                            // @ts-expect-error buggy
-                                            params={{ id: match.player1Id }}
-                                            variant="ghost"
-                                            className="font-medium p-0"
-                                        >
-                                            {match.player1Name}
-                                        </Button>
+                                        <PlayerLink playerId={match.player1Id} playerName={match.player1Name} />
                                     </TableCell>
                                     <TableCell>
-                                        <Button
-                                            as={Link}
-                                            to="/profil/$id"
-                                            // @ts-expect-error buggy
-                                            params={{ id: match.player2Id }}
-                                            variant="ghost"
-                                            className="font-medium p-0"
-                                        >
-                                            {match.player2Name}
-                                        </Button>
+                                        <PlayerLink playerId={match.player2Id} playerName={match.player2Name} />
                                     </TableCell>
                                     <TableCell>
                                         <div className="font-mono">
@@ -157,15 +121,12 @@ export function Matches() {
             )}
 
             {matchesWithNames.length === 0 && (
-                <div className="py-12 text-center">
-                    <p className="mb-4 text-text-subdued">Ingen kamper registrert ennå</p>
-                    <p className="small text-text-subdued">Start ved å registrere den første kampen</p>
-                    <div className="mt-6">
-                        <Button as={Link} to="/ny-kamp" variant="primary">
-                            Registrer første kamp
-                        </Button>
-                    </div>
-                </div>
+                <EmptyState
+                    title="Ingen kamper registrert ennå"
+                    description="Start ved å registrere den første kampen"
+                    actionText="Registrer første kamp"
+                    actionTo="/ny-kamp"
+                />
             )}
         </>
     )

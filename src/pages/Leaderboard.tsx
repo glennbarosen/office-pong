@@ -2,55 +2,27 @@ import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@
 import { WarningTag } from '@fremtind/jokul/tag'
 import { Button } from '@fremtind/jokul/button'
 import { useScreen } from '@fremtind/jokul/hooks'
-import { RATING_CONFIG, type Player } from '../types/pong'
+import { RATING_CONFIG } from '../types/pong'
 import { usePlayers } from '../hooks/usePlayers'
 import { Link } from '@tanstack/react-router'
-
-interface LeaderboardEntry extends Player {
-    winRate: number
-    isEligibleForRanking: boolean
-}
+import { createLeaderboardEntries, formatDate } from '../utils/gameUtils'
+import { PlayerLink } from '../components/common/PlayerLink'
+import { RankDisplay } from '../components/common/RankDisplay'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { EmptyState } from '../components/common/EmptyState'
 
 export function Leaderboard() {
     const { data: players = [], isLoading } = usePlayers()
     const { isSmallDevice } = useScreen()
 
     // Filter and sort players for leaderboard
-    const leaderboardData: LeaderboardEntry[] = players
-        .map((player: Player) => ({
-            ...player,
-            winRate: player.matchesPlayed > 0 ? (player.wins / player.matchesPlayed) * 100 : 0,
-            isEligibleForRanking: player.matchesPlayed >= RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING,
-        }))
-        .sort((a: LeaderboardEntry, b: LeaderboardEntry) => {
-            // Eligible players first, then by ELO rating
-            if (a.isEligibleForRanking && !b.isEligibleForRanking) return -1
-            if (!a.isEligibleForRanking && b.isEligibleForRanking) return 1
-            return b.eloRating - a.eloRating
-        })
+    const leaderboardData = createLeaderboardEntries(players)
 
-    const eligiblePlayers = leaderboardData.filter((player: LeaderboardEntry) => player.isEligibleForRanking)
-    const pendingPlayers = leaderboardData.filter((player: LeaderboardEntry) => !player.isEligibleForRanking)
-
-    const getRankIcon = (rank: number) => {
-        switch (rank) {
-            case 1:
-                return '🥇'
-            case 2:
-                return '🥈'
-            case 3:
-                return '🥉'
-            default:
-                return `${rank}.`
-        }
-    }
+    const eligiblePlayers = leaderboardData.filter((player) => player.isEligibleForRanking)
+    const pendingPlayers = leaderboardData.filter((player) => !player.isEligibleForRanking)
 
     if (isLoading) {
-        return (
-            <div className="flex min-h-64 items-center justify-center">
-                <div>Laster...</div>
-            </div>
-        )
+        return <LoadingSpinner />
     }
 
     return (
@@ -87,24 +59,13 @@ export function Leaderboard() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {eligiblePlayers.map((player: LeaderboardEntry, index: number) => (
+                            {eligiblePlayers.map((player, index: number) => (
                                 <TableRow key={player.id}>
                                     <TableCell data-th="Plassering">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg">{getRankIcon(index + 1)}</span>
-                                        </div>
+                                        <RankDisplay rank={index + 1} />
                                     </TableCell>
                                     <TableCell data-th="Spiller">
-                                        <Button
-                                            as={Link}
-                                            to="/profil/$id"
-                                            // @ts-expect-error buggy
-                                            params={{ id: player.id }}
-                                            variant="ghost"
-                                            className="font-medium p-0"
-                                        >
-                                            {player.name}
-                                        </Button>
+                                        <PlayerLink playerId={player.id} playerName={player.name} />
                                     </TableCell>
                                     <TableCell data-th="ELO rating">
                                         <span className="text-lg font-mono font-bold">{player.eloRating}</span>
@@ -123,13 +84,7 @@ export function Leaderboard() {
                                     </TableCell>
                                     <TableCell data-th="Sist spilt">
                                         <span className="text-sm text-text-subdued">
-                                            {player.lastPlayedAt
-                                                ? new Date(player.lastPlayedAt).toLocaleDateString('no-NO', {
-                                                      day: 'numeric',
-                                                      month: 'short',
-                                                      year: 'numeric',
-                                                  })
-                                                : '-'}
+                                            {player.lastPlayedAt ? formatDate(player.lastPlayedAt) : '-'}
                                         </span>
                                     </TableCell>
                                 </TableRow>
@@ -158,19 +113,10 @@ export function Leaderboard() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {pendingPlayers.map((player: LeaderboardEntry) => (
+                            {pendingPlayers.map((player) => (
                                 <TableRow key={player.id}>
                                     <TableCell data-th="Spiller">
-                                        <Button
-                                            as={Link}
-                                            to="/profil/$id"
-                                            // @ts-expect-error buggy
-                                            params={{ id: player.id }}
-                                            variant="ghost"
-                                            className="font-medium p-0"
-                                        >
-                                            {player.name}
-                                        </Button>
+                                        <PlayerLink playerId={player.id} playerName={player.name} />
                                     </TableCell>
                                     <TableCell data-th="ELO rating">
                                         <span className="font-mono">{player.eloRating}</span>
@@ -201,15 +147,12 @@ export function Leaderboard() {
             )}
 
             {players.length === 0 && (
-                <div className="py-12 text-center">
-                    <p className="mb-4 text-text-subdued">Ingen spillere registrert ennå</p>
-                    <p className="small text-text-subdued">Start ved å registrere en ny kamp</p>
-                    <div className="mt-6">
-                        <Button as={Link} to="/ny-kamp" variant="primary">
-                            Registrer første kamp
-                        </Button>
-                    </div>
-                </div>
+                <EmptyState
+                    title="Ingen spillere registrert ennå"
+                    description="Start ved å registrere en ny kamp"
+                    actionText="Registrer første kamp"
+                    actionTo="/ny-kamp"
+                />
             )}
         </div>
     )

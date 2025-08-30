@@ -1,39 +1,21 @@
 import { Button } from '@fremtind/jokul/button'
 import { Card } from '@fremtind/jokul/card'
 import { WarningTag } from '@fremtind/jokul/tag'
-import { RATING_CONFIG, type Player } from '../types/pong'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches } from '../hooks/useMatches'
 import { Link } from '@tanstack/react-router'
-
-interface LeaderboardEntry extends Player {
-    winRate: number
-    isEligibleForRanking: boolean
-}
+import { createLeaderboardEntries, createPlayerMap, getRankIcon } from '../utils/gameUtils'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
 
 export function Overview() {
     const { data: players = [], isLoading: isLoadingPlayers } = usePlayers()
     const { data: matches = [], isLoading: isLoadingMatches } = useMatches()
 
     // Create a map for quick player lookup
-    const playerMap = new Map<string, Player>()
-    players.forEach((player) => {
-        playerMap.set(player.id, player)
-    })
+    const playerMap = createPlayerMap(players)
 
     // Filter and sort players for leaderboard
-    const leaderboardData: LeaderboardEntry[] = players
-        .map((player: Player) => ({
-            ...player,
-            winRate: player.matchesPlayed > 0 ? (player.wins / player.matchesPlayed) * 100 : 0,
-            isEligibleForRanking: player.matchesPlayed >= RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING,
-        }))
-        .sort((a: LeaderboardEntry, b: LeaderboardEntry) => {
-            // Eligible players first, then by ELO rating
-            if (a.isEligibleForRanking && !b.isEligibleForRanking) return -1
-            if (!a.isEligibleForRanking && b.isEligibleForRanking) return 1
-            return b.eloRating - a.eloRating
-        })
+    const leaderboardData = createLeaderboardEntries(players)
 
     // Get recent matches with player names
     const recentMatches = matches
@@ -53,25 +35,8 @@ export function Overview() {
             }
         })
 
-    const getRankIcon = (rank: number) => {
-        switch (rank) {
-            case 1:
-                return '🥇'
-            case 2:
-                return '🥈'
-            case 3:
-                return '🥉'
-            default:
-                return `${rank}.`
-        }
-    }
-
     if (isLoadingPlayers || isLoadingMatches) {
-        return (
-            <div className="flex min-h-64 items-center justify-center">
-                <div>Laster...</div>
-            </div>
-        )
+        return <LoadingSpinner />
     }
 
     return (
