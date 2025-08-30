@@ -12,6 +12,8 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as NyKampImport } from './routes/ny-kamp'
+import { Route as LedertavleImport } from './routes/ledertavle'
+import { Route as KamperImport } from './routes/kamper'
 import { Route as IndexImport } from './routes/index'
 import { Route as ProfilIdImport } from './routes/profil.$id'
 
@@ -20,6 +22,18 @@ import { Route as ProfilIdImport } from './routes/profil.$id'
 const NyKampRoute = NyKampImport.update({
   id: '/ny-kamp',
   path: '/ny-kamp',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LedertavleRoute = LedertavleImport.update({
+  id: '/ledertavle',
+  path: '/ledertavle',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const KamperRoute = KamperImport.update({
+  id: '/kamper',
+  path: '/kamper',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -46,6 +60,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/kamper': {
+      id: '/kamper'
+      path: '/kamper'
+      fullPath: '/kamper'
+      preLoaderRoute: typeof KamperImport
+      parentRoute: typeof rootRoute
+    }
+    '/ledertavle': {
+      id: '/ledertavle'
+      path: '/ledertavle'
+      fullPath: '/ledertavle'
+      preLoaderRoute: typeof LedertavleImport
+      parentRoute: typeof rootRoute
+    }
     '/ny-kamp': {
       id: '/ny-kamp'
       path: '/ny-kamp'
@@ -67,12 +95,16 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/kamper': typeof KamperRoute
+  '/ledertavle': typeof LedertavleRoute
   '/ny-kamp': typeof NyKampRoute
   '/profil/$id': typeof ProfilIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/kamper': typeof KamperRoute
+  '/ledertavle': typeof LedertavleRoute
   '/ny-kamp': typeof NyKampRoute
   '/profil/$id': typeof ProfilIdRoute
 }
@@ -80,27 +112,33 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/kamper': typeof KamperRoute
+  '/ledertavle': typeof LedertavleRoute
   '/ny-kamp': typeof NyKampRoute
   '/profil/$id': typeof ProfilIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ny-kamp' | '/profil/$id'
+  fullPaths: '/' | '/kamper' | '/ledertavle' | '/ny-kamp' | '/profil/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ny-kamp' | '/profil/$id'
-  id: '__root__' | '/' | '/ny-kamp' | '/profil/$id'
+  to: '/' | '/kamper' | '/ledertavle' | '/ny-kamp' | '/profil/$id'
+  id: '__root__' | '/' | '/kamper' | '/ledertavle' | '/ny-kamp' | '/profil/$id'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  KamperRoute: typeof KamperRoute
+  LedertavleRoute: typeof LedertavleRoute
   NyKampRoute: typeof NyKampRoute
   ProfilIdRoute: typeof ProfilIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  KamperRoute: KamperRoute,
+  LedertavleRoute: LedertavleRoute,
   NyKampRoute: NyKampRoute,
   ProfilIdRoute: ProfilIdRoute,
 }
@@ -116,12 +154,20 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/kamper",
+        "/ledertavle",
         "/ny-kamp",
         "/profil/$id"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/kamper": {
+      "filePath": "kamper.tsx"
+    },
+    "/ledertavle": {
+      "filePath": "ledertavle.tsx"
     },
     "/ny-kamp": {
       "filePath": "ny-kamp.tsx"
