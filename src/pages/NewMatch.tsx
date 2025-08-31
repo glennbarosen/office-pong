@@ -5,11 +5,12 @@ import { usePlayers, useAddPlayer } from '../hooks/usePlayers'
 import { useAddMatchWithEloUpdates } from '../hooks/useMatches'
 import { MatchService, type MatchCreationData } from '../lib/matchService'
 import { parseInteger } from '../utils/gameUtils'
+import { triggerMatchSuccessConfetti } from '../utils/confetti'
 import { Button } from '@fremtind/jokul/button'
 import { Card } from '@fremtind/jokul/card'
 import { NativeSelect } from '@fremtind/jokul/select'
 import { TextInput } from '@fremtind/jokul/text-input'
-import { InfoMessage } from '@fremtind/jokul/message'
+import { ErrorMessage, InfoMessage } from '@fremtind/jokul/message'
 
 export default function NewMatch() {
     const navigate = useNavigate()
@@ -58,7 +59,11 @@ export default function NewMatch() {
             )
 
             await addMatch.mutateAsync(processedMatch)
-            navigate({ to: '/' })
+            
+            // Trigger extreme celebratory confetti animation
+            triggerMatchSuccessConfetti(() => {
+                navigate({ to: '/' })
+            })
         } catch (error) {
             console.error('Error creating match:', error)
             setError(error instanceof Error ? error.message : 'Kunne ikke registrere kamp')
@@ -185,11 +190,7 @@ export default function NewMatch() {
                 </div>
 
                 {/* Error Display */}
-                {error && (
-                    <Card variant="low" padding="l" className="bg-background-alert-error">
-                        <p className="small text-center text-text-on-alert">{error}</p>
-                    </Card>
-                )}
+                {error && <ErrorMessage>{error}</ErrorMessage>}
 
                 {/* Actions */}
                 <div className="flex gap-12">

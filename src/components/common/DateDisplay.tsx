@@ -8,10 +8,10 @@ interface DateDisplayProps {
 
 export function DateDisplay({ dateString, includeTime = false, className = '' }: DateDisplayProps) {
     return (
-        <div className={`text-sm ${className}`}>
+        <div className={`${className}`}>
             <div>{formatDate(dateString)}</div>
             {includeTime && (
-                <div className="text-xs text-text-subdued">
+                <div className="text-text-subdued">
                     {new Date(dateString).toLocaleTimeString('no-NO', {
                         hour: '2-digit',
                         minute: '2-digit',

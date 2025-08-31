@@ -36,7 +36,7 @@ export function Profile({ id }: ProfileProps) {
 
     return (
         <div className="flex flex-col gap-32">
-            <Card variant="outlined">
+            <Card variant="outlined" className="max-w-[400px]">
                 <div className="mb-6">
                     <h1 className="heading-2 mb-2">{player.name}</h1>
                     <div className="small text-text-subdued">

@@ -1,5 +1,5 @@
 import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
-import { Tag } from '@fremtind/jokul/tag'
+import { SuccessTag } from '@fremtind/jokul/tag'
 import { useMatches } from '../hooks/useMatches'
 import { usePlayers } from '../hooks/usePlayers'
 import type { Match } from '../types/pong'
@@ -8,6 +8,7 @@ import { PlayerLink } from '../components/common/PlayerLink'
 import { DateDisplay } from '../components/common/DateDisplay'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { EmptyState } from '../components/common/EmptyState'
+import { useElementDimensions } from '@fremtind/jokul/hooks'
 
 interface MatchWithPlayerNames extends Match {
     player1Name: string
@@ -22,6 +23,10 @@ export function Matches() {
 
     // Create a map for quick player lookup
     const playerMap = createPlayerMap(players)
+
+    const [elementRef, dimensions] = useElementDimensions<HTMLTableElement>(350)
+
+    const shouldCollapse = dimensions.width <= 1000
 
     // Enrich matches with player names
     const matchesWithNames: MatchWithPlayerNames[] = matches
@@ -53,14 +58,12 @@ export function Matches() {
     }
 
     return (
-        <>
+        <div ref={elementRef}>
             {matchesWithNames.length > 0 && (
                 <div>
-                    <p className="small mb-4 text-text-subdued">
-                        Viser {matchesWithNames.length} kamp{matchesWithNames.length !== 1 ? 'er' : ''}, sortert etter
-                        dato (nyeste først)
-                    </p>
-                    <Table caption="Oversikt over alle kamper" fullWidth>
+                    <h2 className="heading-4 mb-4">Kamper</h2>
+
+                    <Table caption="" fullWidth collapseToList data-collapse={shouldCollapse ? 'true' : undefined}>
                         <TableHead>
                             <TableRow>
                                 <TableHeader>Dato</TableHeader>
@@ -74,38 +77,36 @@ export function Matches() {
                         <TableBody>
                             {matchesWithNames.map((match) => (
                                 <TableRow key={match.id}>
-                                    <TableCell>
+                                    <TableCell data-th="Dato">
                                         <DateDisplay dateString={match.playedAt} includeTime />
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell data-th="Spiller 1">
                                         <PlayerLink playerId={match.player1Id} playerName={match.player1Name} />
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell data-th="Spiller 2">
                                         <PlayerLink playerId={match.player2Id} playerName={match.player2Name} />
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="font-mono">
-                                            {match.player1Score} - {match.player2Score}
-                                        </div>
+                                    <TableCell data-th="Resultat">
+                                        {match.player1Score} - {match.player2Score}
                                     </TableCell>
-                                    <TableCell>
-                                        <Tag>{match.winnerName}</Tag>
+                                    <TableCell data-th="Vinner">
+                                        <SuccessTag>{match.winnerName}</SuccessTag>
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="text-sm">
+                                    <TableCell data-th="ELO-endring">
+                                        <div>
                                             <div
-                                                className={`font-mono ${
+                                                className={`font-bold ${
                                                     match.eloChanges[match.winnerId] > 0
-                                                        ? 'text-green-600'
+                                                        ? 'text-background-alert-success'
                                                         : 'text-text-subdued'
                                                 }`}
                                             >
                                                 {match.winnerName}: +{Math.abs(match.eloChanges[match.winnerId])}
                                             </div>
                                             <div
-                                                className={`font-mono ${
+                                                className={`font-bold ${
                                                     match.eloChanges[match.loserId] < 0
-                                                        ? 'text-red-600'
+                                                        ? 'text-background-alert-error'
                                                         : 'text-text-subdued'
                                                 }`}
                                             >
@@ -128,6 +129,6 @@ export function Matches() {
                     actionTo="/ny-kamp"
                 />
             )}
-        </>
+        </div>
     )
 }

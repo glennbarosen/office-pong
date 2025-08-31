@@ -1,5 +1,5 @@
 import type { Player, Match } from '../types/pong'
-import { matchScoreSchema, playerNameSchema } from './validation'
+import { matchScoreSchema, playerNameSchema, validateUniquePlayerName } from './validation'
 import { RATING_CONFIG } from '../types/pong'
 
 export interface MatchCreationData {
@@ -44,10 +44,15 @@ export class MatchService {
             if (!data.player1Name?.trim()) {
                 throw new Error('Spiller 1 navn er påkrevd')
             }
-            
+
             const nameValidation = playerNameSchema.safeParse(data.player1Name)
             if (!nameValidation.success) {
                 throw new Error(`Spiller 1: ${nameValidation.error.issues[0].message}`)
+            }
+
+            // Check if player with this name already exists
+            if (!validateUniquePlayerName(data.player1Name, players)) {
+                throw new Error(`En spiller med navnet "${data.player1Name.trim()}" finnes allerede i databasen`)
             }
 
             player1Data = await addPlayer({
@@ -76,6 +81,11 @@ export class MatchService {
             const nameValidation = playerNameSchema.safeParse(data.player2Name)
             if (!nameValidation.success) {
                 throw new Error(`Spiller 2: ${nameValidation.error.issues[0].message}`)
+            }
+
+            // Check if player with this name already exists
+            if (!validateUniquePlayerName(data.player2Name, players)) {
+                throw new Error(`En spiller med navnet "${data.player2Name.trim()}" finnes allerede i databasen`)
             }
 
             player2Data = await addPlayer({

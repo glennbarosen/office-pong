@@ -1,5 +1,5 @@
-import { Button } from '@fremtind/jokul/button'
-import { Link } from '@tanstack/react-router'
+import { Link } from '@fremtind/jokul/link'
+import { Link as RouterLink } from '@tanstack/react-router'
 
 interface PlayerLinkProps {
     playerId: string
@@ -8,17 +8,16 @@ interface PlayerLinkProps {
     variant?: 'ghost' | 'primary' | 'secondary' | 'tertiary'
 }
 
-export function PlayerLink({ playerId, playerName, className = 'font-medium p-0', variant = 'ghost' }: PlayerLinkProps) {
+export function PlayerLink({ playerId, playerName }: PlayerLinkProps) {
     return (
-        <Button
-            as={Link}
+        <Link
+            className="underline"
+            as={RouterLink}
             to="/profil/$id"
             // @ts-expect-error - Router typing issue with params
             params={{ id: playerId }}
-            variant={variant}
-            className={className}
         >
             {playerName}
-        </Button>
+        </Link>
     )
 }

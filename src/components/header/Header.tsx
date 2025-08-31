@@ -7,7 +7,7 @@ export const Header = () => {
 
     return (
         <header className="flex items-center justify-between py-8">
-            <h1 className="heading-1">Fremtind kontorpong</h1>
+            <h1 className="heading-1">Fremtind kontorpong 🏓</h1>
             <Button
                 variant="ghost"
                 icon={<Icon>{isDark ? 'light_mode' : 'dark_mode'}</Icon>}
