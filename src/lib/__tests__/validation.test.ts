@@ -35,7 +35,7 @@ describe('Validation Schemas', () => {
                 player2Score: 11,
             })
             expect(result.success).toBe(false)
-            expect(result.error?.issues[0].message).toBe('Ugyldig resultat: Ved 11 poeng må motstanderen ha 9 eller mindre. Ved over 11 poeng må man vinne med minst 2 poengs margin.')
+            expect(result.error?.issues[0].message).toBe('Ugyldig resultat: Må vinne med minst 2 poengs margin. Ved 11 poeng kan motstanderen ha 0-9 poeng. Ved deuce (10-10+) må begge ha minst 10 poeng.')
         })
 
         test('should accept valid high scores with proper margin', () => {
@@ -47,7 +47,7 @@ describe('Validation Schemas', () => {
         })
 
         test('should accept 11-point wins with any score 9 or below', () => {
-            // Test various valid 11-point game scores
+            // Test various valid 11-point game scores (winner reached 11, margin of at least 2)
             const validScores = [
                 [11, 9], [11, 8], [11, 7], [11, 6], [11, 5], [11, 4], [11, 3], [11, 2], [11, 1], [11, 0],
                 [9, 11], [8, 11], [7, 11], [6, 11], [5, 11], [4, 11], [3, 11], [2, 11], [1, 11], [0, 11]
@@ -62,7 +62,7 @@ describe('Validation Schemas', () => {
             })
         })
 
-        test('should reject 11-point wins where opponent has 10 points', () => {
+        test('should reject 11-point wins where opponent has 10 points (no 2-point margin)', () => {
             const result1 = matchScoreSchema.safeParse({
                 player1Score: 11,
                 player2Score: 10,
@@ -76,10 +76,11 @@ describe('Validation Schemas', () => {
             expect(result2.success).toBe(false)
         })
 
-        test('should accept deuce scenarios with 2-point margin', () => {
+        test('should accept deuce scenarios with proper rules', () => {
+            // In deuce situations, both players must have reached at least 10, and winner wins by 2+
             const validDeuceScores = [
-                [12, 10], [13, 11], [14, 12], [15, 13], [20, 18],
-                [10, 12], [11, 13], [12, 14], [13, 15], [18, 20]
+                [12, 10], [13, 11], [14, 12], [15, 13], [16, 14], [20, 18],
+                [10, 12], [11, 13], [12, 14], [13, 15], [14, 16], [18, 20]
             ]
             
             validDeuceScores.forEach(([score1, score2]) => {
@@ -91,10 +92,14 @@ describe('Validation Schemas', () => {
             })
         })
 
-        test('should reject deuce scenarios with less than 2-point margin', () => {
+        test('should reject invalid deuce scenarios', () => {
             const invalidDeuceScores = [
+                // Less than 2-point margin in deuce
                 [12, 11], [13, 12], [14, 13], [15, 14],
-                [11, 12], [12, 13], [13, 14], [14, 15]
+                [11, 12], [12, 13], [13, 14], [14, 15],
+                // Invalid deuce where loser has less than 10 points (should be normal 11-point game)
+                [12, 9], [13, 8], [14, 7],
+                [9, 12], [8, 13], [7, 14]
             ]
             
             invalidDeuceScores.forEach(([score1, score2]) => {

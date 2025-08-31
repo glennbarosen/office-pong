@@ -37,22 +37,30 @@ export const matchScoreSchema = z
             const maxScore = Math.max(data.player1Score, data.player2Score)
             const minScore = Math.min(data.player1Score, data.player2Score)
             
-            // If the winner has exactly 11 points, the loser can have any score from 0-9
+            // Must win by at least 2 points
+            const margin = maxScore - minScore
+            if (margin < 2) {
+                return false
+            }
+            
+            // If the winner has exactly 11 points, the loser must have 9 or fewer
+            // (this covers normal 11-point games: 11-9, 11-8, 11-7, etc.)
             if (maxScore === 11) {
                 return minScore <= 9
             }
             
-            // If the winner has more than 11 points, they must win by at least 2 points
-            // (this handles deuce situations like 12-10, 13-11, etc.)
+            // If the winner has more than 11 points, this is a deuce situation
+            // Both players must have reached at least 10, and winner must win by exactly 2
+            // (this covers deuce games: 12-10, 13-11, 14-12, etc.)
             if (maxScore > 11) {
-                return maxScore - minScore >= 2
+                return minScore >= 10 && margin >= 2
             }
             
-            // If both players have less than 11, it's not a valid game
+            // If winner has less than 11, it's not a valid completed game
             return false
         },
         {
-            message: 'Ugyldig resultat: Ved 11 poeng må motstanderen ha 9 eller mindre. Ved over 11 poeng må man vinne med minst 2 poengs margin.',
+            message: 'Ugyldig resultat: Må vinne med minst 2 poengs margin. Ved 11 poeng kan motstanderen ha 0-9 poeng. Ved deuce (10-10+) må begge ha minst 10 poeng.',
             path: ['player1Score'],
         }
     )
