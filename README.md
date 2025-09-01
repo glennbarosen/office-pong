@@ -33,11 +33,23 @@ pnpm install
 # Start development server
 pnpm dev
 
+# Build for production
+pnpm build
+
+# Run tests
+pnpm test
+
 # Check TypeScript
 pnpm types:check
 
 # Format code
 pnpm prettier
+
+# Check code formatting
+pnpm prettier:check
+
+# Lint code
+pnpm lint
 ```
 
 ## Tech Stack
@@ -46,32 +58,63 @@ pnpm prettier
 - **TanStack Router** for file-based routing
 - **TanStack Query** for state management
 - **Jøkul Design System** for UI components
-- **Tailwind CSS** for styling
+- **Tailwind CSS** + **Sass** for styling
+- **Supabase** for database and backend
 - **Vite** for fast development
+- **Vitest** for unit testing
+- **ESLint** + **Prettier** for code quality
 
 ## Project Structure
 
 ```
 src/
 ├── components/         # Reusable UI components
-│   ├── navigation/    # Bottom navigation
+│   ├── common/        # Common components (DateDisplay, LoadingSpinner, etc.)
 │   ├── header/        # Top header
-│   ├── layout/        # Layout components
-│   └── links/         # Router links
+│   ├── layout/        # Layout components (Container, FullBleed)
+│   ├── links/         # Router links with Jøkul styling
+│   ├── match-card/    # Match card component
+│   └── errors/        # Error handling components
 ├── hooks/             # Custom React hooks
-├── pages/             # Main pages
-│   ├── Leaderboard.tsx # Rankings
-│   ├── Profile.tsx     # Player profile
-│   └── NewMatch.tsx    # Register new match
-├── routes/            # TanStack Router routes
-├── types/             # TypeScript types
-├── data/              # Local JSON database
-└── utils/             # Helper functions
+├── lib/               # Core business logic and services
+│   ├── dataService.ts # Data fetching service
+│   ├── eloService.ts  # ELO rating calculations
+│   ├── matchService.ts # Match operations
+│   ├── supabase.ts    # Supabase client and types
+│   └── __tests__/     # Unit tests
+├── pages/             # Main page components
+│   ├── Leaderboard.tsx # Rankings page
+│   ├── Profile.tsx     # Player profile page
+│   ├── NewMatch.tsx    # Register new match page
+│   ├── Matches.tsx     # Match history page
+│   └── Overview.tsx    # Overview/dashboard page
+├── routes/            # TanStack Router route definitions
+├── types/             # TypeScript type definitions
+├── utils/             # Helper functions and utilities
+├── styles/            # Global styles (SCSS + Tailwind)
+└── test/              # Test setup and utilities
 ```
 
 ## Development
 
-The app uses a local JSON file (`src/data/db.json`) as a database for rapid prototyping. In the future, this can be replaced with Supabase or another backend.
+The app uses **Supabase** as the backend database for storing players, matches, and calculating ELO ratings. The database schema is fully typed with TypeScript for type safety.
+
+### Environment Setup
+
+Create an `env.local` file in the root directory with your Supabase credentials:
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Testing
+
+Unit tests are written with **Vitest** and **Testing Library**. Run tests with:
+
+```bash
+pnpm test
+```
 
 ## Contributing
 
