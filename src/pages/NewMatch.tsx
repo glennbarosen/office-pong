@@ -59,7 +59,7 @@ export default function NewMatch() {
             )
 
             await addMatch.mutateAsync(processedMatch)
-            
+
             // Trigger extreme celebratory confetti animation
             triggerMatchSuccessConfetti(() => {
                 navigate({ to: '/' })
@@ -120,6 +120,7 @@ export default function NewMatch() {
                                     name="player1Name"
                                     label="Navn"
                                     placeholder="Skriv inn navn på ny spiller..."
+                                    helpLabel="Bruk gjerne fornavn + etternavn for å unngå duplikater"
                                     value={player1Name}
                                     onChange={(e) => setPlayer1Name(e.target.value)}
                                 />
@@ -172,6 +173,7 @@ export default function NewMatch() {
                                     name="player2Name"
                                     label="Navn"
                                     placeholder="Skriv inn navn på ny spiller..."
+                                    helpLabel="Bruk gjerne fornavn + etternavn for å unngå duplikater"
                                     value={player2Name}
                                     onChange={(e) => setPlayer2Name(e.target.value)}
                                 />
