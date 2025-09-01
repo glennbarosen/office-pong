@@ -99,7 +99,7 @@ export function Overview() {
                                         {isPlayer1Winner && <span className="text-green-600">🏆</span>}
                                     </div>
                                     <span className="text-text-subdued">vs</span>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-4">
                                         <Link
                                             to="/profil/$id"
                                             params={{ id: match.player2Id }}
@@ -107,7 +107,7 @@ export function Overview() {
                                         >
                                             {match.player2Name}
                                         </Link>
-                                        {!isPlayer1Winner && <span className="text-green-600">🏆</span>}
+                                        {!isPlayer1Winner && <span>🏆</span>}
                                     </div>
                                 </div>
                                 <div className="body font-bold">

@@ -6,10 +6,8 @@ import { useAddMatchWithEloUpdates } from '../hooks/useMatches'
 import { MatchService, type MatchCreationData } from '../lib/matchService'
 import { parseInteger } from '../utils/gameUtils'
 import { triggerMatchSuccessConfetti } from '../utils/confetti'
+import { PlayerCard } from '../components'
 import { Button } from '@fremtind/jokul/button'
-import { Card } from '@fremtind/jokul/card'
-import { NativeSelect } from '@fremtind/jokul/select'
-import { TextInput } from '@fremtind/jokul/text-input'
 import { ErrorMessage, InfoMessage } from '@fremtind/jokul/message'
 
 export default function NewMatch() {
@@ -32,6 +30,10 @@ export default function NewMatch() {
         value: player.id,
         label: player.name,
     }))
+
+    // Filter out selected players to prevent duplicate selection
+    const player1Options = playerOptions.filter((option) => option.value !== player2Id)
+    const player2Options = playerOptions.filter((option) => option.value !== player1Id)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -82,113 +84,31 @@ export default function NewMatch() {
             <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Player Cards */}
                 <div className="grid gap-8 md:grid-cols-2 md:gap-12">
-                    {/* Player 1 Card */}
-                    <Card variant="low" padding="xl">
-                        <div className="space-y-6">
-                            <div className="text-center">
-                                <h2 className="heading-4 mb-2">Spiller 1</h2>
-                                <div className="flex gap-2">
-                                    <Button
-                                        variant={player1Type === 'existing' ? 'primary' : 'secondary'}
-                                        density="compact"
-                                        type="button"
-                                        onClick={() => setPlayer1Type('existing')}
-                                    >
-                                        Eksisterende
-                                    </Button>
-                                    <Button
-                                        variant={player1Type === 'new' ? 'primary' : 'secondary'}
-                                        density="compact"
-                                        type="button"
-                                        onClick={() => setPlayer1Type('new')}
-                                    >
-                                        Ny spiller
-                                    </Button>
-                                </div>
-                            </div>
+                    <PlayerCard
+                        playerNumber={1}
+                        playerType={player1Type}
+                        playerId={player1Id}
+                        playerName={player1Name}
+                        playerScore={player1Score}
+                        playerOptions={player1Options}
+                        onPlayerTypeChange={setPlayer1Type}
+                        onPlayerIdChange={setPlayer1Id}
+                        onPlayerNameChange={setPlayer1Name}
+                        onPlayerScoreChange={setPlayer1Score}
+                    />
 
-                            {player1Type === 'existing' ? (
-                                <NativeSelect
-                                    name="player1"
-                                    items={playerOptions}
-                                    label="Velg spiller"
-                                    onChange={(event) => setPlayer1Id(event.target.value)}
-                                    style={{ overflowY: 'visible' }}
-                                />
-                            ) : (
-                                <TextInput
-                                    name="player1Name"
-                                    label="Navn"
-                                    placeholder="Skriv inn navn på ny spiller..."
-                                    helpLabel="Bruk gjerne fornavn + etternavn for å unngå duplikater"
-                                    value={player1Name}
-                                    onChange={(e) => setPlayer1Name(e.target.value)}
-                                />
-                            )}
-
-                            <TextInput
-                                type="number"
-                                name="player1Score"
-                                label="Poeng"
-                                value={player1Score}
-                                onChange={(e) => setPlayer1Score(e.target.value)}
-                            />
-                        </div>
-                    </Card>
-
-                    {/* Player 2 Card */}
-                    <Card variant="low" padding="xl" className="overflow-y-visible">
-                        <div className="space-y-6">
-                            <div className="text-center">
-                                <h2 className="heading-4 mb-2">Spiller 2</h2>
-                                <div className="flex gap-2">
-                                    <Button
-                                        variant={player2Type === 'existing' ? 'primary' : 'secondary'}
-                                        density="compact"
-                                        type="button"
-                                        onClick={() => setPlayer2Type('existing')}
-                                    >
-                                        Eksisterende
-                                    </Button>
-                                    <Button
-                                        variant={player2Type === 'new' ? 'primary' : 'secondary'}
-                                        density="compact"
-                                        type="button"
-                                        onClick={() => setPlayer2Type('new')}
-                                    >
-                                        Ny spiller
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {player2Type === 'existing' ? (
-                                <NativeSelect
-                                    name="player2"
-                                    items={playerOptions}
-                                    label="Velg spiller"
-                                    onChange={(event) => setPlayer2Id(event.target.value)}
-                                />
-                            ) : (
-                                <TextInput
-                                    name="player2Name"
-                                    label="Navn"
-                                    placeholder="Skriv inn navn på ny spiller..."
-                                    helpLabel="Bruk gjerne fornavn + etternavn for å unngå duplikater"
-                                    value={player2Name}
-                                    onChange={(e) => setPlayer2Name(e.target.value)}
-                                />
-                            )}
-
-                            <TextInput
-                                type="number"
-                                name="player2Score"
-                                label="Poeng"
-                                value={player2Score}
-                                onChange={(e) => setPlayer2Score(e.target.value)}
-                                className="text-center"
-                            />
-                        </div>
-                    </Card>
+                    <PlayerCard
+                        playerNumber={2}
+                        playerType={player2Type}
+                        playerId={player2Id}
+                        playerName={player2Name}
+                        playerScore={player2Score}
+                        playerOptions={player2Options}
+                        onPlayerTypeChange={setPlayer2Type}
+                        onPlayerIdChange={setPlayer2Id}
+                        onPlayerNameChange={setPlayer2Name}
+                        onPlayerScoreChange={setPlayer2Score}
+                    />
                 </div>
 
                 {/* Error Display */}
