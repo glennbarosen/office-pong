@@ -4,6 +4,7 @@ import { usePlayers } from '../hooks/usePlayers'
 import { RATING_CONFIG, type Match } from '../types/pong'
 import { useMatches } from '../hooks/useMatches'
 import { MatchCard } from '../components/match-card/MatchCard'
+import { PlayerMetrics } from '../components/player-metrics/PlayerMetrics'
 import { InfoMessage } from '@fremtind/jokul/message'
 
 interface ProfileProps {
@@ -65,6 +66,12 @@ export function Profile({ id }: ProfileProps) {
                     </InfoMessage>
                 )}
             </Card>
+
+            {/* Player Metrics Charts */}
+            <div className="p-6">
+                <h2 className="heading-4 mb-4">Detaljert statistikk</h2>
+                <PlayerMetrics player={player} matches={matches} players={players} />
+            </div>
 
             <div className="p-6">
                 <h2 className="heading-4 mb-4">Kamphistorikk</h2>
