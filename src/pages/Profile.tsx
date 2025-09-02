@@ -5,6 +5,7 @@ import { RATING_CONFIG, type Match } from '../types/pong'
 import { useMatches } from '../hooks/useMatches'
 import { MatchCard } from '../components/match-card/MatchCard'
 import { PlayerMetrics } from '../components/player-metrics/PlayerMetrics'
+import { InfoMessage } from '@fremtind/jokul/message'
 
 interface ProfileProps {
     id: string
@@ -37,39 +38,33 @@ export function Profile({ id }: ProfileProps) {
 
     return (
         <div className="flex flex-col gap-32">
-            <Card variant="outlined" className="max-w-[400px]">
-                <div className="mb-6">
-                    <h1 className="heading-2 mb-2">{player.name}</h1>
-                    <div className="small text-text-subdued">
+            <Card variant="outlined" className="max-w-[400px] space-y-24">
+                <div>
+                    <h1 className="heading-2">{player.name}</h1>
+                    <div className="text-text-subdued">
                         Medlem siden {new Date(player.createdAt).toLocaleDateString('no-NO')}
                     </div>
                 </div>
 
-                {/* Stats Overview */}
-                <div className="p-6 mb-6">
-                    <h2 className="heading-4 mb-4">Statistikk</h2>
-                    <DescriptionList>
-                        <DescriptionTerm>ELO Rating</DescriptionTerm>
-                        <DescriptionDetail>{player.eloRating}</DescriptionDetail>
-                        <DescriptionTerm>Antall kamper</DescriptionTerm>
-                        <DescriptionDetail>{player.wins + player.losses}</DescriptionDetail>
-                        <DescriptionTerm>Seire</DescriptionTerm>
-                        <DescriptionDetail>{player.wins}</DescriptionDetail>
-                        <DescriptionTerm>Tap</DescriptionTerm>
-                        <DescriptionDetail>{player.losses}</DescriptionDetail>
-                        <DescriptionTerm>Seiersprosent</DescriptionTerm>
-                        <DescriptionDetail>{winRate.toFixed(0)}%</DescriptionDetail>
-                    </DescriptionList>
+                <DescriptionList>
+                    <DescriptionTerm>ELO Rating</DescriptionTerm>
+                    <DescriptionDetail>{player.eloRating}</DescriptionDetail>
+                    <DescriptionTerm>Antall kamper</DescriptionTerm>
+                    <DescriptionDetail>{player.wins + player.losses}</DescriptionDetail>
+                    <DescriptionTerm>Seire</DescriptionTerm>
+                    <DescriptionDetail>{player.wins}</DescriptionDetail>
+                    <DescriptionTerm>Tap</DescriptionTerm>
+                    <DescriptionDetail>{player.losses}</DescriptionDetail>
+                    <DescriptionTerm>Seiersprosent</DescriptionTerm>
+                    <DescriptionDetail>{winRate.toFixed(0)}%</DescriptionDetail>
+                </DescriptionList>
 
-                    {!isEligibleForRanking && (
-                        <div className="p-3 mt-4 rounded-lg bg-background-alert-warning">
-                            <p className="small text-text-on-alert">
-                                Spill {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING - player.matchesPlayed} kamper til for
-                                å komme på ledetavlen
-                            </p>
-                        </div>
-                    )}
-                </div>
+                {!isEligibleForRanking && (
+                    <InfoMessage title="Ikke kvalifisert for ledetavlen" className="mt-24">
+                        Spill {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING - player.matchesPlayed} kamper til for å komme
+                        på ledetavlen
+                    </InfoMessage>
+                )}
             </Card>
 
             {/* Player Metrics Charts */}
