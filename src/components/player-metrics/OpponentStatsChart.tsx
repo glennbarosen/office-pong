@@ -9,6 +9,7 @@ import {
     ResponsiveContainer
 } from 'recharts'
 import type { OpponentStats, ChartColors } from './types'
+import { useIsMobile } from './useIsMobile'
 
 interface OpponentStatsChartProps {
     data: OpponentStats[]
@@ -18,36 +19,42 @@ interface OpponentStatsChartProps {
 }
 
 export function OpponentStatsChart({ data, chartColors, currentTheme, selectedOpponent }: OpponentStatsChartProps) {
+    const isMobile = useIsMobile()
     if (data.length === 0) return null
 
     return (
-        <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-6">
+        <Card className="p-3 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">
                 Motstanderstatistikk
                 {selectedOpponent !== 'all' && ' (filtrert)'}
             </h3>
-            <div className="w-full overflow-x-auto overflow-y-hidden" style={{ height: '450px' }}>
-                <div style={{ minWidth: '600px', height: '100%' }}>
+            <div className="w-full overflow-x-auto overflow-y-hidden h-[400px] sm:h-[450px]">
+                <div style={{ minWidth: isMobile ? '400px' : '600px', height: '100%' }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart 
                             key={`bar-chart-${currentTheme}`}
                             data={data}
-                            margin={{ top: 20, right: 40, left: 40, bottom: 120 }}
+                            margin={{ 
+                                top: 20, 
+                                right: isMobile ? 20 : 40, 
+                                left: isMobile ? 20 : 40, 
+                                bottom: isMobile ? 100 : 120 
+                            }}
                         >
                             <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} strokeOpacity={0.3} />
                             <XAxis 
                                 dataKey="opponentName" 
                                 angle={-45}
                                 textAnchor="end"
-                                height={120}
+                                height={isMobile ? 100 : 120}
                                 interval={0}
-                                tick={{ fontSize: 11, fill: chartColors.text }}
+                                tick={{ fontSize: isMobile ? 9 : 11, fill: chartColors.text }}
                                 axisLine={{ stroke: chartColors.grid }}
                                 tickLine={{ stroke: chartColors.grid }}
                             />
                             <YAxis 
-                                width={80} 
-                                tick={{ fontSize: 12, fill: chartColors.text }}
+                                width={isMobile ? 60 : 80} 
+                                tick={{ fontSize: isMobile ? 10 : 12, fill: chartColors.text }}
                                 axisLine={{ stroke: chartColors.grid }}
                                 tickLine={{ stroke: chartColors.grid }}
                             />
@@ -59,12 +66,13 @@ export function OpponentStatsChart({ data, chartColors, currentTheme, selectedOp
                                             <div style={{
                                                 backgroundColor: '#1f2937',
                                                 color: 'white',
-                                                padding: '12px',
+                                                padding: isMobile ? '8px' : '12px',
                                                 border: '1px solid #4b5563',
                                                 borderRadius: '8px',
                                                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                                                fontSize: '14px',
-                                                opacity: 1
+                                                fontSize: isMobile ? '11px' : '14px',
+                                                opacity: 1,
+                                                maxWidth: isMobile ? '220px' : 'none'
                                             }}>
                                                 <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>{label}</p>
                                                 <p style={{ margin: '0 0 4px 0' }}>Seire: {data.wins}</p>

@@ -9,6 +9,7 @@ import {
     ResponsiveContainer
 } from 'recharts'
 import type { EloHistoryPoint, ChartColors } from './types'
+import { useIsMobile } from './useIsMobile'
 
 interface EloHistoryChartProps {
     data: EloHistoryPoint[]
@@ -17,17 +18,23 @@ interface EloHistoryChartProps {
 }
 
 export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryChartProps) {
+    const isMobile = useIsMobile()
     if (data.length === 0) return null
 
     return (
-        <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-6">ELO-utvikling over tid</h3>
-            <div className="w-full overflow-hidden" style={{ height: '400px' }}>
+        <Card className="p-3 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-4 sm:mb-6">ELO-utvikling over tid</h3>
+            <div className="h-[300px] sm:h-[400px] w-full overflow-hidden">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart 
                         key={`elo-chart-${currentTheme}`}
                         data={data}
-                        margin={{ top: 20, right: 40, left: 40, bottom: 80 }}
+                        margin={{ 
+                            top: 20, 
+                            right: isMobile ? 10 : 40, 
+                            left: isMobile ? 10 : 40, 
+                            bottom: isMobile ? 60 : 80 
+                        }}
                     >
                         <CartesianGrid 
                             strokeDasharray="3 3" 
@@ -36,7 +43,7 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
                         />
                         <XAxis 
                             dataKey="matchNumber" 
-                            label={{ 
+                            label={!isMobile ? { 
                                 value: '📈 Viser ELO-rating utvikling gjennom alle kamper. Hover over punktene for detaljer.', 
                                 position: 'insideBottom', 
                                 offset: -15,
@@ -44,8 +51,8 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
                                     fill: chartColors.text,
                                     fontSize: '12px'
                                 }
-                            }}
-                            tick={{ fontSize: 12, fill: chartColors.text }}
+                            } : undefined}
+                            tick={{ fontSize: isMobile ? 10 : 12, fill: chartColors.text }}
                             axisLine={{ stroke: chartColors.grid }}
                             tickLine={{ stroke: chartColors.grid }}
                             type="number"
@@ -59,11 +66,12 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
                                 position: 'insideLeft',
                                 style: { 
                                     fill: chartColors.text,
-                                    textAnchor: 'middle'
+                                    textAnchor: 'middle',
+                                    fontSize: isMobile ? '10px' : '12px'
                                 }
                             }}
-                            width={80}
-                            tick={{ fontSize: 12, fill: chartColors.text }}
+                            width={isMobile ? 60 : 80}
+                            tick={{ fontSize: isMobile ? 10 : 12, fill: chartColors.text }}
                             axisLine={{ stroke: chartColors.grid }}
                             tickLine={{ stroke: chartColors.grid }}
                             domain={['dataMin - 50', 'dataMax + 50']}
@@ -78,12 +86,13 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
                                         <div style={{
                                             backgroundColor: '#1f2937',
                                             color: 'white',
-                                            padding: '12px',
+                                            padding: isMobile ? '8px' : '12px',
                                             border: '1px solid #4b5563',
                                             borderRadius: '8px',
                                             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                                            fontSize: '14px',
-                                            opacity: 1
+                                            fontSize: isMobile ? '12px' : '14px',
+                                            opacity: 1,
+                                            maxWidth: isMobile ? '200px' : 'none'
                                         }}>
                                             <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>Kamp {label}</p>
                                             <p style={{ margin: '0 0 4px 0' }}>ELO: {data.elo}</p>
@@ -107,9 +116,18 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
                             type="monotone" 
                             dataKey="elo" 
                             stroke={chartColors.line} 
-                            strokeWidth={3}
-                            dot={{ fill: chartColors.line, strokeWidth: 2, r: 5 }}
-                            activeDot={{ r: 8, stroke: chartColors.line, strokeWidth: 2, fill: '#ffffff' }}
+                            strokeWidth={isMobile ? 2 : 3}
+                            dot={{ 
+                                fill: chartColors.line, 
+                                strokeWidth: 2, 
+                                r: isMobile ? 3 : 5 
+                            }}
+                            activeDot={{ 
+                                r: isMobile ? 6 : 8, 
+                                stroke: chartColors.line, 
+                                strokeWidth: 2, 
+                                fill: '#ffffff' 
+                            }}
                         />
                     </LineChart>
                 </ResponsiveContainer>
