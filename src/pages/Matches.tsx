@@ -78,7 +78,7 @@ export function Matches() {
                             {matchesWithNames.map((match) => (
                                 <TableRow key={match.id}>
                                     <TableCell data-th="Dato">
-                                        <DateDisplay dateString={match.playedAt} includeTime />
+                                        <DateDisplay dateString={match.playedAt} />
                                     </TableCell>
                                     <TableCell data-th="Spiller 1">
                                         <PlayerLink playerId={match.player1Id} playerName={match.player1Name} />
