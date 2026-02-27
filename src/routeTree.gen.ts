@@ -8,90 +8,38 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as NyKampRouteImport } from './routes/ny-kamp'
+import { Route as LedertavleRouteImport } from './routes/ledertavle'
+import { Route as KamperRouteImport } from './routes/kamper'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProfilIdRouteImport } from './routes/profil.$id'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as NyKampImport } from './routes/ny-kamp'
-import { Route as LedertavleImport } from './routes/ledertavle'
-import { Route as KamperImport } from './routes/kamper'
-import { Route as IndexImport } from './routes/index'
-import { Route as ProfilIdImport } from './routes/profil.$id'
-
-// Create/Update Routes
-
-const NyKampRoute = NyKampImport.update({
+const NyKampRoute = NyKampRouteImport.update({
   id: '/ny-kamp',
   path: '/ny-kamp',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LedertavleRoute = LedertavleImport.update({
+const LedertavleRoute = LedertavleRouteImport.update({
   id: '/ledertavle',
   path: '/ledertavle',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const KamperRoute = KamperImport.update({
+const KamperRoute = KamperRouteImport.update({
   id: '/kamper',
   path: '/kamper',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const ProfilIdRoute = ProfilIdImport.update({
+const ProfilIdRoute = ProfilIdRouteImport.update({
   id: '/profil/$id',
   path: '/profil/$id',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/kamper': {
-      id: '/kamper'
-      path: '/kamper'
-      fullPath: '/kamper'
-      preLoaderRoute: typeof KamperImport
-      parentRoute: typeof rootRoute
-    }
-    '/ledertavle': {
-      id: '/ledertavle'
-      path: '/ledertavle'
-      fullPath: '/ledertavle'
-      preLoaderRoute: typeof LedertavleImport
-      parentRoute: typeof rootRoute
-    }
-    '/ny-kamp': {
-      id: '/ny-kamp'
-      path: '/ny-kamp'
-      fullPath: '/ny-kamp'
-      preLoaderRoute: typeof NyKampImport
-      parentRoute: typeof rootRoute
-    }
-    '/profil/$id': {
-      id: '/profil/$id'
-      path: '/profil/$id'
-      fullPath: '/profil/$id'
-      preLoaderRoute: typeof ProfilIdImport
-      parentRoute: typeof rootRoute
-    }
-  }
-}
-
-// Create and export the route tree
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -100,7 +48,6 @@ export interface FileRoutesByFullPath {
   '/ny-kamp': typeof NyKampRoute
   '/profil/$id': typeof ProfilIdRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/kamper': typeof KamperRoute
@@ -108,16 +55,14 @@ export interface FileRoutesByTo {
   '/ny-kamp': typeof NyKampRoute
   '/profil/$id': typeof ProfilIdRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/kamper': typeof KamperRoute
   '/ledertavle': typeof LedertavleRoute
   '/ny-kamp': typeof NyKampRoute
   '/profil/$id': typeof ProfilIdRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '/' | '/kamper' | '/ledertavle' | '/ny-kamp' | '/profil/$id'
@@ -126,13 +71,52 @@ export interface FileRouteTypes {
   id: '__root__' | '/' | '/kamper' | '/ledertavle' | '/ny-kamp' | '/profil/$id'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   KamperRoute: typeof KamperRoute
   LedertavleRoute: typeof LedertavleRoute
   NyKampRoute: typeof NyKampRoute
   ProfilIdRoute: typeof ProfilIdRoute
+}
+
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/ny-kamp': {
+      id: '/ny-kamp'
+      path: '/ny-kamp'
+      fullPath: '/ny-kamp'
+      preLoaderRoute: typeof NyKampRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ledertavle': {
+      id: '/ledertavle'
+      path: '/ledertavle'
+      fullPath: '/ledertavle'
+      preLoaderRoute: typeof LedertavleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kamper': {
+      id: '/kamper'
+      path: '/kamper'
+      fullPath: '/kamper'
+      preLoaderRoute: typeof KamperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profil/$id': {
+      id: '/profil/$id'
+      path: '/profil/$id'
+      fullPath: '/profil/$id'
+      preLoaderRoute: typeof ProfilIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -142,39 +126,15 @@ const rootRouteChildren: RootRouteChildren = {
   NyKampRoute: NyKampRoute,
   ProfilIdRoute: ProfilIdRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/kamper",
-        "/ledertavle",
-        "/ny-kamp",
-        "/profil/$id"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/kamper": {
-      "filePath": "kamper.tsx"
-    },
-    "/ledertavle": {
-      "filePath": "ledertavle.tsx"
-    },
-    "/ny-kamp": {
-      "filePath": "ny-kamp.tsx"
-    },
-    "/profil/$id": {
-      "filePath": "profil.$id.tsx"
-    }
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
   }
 }
-ROUTE_MANIFEST_END */

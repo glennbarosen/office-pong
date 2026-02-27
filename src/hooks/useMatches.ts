@@ -1,23 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Match, Player } from '../types/pong'
-import { DataService } from '../lib/dataService'
+import { getMatches, addMatchWithPlayerUpdates } from '../lib/server/matches'
 
 export function useMatches() {
     return useQuery({
         queryKey: ['matches'],
-        queryFn: DataService.getMatches,
-    })
-}
-
-export function useAddMatch() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: DataService.addMatch,
-        onSuccess: (newMatch) => {
-            queryClient.setQueryData(['matches'], (old: Match[] = []) => [newMatch, ...old])
-            queryClient.invalidateQueries({ queryKey: ['players'] })
-        },
+        queryFn: () => getMatches(),
     })
 }
 
@@ -34,7 +22,7 @@ export function useAddMatchWithEloUpdates() {
             winnerData: Player
             loserData: Player
         }) => {
-            return DataService.addMatchWithPlayerUpdates(matchData, winnerData, loserData)
+            return addMatchWithPlayerUpdates({ data: { matchData, winnerData, loserData } })
         },
         onSuccess: (newMatch) => {
             queryClient.setQueryData(['matches'], (old: Match[] = []) => [newMatch, ...old])

@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Player } from '../types/pong'
-import { DataService } from '../lib/dataService'
+import { getPlayers, addPlayer, updatePlayer } from '../lib/server/players'
 
 export function usePlayers() {
     return useQuery({
         queryKey: ['players'],
-        queryFn: DataService.getPlayers,
+        queryFn: () => getPlayers(),
     })
 }
 
@@ -13,7 +13,7 @@ export function useAddPlayer() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: DataService.addPlayer,
+        mutationFn: (playerData: Omit<Player, 'id'>) => addPlayer({ data: playerData }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['players'] })
         },
@@ -25,7 +25,7 @@ export function useUpdatePlayer() {
 
     return useMutation({
         mutationFn: async ({ id, ...updates }: Partial<Player> & { id: string }) => {
-            return DataService.updatePlayer(id, updates)
+            return updatePlayer({ data: { id, updates } })
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['players'] })

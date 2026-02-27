@@ -1,12 +1,9 @@
-import { env } from '../../utils/env'
-
 interface ErrorDetailsProps {
     error: Error
 }
 
 export const ErrorDetails = ({ error }: ErrorDetailsProps) => {
-    // Only show error details in non-production environments
-    if (env.ENVIRONMENT === 'prod') {
+    if (import.meta.env.PROD) {
         return null
     }
 

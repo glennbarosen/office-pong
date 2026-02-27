@@ -10,16 +10,12 @@ COPY . .
 
 RUN pnpm run build
 
-# Use a simple Node HTTP server for the static assets
 FROM node:24-alpine
 
 WORKDIR /app
 
-# Install serve to run the static files
-RUN npm install -g serve
-
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/.output ./.output
 
 EXPOSE 3000
 
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["node", ".output/server/index.mjs"]

@@ -122,7 +122,7 @@ export class MatchService {
             player1Score: data.player1Score,
             player2Score: data.player2Score,
             playedAt: new Date().toISOString(),
-            eloChanges: {}, // Will be calculated in DataService
+            eloChanges: {},
         }
 
         return {
