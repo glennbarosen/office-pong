@@ -23,7 +23,7 @@ export const getPlayers = createServerFn({ method: 'GET' }).handler(async () => 
 })
 
 export const addPlayer = createServerFn({ method: 'POST' })
-    .validator((data: Omit<Player, 'id'>) => data)
+    .inputValidator((data: Omit<Player, 'id'>) => data)
     .handler(async ({ data }) => {
         const result = await pool.query(
             `INSERT INTO players (name, avatar, elo_rating, matches_played, wins, losses, created_at, last_played_at)
@@ -56,7 +56,7 @@ export const addPlayer = createServerFn({ method: 'POST' })
     })
 
 export const updatePlayer = createServerFn({ method: 'POST' })
-    .validator((data: { id: string; updates: Partial<Omit<Player, 'id'>> }) => data)
+    .inputValidator((data: { id: string; updates: Partial<Omit<Player, 'id'>> }) => data)
     .handler(async ({ data }) => {
         const setClauses: string[] = []
         const values: unknown[] = []

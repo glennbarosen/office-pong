@@ -24,7 +24,7 @@ export const getMatches = createServerFn({ method: 'GET' }).handler(async () => 
 })
 
 export const addMatchWithPlayerUpdates = createServerFn({ method: 'POST' })
-    .validator(
+    .inputValidator(
         (data: {
             matchData: Omit<Match, 'id'>
             winnerData: Player
