@@ -36,21 +36,62 @@ pnpm dev
 # Build for production
 pnpm build
 
-# Run tests
-pnpm test
-
-# Check TypeScript
-pnpm types:check
-
-# Format code
-pnpm prettier
-
-# Check code formatting
-pnpm prettier:check
-
-# Lint code
-pnpm lint
+# Run the built app locally
+pnpm start
 ```
+
+## Deployment
+
+This app is deployed on a self-hosted Dokku server on Hetzner Cloud.
+
+### Prerequisites
+
+- SSH access to the Dokku server
+- `dokku` git remote configured (should already be set up)
+
+### Deploying a new version
+
+After making changes and committing locally:
+
+```bash
+# Push to both GitHub (backup) and Dokku (deploy)
+git push origin main && git push dokku main
+```
+
+The Dokku server will automatically:
+1. Detect the new commits
+2. Build a Docker image using the `Dockerfile`
+3. Install dependencies with pnpm (using frozen lockfile)
+4. Start a new container
+5. Run healthchecks to verify the app is working
+6. Redirect traffic to the new container
+7. Gracefully shut down the old container after 60 seconds
+
+### Monitor deployment
+
+Watch logs in real-time:
+
+```bash
+ssh personal "dokku logs -f office-pong --tail 100"
+```
+
+Or check the latest deployment status:
+
+```bash
+ssh personal "dokku ps:inspect office-pong"
+```
+
+### App Details
+
+- **URL:** https://kontorpong.glennbarosen.com
+- **Server:** Hetzner Cloud (46.62.135.107)
+- **Runtime:** Node.js 24.x
+- **Package Manager:** pnpm with lockfile
+- **Container Port:** 3000
+- **HTTPS:** Let's Encrypt (auto-renews 30 days before expiration)
+
+---
+
 
 ## Tech Stack
 
