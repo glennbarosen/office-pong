@@ -72,13 +72,13 @@ The Dokku server will automatically:
 Watch logs in real-time:
 
 ```bash
-ssh personal "dokku logs -f office-pong --tail 100"
+ssh root@46.62.135.107 "dokku logs -f office-pong --tail 100"
 ```
 
 Or check the latest deployment status:
 
 ```bash
-ssh personal "dokku ps:inspect office-pong"
+ssh root@46.62.135.107 "dokku ps:inspect office-pong"
 ```
 
 ### App Details
