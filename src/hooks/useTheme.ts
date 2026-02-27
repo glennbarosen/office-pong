@@ -1,24 +1,29 @@
 import { useBrowserPreferences } from '@fremtind/jokul/hooks'
 import { useEffect, useState } from 'react'
 
+const isServer = typeof window === 'undefined'
+
 export const useTheme = () => {
     const { prefersColorScheme } = useBrowserPreferences()
-    const themeFromLocalStorage = localStorage.getItem('theme')
-    const [theme, setTheme] = useState(themeFromLocalStorage ?? prefersColorScheme)
+    const [theme, setTheme] = useState(() => {
+        if (isServer) return 'light'
+        return localStorage.getItem('theme') ?? prefersColorScheme
+    })
 
     const isDark = theme === 'dark'
 
     useEffect(() => {
-        document.body.setAttribute('data-theme', theme)
-    }, [theme])
-
-    useEffect(() => {
-        if (themeFromLocalStorage) {
-            setTheme(themeFromLocalStorage)
+        const stored = localStorage.getItem('theme')
+        if (stored) {
+            setTheme(stored)
         } else {
             setTheme(prefersColorScheme)
         }
-    }, [themeFromLocalStorage, prefersColorScheme])
+    }, [prefersColorScheme])
+
+    useEffect(() => {
+        document.body.setAttribute('data-theme', theme)
+    }, [theme])
 
     const toggleTheme = () => {
         if (theme === 'light') {
