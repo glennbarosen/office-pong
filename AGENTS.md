@@ -5,7 +5,7 @@ This document provides essential context and conventions for AI coding agents wo
 
 ## Architecture Overview
 - **React 18 + TypeScript**: Mobile-first SPA for tracking office ping pong matches and ELO-based rankings.
-- **Supabase**: Backend for data storage and authentication. See `src/lib/supabase.ts` and `src/utils/env.ts`.
+- **PostgreSQL**: Backend for data storage, accessed via a `pg.Pool` (`DATABASE_URL` env var). See `src/lib/server/db.ts`, `players.ts`, and `matches.ts`.
 - **TanStack Router**: File-based routing in `src/routes/`, with auto-generated route tree in `src/routeTree.gen.ts`.
 - **TanStack Query**: State management and data fetching, provided at root in `src/main.tsx`.
 - **Jøkul Design System**: UI components, styled with Tailwind (Jøkul preset) and SCSS for complex cases.
@@ -36,7 +36,7 @@ This document provides essential context and conventions for AI coding agents wo
 - **Language**: Norwegian text throughout UI.
 
 ## Integration Points
-- **Supabase**: All DB access via `src/lib/supabase.ts` and `dataService.ts`.
+- **PostgreSQL**: All DB access via server functions in `src/lib/server/` (`db.ts`, `players.ts`, `matches.ts`).
 - **ELO**: Calculations in `eloService.ts`.
 - **Confetti/Effects**: See `src/utils/confetti.ts`.
 

@@ -100,7 +100,7 @@ ssh root@your-server-ip "dokku ps:inspect office-pong"
 - **TanStack Query** for state management
 - **Jøkul Design System** for UI components
 - **Tailwind CSS** + **Sass** for styling
-- **Supabase** for database and backend
+- **PostgreSQL** for the database, accessed via TanStack Start server functions
 - **Vite** for fast development
 - **Vitest** for unit testing
 - **ESLint** + **Prettier** for code quality
@@ -138,15 +138,34 @@ src/
 
 ## Development
 
-The app uses **Supabase** as the backend database for storing players, matches, and calculating ELO ratings. The database schema is fully typed with TypeScript for type safety.
+The app uses **PostgreSQL** as the backend database for storing players, matches, and calculating ELO ratings, accessed through TanStack Start server functions (`src/lib/server/`).
 
 ### Environment Setup
 
-Create an `env.local` file in the root directory with your Supabase credentials:
+1. Copy the example env file:
 
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```bash
+    cp .env.example .env
+    ```
+
+2. Start a local Postgres instance via Docker Compose (schema is created automatically on first run from `db/init.sql`):
+
+    ```bash
+    pnpm db:up
+    ```
+
+3. Run the dev server as usual:
+
+    ```bash
+    pnpm dev
+    ```
+
+Other useful commands:
+
+```bash
+pnpm db:down    # stop the local database
+pnpm db:reset   # wipe the local database and recreate it from scratch
+pnpm db:logs    # tail the database container logs
 ```
 
 ### Testing
