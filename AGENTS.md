@@ -37,9 +37,7 @@ Schema lives in `db/init.sql` (`players`: id, name, avatar, elo_rating, matches_
 
 - `createServerFn(...).inputValidator()` — **not** `.validator()`. The latter is an older API name common in training data; using it silently breaks (root cause of a past bug, see `src/lib/server/matches.ts` for the correct usage).
 - SSR: guard any browser-only API (`localStorage`, `window`) with `typeof window === 'undefined'` — see `src/hooks/useTheme.ts`.
-- Two divergent test-render helpers exist: `src/test/utils.tsx` vs `src/utils/test-utils.tsx` (the latter is re-exported from the `src/utils` barrel). Check which a given test actually imports before copying a pattern.
-- `src/test/setup.ts` still mocks unused Supabase env vars — dead leftover from a prior backend, harmless, ignore.
-- `src/components/links/` has both `HeaderLink.scss` and `header-link.scss` (identical content) — only the lowercase one is imported.
+- No test-render helper exists yet for mounting components with router/query providers — only pure-logic tests exist today (see Testing below). Write one if you add component/route tests; don't assume one is already there.
 
 ## Testing
 
