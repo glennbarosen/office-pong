@@ -4,6 +4,8 @@ applyTo: '**'
 
 # General instructions
 
+Full architecture, conventions, commands, and gotchas: see [`AGENTS.md`](../../AGENTS.md) at the repo root.
+
 ## Documentation
 
 - Do not add README.md files for the changes you make
@@ -22,9 +24,9 @@ applyTo: '**'
 - Use ESLint for linting
 - Use TypeScript for type checking
 - Use Vitest for unit testing
-- Use Playwright for E2E testing
+- No E2E framework is set up (no Playwright/Cypress) — Vitest covers unit tests only
 - Use PNPM for package management
-- Use Tanstack Router for routing
+- Use TanStack Start (file-based routing via TanStack Router conventions)
 - Use Tanstack Query for data fetching
 - Use Tailwind for styling, but use SCSS if the stylnig is very complex
 - Use Jøkul design system for UI components (https://jokul.fremtind.no/)
