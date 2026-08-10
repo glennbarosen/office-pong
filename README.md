@@ -4,6 +4,8 @@ A mobile-first ping pong leaderboard app for the office! 🏓
 
 _Vibe coded for maximum fun and minimal complexity._
 
+> AI agents: see [`AGENTS.md`](./AGENTS.md) for architecture, conventions, and gotchas.
+
 ## Overview
 
 This app helps you keep track of ping pong matches and rankings at the office with a trust-based system. Players can register match results themselves, and the system automatically calculates ELO ratings.
@@ -96,7 +98,7 @@ ssh root@your-server-ip "dokku ps:inspect office-pong"
 ## Tech Stack
 
 - **React 18** with TypeScript
-- **TanStack Router** for file-based routing
+- **TanStack Start** for full-stack SSR + file-based routing
 - **TanStack Query** for state management
 - **Jøkul Design System** for UI components
 - **Tailwind CSS** + **Sass** for styling
@@ -118,10 +120,10 @@ src/
 │   └── errors/        # Error handling components
 ├── hooks/             # Custom React hooks
 ├── lib/               # Core business logic and services
-│   ├── dataService.ts # Data fetching service
 │   ├── eloService.ts  # ELO rating calculations
 │   ├── matchService.ts # Match operations
-│   ├── supabase.ts    # Supabase client and types
+│   ├── validation.ts  # Zod schemas and match validation rules
+│   ├── server/        # createServerFn DB access (db.ts, players.ts, matches.ts)
 │   └── __tests__/     # Unit tests
 ├── pages/             # Main page components
 │   ├── Leaderboard.tsx # Rankings page
