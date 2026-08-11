@@ -40,11 +40,7 @@ export class EloService {
     /**
      * Calculate updated player statistics after a match
      */
-    static calculatePlayerUpdates(
-        player: Player,
-        isWinner: boolean,
-        newRating: number
-    ): Partial<Omit<Player, 'id'>> {
+    static calculatePlayerUpdates(player: Player, isWinner: boolean, newRating: number): Partial<Omit<Player, 'id'>> {
         return {
             eloRating: newRating,
             matchesPlayed: player.matchesPlayed + 1,

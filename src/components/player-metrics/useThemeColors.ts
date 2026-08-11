@@ -25,7 +25,7 @@ export function useThemeColors(): ChartColors {
 
         observer.observe(document.body, {
             attributes: true,
-            attributeFilter: ['data-theme']
+            attributeFilter: ['data-theme'],
         })
 
         return () => observer.disconnect()
@@ -41,6 +41,6 @@ export function useThemeColors(): ChartColors {
         // Adaptive colors based on current theme
         grid: currentTheme === 'dark' ? '#374151' : '#e5e7eb',
         text: currentTheme === 'dark' ? '#d1d5db' : '#374151',
-        line: currentTheme === 'dark' ? '#60a5fa' : '#2563eb'
+        line: currentTheme === 'dark' ? '#60a5fa' : '#2563eb',
     }
 }

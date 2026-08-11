@@ -23,12 +23,12 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
         if (selectedOpponent === 'all') {
             return {
                 eloHistory,
-                opponentStats
+                opponentStats,
             }
         }
 
         // Filter matches for specific opponent
-        const filteredMatches = playerMatches.filter(match => {
+        const filteredMatches = playerMatches.filter((match) => {
             const isPlayer1 = match.player1Id === player.id
             const opponentId = isPlayer1 ? match.player2Id : match.player1Id
             return opponentId === selectedOpponent
@@ -36,35 +36,35 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
 
         // Recalculate ELO history for filtered matches
         const filteredEloHistory: EloHistoryPoint[] = []
-        
+
         if (filteredMatches.length > 0) {
             // Use approximate starting ELO for filtered view
             let currentElo = 1200 // Default starting point for filtered view
-            
+
             filteredMatches.forEach((match, index) => {
                 const eloChange = match.eloChanges[player.id] || 0
                 currentElo += eloChange
-                
+
                 const isPlayer1 = match.player1Id === player.id
                 const opponentId = isPlayer1 ? match.player2Id : match.player1Id
-                const opponent = players.find(p => p.id === opponentId)
-                
+                const opponent = players.find((p) => p.id === opponentId)
+
                 const matchDate = new Date(match.playedAt)
-                
+
                 filteredEloHistory.push({
                     matchNumber: index + 1,
                     elo: Math.round(currentElo),
                     date: matchDate.toLocaleDateString('no-NO'),
                     dateFormatted: matchDate.toISOString().split('T')[0], // YYYY-MM-DD format
                     opponent: opponent?.name || 'Ukjent',
-                    result: match.winnerId === player.id ? 'Win' : 'Loss'
+                    result: match.winnerId === player.id ? 'Win' : 'Loss',
                 })
             })
         }
 
         return {
             eloHistory: filteredEloHistory,
-            opponentStats: opponentStats.filter(stat => stat.opponentId === selectedOpponent)
+            opponentStats: opponentStats.filter((stat) => stat.opponentId === selectedOpponent),
         }
     }, [selectedOpponent, eloHistory, opponentStats, playerMatches, player.id, players])
 
@@ -73,17 +73,14 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
 
     if (playerMatches.length === 0) {
         return (
-            <Card className="p-4 sm:p-6">
-                <EmptyState
-                    title="Ingen kampdata"
-                    description="Denne spilleren har ikke spilt noen kamper ennå."
-                />
+            <Card className="sm:p-6 p-4">
+                <EmptyState title="Ingen kampdata" description="Denne spilleren har ikke spilt noen kamper ennå." />
             </Card>
         )
     }
 
     return (
-        <div className="space-y-4 sm:space-y-6">
+        <div className="sm:space-y-6 space-y-4">
             <PlayerMetricsControls
                 selectedOpponent={selectedOpponent}
                 onOpponentChange={setSelectedOpponent}
@@ -97,20 +94,10 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
             />
 
             {showEloHistory && (
-                <EloHistoryChart
-                    data={filteredData.eloHistory}
-                    chartColors={chartColors}
-                    currentTheme={currentTheme}
-                />
+                <EloHistoryChart data={filteredData.eloHistory} chartColors={chartColors} currentTheme={currentTheme} />
             )}
 
-            {showWinLossRatio && (
-                <WinLossChart
-                    player={player}
-                    chartColors={chartColors}
-                    currentTheme={currentTheme}
-                />
-            )}
+            {showWinLossRatio && <WinLossChart player={player} chartColors={chartColors} currentTheme={currentTheme} />}
 
             {showOpponentStats && (
                 <OpponentStatsChart

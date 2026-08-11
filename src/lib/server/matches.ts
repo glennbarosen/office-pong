@@ -24,13 +24,7 @@ export const getMatches = createServerFn({ method: 'GET' }).handler(async () => 
 })
 
 export const addMatchWithPlayerUpdates = createServerFn({ method: 'POST' })
-    .inputValidator(
-        (data: {
-            matchData: Omit<Match, 'id'>
-            winnerData: Player
-            loserData: Player
-        }) => data
-    )
+    .inputValidator((data: { matchData: Omit<Match, 'id'>; winnerData: Player; loserData: Player }) => data)
     .handler(async ({ data }) => {
         const client = await pool.connect()
         try {
@@ -79,11 +73,7 @@ export const addMatchWithPlayerUpdates = createServerFn({ method: 'POST' })
             )
 
             // Update loser
-            const loserUpdates = EloService.calculatePlayerUpdates(
-                data.loserData,
-                false,
-                eloCalculation.loserNewRating
-            )
+            const loserUpdates = EloService.calculatePlayerUpdates(data.loserData, false, eloCalculation.loserNewRating)
             await client.query(
                 `UPDATE players SET elo_rating = $1, matches_played = $2, wins = $3, losses = $4, last_played_at = $5 WHERE id = $6`,
                 [

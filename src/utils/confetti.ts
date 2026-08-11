@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti'
 /**
  * Extreme celebratory confetti animation for successful match submissions
  * Creates multiple sequential confetti explosions with various colors and patterns
- * 
+ *
  * @param onComplete - Callback function to execute after the confetti animation completes
  */
 export const triggerMatchSuccessConfetti = (onComplete?: () => void) => {
