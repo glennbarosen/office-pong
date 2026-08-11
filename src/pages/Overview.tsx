@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router'
 import { createLeaderboardEntries, createPlayerMap, resolveMatchPlayers } from '../utils/gameUtils'
 import { QueryState } from '../components/common/QueryState'
 import { EmptyState } from '../components/common/EmptyState'
+import { NO_PLAYERS_EMPTY_STATE } from '../lib/messages'
 import { LeaderboardCard } from '../components/leaderboard/LeaderboardCard'
 import { MatchCard } from '../components/match-card/MatchCard'
 
@@ -58,14 +59,7 @@ export function Overview() {
                 </div>
             </div>
 
-            {players.length === 0 && (
-                <EmptyState
-                    title="Ingen spillere registrert ennå"
-                    description="Start ved å registrere en ny kamp"
-                    actionText="Registrer første kamp"
-                    actionTo="/ny-kamp"
-                />
-            )}
+            {players.length === 0 && <EmptyState {...NO_PLAYERS_EMPTY_STATE} />}
         </QueryState>
     )
 }

@@ -5,6 +5,7 @@ import { createLeaderboardEntries, formatDate } from '../utils/gameUtils'
 import { PlayerLink } from '../components/common/PlayerLink'
 import { RankIcon } from '../components/leaderboard/RankIcon'
 import { EmptyState } from '../components/common/EmptyState'
+import { NO_PLAYERS_EMPTY_STATE } from '../lib/messages'
 import { QueryState } from '../components/common/QueryState'
 import { CollapsibleTable } from '../components/common/CollapsibleTable'
 
@@ -64,14 +65,7 @@ export function Leaderboard() {
                     </div>
                 )}
 
-                {players.length === 0 && (
-                    <EmptyState
-                        title="Ingen spillere registrert ennå"
-                        description="Start ved å registrere en ny kamp"
-                        actionText="Registrer første kamp"
-                        actionTo="/ny-kamp"
-                    />
-                )}
+                {players.length === 0 && <EmptyState {...NO_PLAYERS_EMPTY_STATE} />}
             </div>
         </QueryState>
     )

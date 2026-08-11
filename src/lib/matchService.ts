@@ -7,6 +7,7 @@ import {
     type CreateMatchInput,
     type PlayerRef,
 } from './validation'
+import { SAME_PLAYER_MESSAGE } from './messages'
 
 export interface MatchCreationData {
     player1Type: 'existing' | 'new'
@@ -57,7 +58,7 @@ export class MatchService {
         )
 
         if (MatchService.isSameSide(player1, player2, players)) {
-            throw new Error('Spillerne må være forskjellige')
+            throw new Error(SAME_PLAYER_MESSAGE)
         }
 
         return {

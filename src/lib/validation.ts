@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { MATCH_RULES, type Player } from '../types/pong'
+import { SAME_PLAYER_MESSAGE } from './messages'
 
 /**
  * First validation message from a failed parse.
@@ -128,7 +129,7 @@ export const createMatchInputSchema = z
             }
             return true
         },
-        { message: 'Spillerne må være forskjellige' }
+        { message: SAME_PLAYER_MESSAGE }
     )
 
 export type CreateMatchInput = z.infer<typeof createMatchInputSchema>
