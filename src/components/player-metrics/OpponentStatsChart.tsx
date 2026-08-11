@@ -1,6 +1,6 @@
 import { Card } from '@fremtind/jokul/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import type { OpponentStats, ChartColors } from './types'
+import type { OpponentStats, ChartColors } from '../../types'
 import { useIsMobile } from './useIsMobile'
 
 interface OpponentStatsChartProps {
@@ -35,7 +35,7 @@ export function OpponentStatsChart({ data, chartColors, currentTheme, selectedOp
                         >
                             <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} strokeOpacity={0.3} />
                             <XAxis
-                                dataKey="opponentName"
+                                dataKey={(stat: OpponentStats) => stat.opponent.name}
                                 angle={-45}
                                 textAnchor="end"
                                 height={isMobile ? 100 : 120}

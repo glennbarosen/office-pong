@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { Player, Match } from '../../types/pong'
-import type { OpponentStats, EloHistoryPoint } from './types'
+import type { OpponentStats, EloHistoryPoint } from '../../types'
 
 export function usePlayerMetricsData(player: Player, matches: Match[], players: Player[]) {
     // Get all matches for this player
@@ -35,8 +35,7 @@ export function usePlayerMetricsData(player: Player, matches: Match[], players: 
 
             if (!stats.has(opponentId)) {
                 stats.set(opponentId, {
-                    opponentId,
-                    opponentName: opponent.name,
+                    opponent,
                     wins: 0,
                     losses: 0,
                     winRate: 0,

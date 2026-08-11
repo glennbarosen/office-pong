@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { ChartColors } from './types'
+import type { ChartColors } from '../../types'
 
 export function useThemeColors(): ChartColors {
     const [currentTheme, setCurrentTheme] = useState<string>('light')

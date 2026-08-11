@@ -7,7 +7,8 @@ import { WinLossChart } from './WinLossChart'
 import { OpponentStatsChart } from './OpponentStatsChart'
 import { useThemeColors } from './useThemeColors'
 import { usePlayerMetricsData } from './usePlayerMetricsData'
-import type { PlayerMetricsProps, EloHistoryPoint } from './types'
+import type { PlayerMetricsProps } from './types'
+import type { EloHistoryPoint } from '../../types'
 
 export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) {
     const [selectedOpponent, setSelectedOpponent] = useState<string>('all')
@@ -64,7 +65,7 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
 
         return {
             eloHistory: filteredEloHistory,
-            opponentStats: opponentStats.filter((stat) => stat.opponentId === selectedOpponent),
+            opponentStats: opponentStats.filter((stat) => stat.opponent.id === selectedOpponent),
         }
     }, [selectedOpponent, eloHistory, opponentStats, playerMatches, player.id, players])
 

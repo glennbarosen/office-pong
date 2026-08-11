@@ -2,6 +2,7 @@ import { Button } from '@fremtind/jokul/button'
 import { Card } from '@fremtind/jokul/card'
 import { NativeSelect } from '@fremtind/jokul/select'
 import { TextInput } from '@fremtind/jokul/text-input'
+import type { SelectOption } from '../../types'
 
 export interface PlayerCardProps {
     playerNumber: 1 | 2
@@ -9,7 +10,7 @@ export interface PlayerCardProps {
     playerId: string
     playerName: string
     playerScore: string
-    playerOptions: Array<{ value: string; label: string }>
+    playerOptions: SelectOption[]
     onPlayerTypeChange: (type: 'existing' | 'new') => void
     onPlayerIdChange: (id: string) => void
     onPlayerNameChange: (name: string) => void

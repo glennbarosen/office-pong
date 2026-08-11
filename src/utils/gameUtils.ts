@@ -1,4 +1,38 @@
-import { RATING_CONFIG, type Player, type LeaderboardEntry } from '../types/pong'
+import { RATING_CONFIG, type Player, type LeaderboardEntry, type Match, type MatchWithPlayers } from '../types/pong'
+
+/**
+ * Resolve each match's four player ids against a player map.
+ *
+ * Matches referencing an unknown player are dropped. The foreign keys make
+ * that impossible in practice, but resolving to a real Player is what lets
+ * one row component serve both the match list and the overview.
+ */
+export function resolveMatchPlayers(matches: Match[], playerMap: Map<string, Player>): MatchWithPlayers[] {
+    return matches.flatMap((match) => {
+        const player1 = playerMap.get(match.player1Id)
+        const player2 = playerMap.get(match.player2Id)
+        const winner = playerMap.get(match.winnerId)
+        const loser = playerMap.get(match.loserId)
+
+        if (!player1 || !player2 || !winner || !loser) {
+            return []
+        }
+
+        return [
+            {
+                id: match.id,
+                player1Score: match.player1Score,
+                player2Score: match.player2Score,
+                playedAt: match.playedAt,
+                eloChanges: match.eloChanges,
+                player1,
+                player2,
+                winner,
+                loser,
+            },
+        ]
+    })
+}
 
 /**
  * Transform players into leaderboard entries with calculated stats

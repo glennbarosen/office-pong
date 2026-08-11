@@ -1,7 +1,7 @@
 import { Card } from '@fremtind/jokul/card'
 import { NativeSelect } from '@fremtind/jokul/select'
 import { Button } from '@fremtind/jokul/button'
-import type { OpponentStats } from './types'
+import type { OpponentStats } from '../../types'
 
 interface PlayerMetricsControlsProps {
     selectedOpponent: string
@@ -38,8 +38,8 @@ export function PlayerMetricsControls({
                         items={[
                             { value: 'all', label: 'Alle motstandere' },
                             ...opponentStats.map((stat) => ({
-                                value: stat.opponentId,
-                                label: `${stat.opponentName} (${stat.totalMatches} kamper)`,
+                                value: stat.opponent.id,
+                                label: `${stat.opponent.name} (${stat.totalMatches} kamper)`,
                             })),
                         ]}
                         onChange={(event: React.ChangeEvent<HTMLSelectElement>) => onOpponentChange(event.target.value)}

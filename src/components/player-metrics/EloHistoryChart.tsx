@@ -1,6 +1,6 @@
 import { Card } from '@fremtind/jokul/card'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import type { EloHistoryPoint, ChartColors } from './types'
+import type { EloHistoryPoint, ChartColors } from '../../types'
 import { useIsMobile } from './useIsMobile'
 
 interface EloHistoryChartProps {
