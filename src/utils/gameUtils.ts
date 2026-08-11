@@ -5,7 +5,12 @@ import {
     type Match,
     type MatchWithPlayers,
     type OpponentStats,
+    type MatchResult,
+    type PlayerForm,
 } from '../types/pong'
+
+/** How many recent results the "form" (e.g. WWLWW) shows. */
+export const FORM_LENGTH = 5
 
 /**
  * Resolve each match's four player ids against a player map.
@@ -114,6 +119,57 @@ export function createOpponentStats(matches: Match[], player: Player, players: P
     })
 
     return Array.from(stats.values()).sort((a, b) => b.totalMatches - a.totalMatches)
+}
+
+/**
+ * Every player's recent form and current streak, derived from a shared set of
+ * matches in one pass.
+ *
+ * A single function producing a Map for every player, rather than something
+ * called once per row from a render loop over players — the leaderboard would
+ * otherwise re-filter the same match list once per player on every render.
+ * Ordering of `matches` is not assumed; each player's own history is sorted
+ * by playedAt before the streak or form is read off it.
+ */
+export function createFormByPlayer(matches: Match[], limit: number = FORM_LENGTH): Map<string, PlayerForm> {
+    const matchesByPlayer = new Map<string, Match[]>()
+
+    matches.forEach((match) => {
+        for (const playerId of [match.player1Id, match.player2Id]) {
+            const playerMatches = matchesByPlayer.get(playerId) ?? []
+            playerMatches.push(match)
+            matchesByPlayer.set(playerId, playerMatches)
+        }
+    })
+
+    const formByPlayer = new Map<string, PlayerForm>()
+
+    matchesByPlayer.forEach((playerMatches, playerId) => {
+        const results: MatchResult[] = [...playerMatches]
+            .sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
+            .map((match) => (match.winnerId === playerId ? 'win' : 'loss'))
+
+        formByPlayer.set(playerId, {
+            recent: results.slice(0, limit),
+            streak: computeStreak(results),
+        })
+    })
+
+    return formByPlayer
+}
+
+/** The run of identical results at the head of a newest-first result list. */
+function computeStreak(results: MatchResult[]): PlayerForm['streak'] {
+    const mostRecent = results[0]
+    if (!mostRecent) return null
+
+    let count = 0
+    for (const result of results) {
+        if (result !== mostRecent) break
+        count++
+    }
+
+    return { type: mostRecent, count }
 }
 
 /**

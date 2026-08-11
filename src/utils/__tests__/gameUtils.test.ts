@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest'
 import {
     createLeaderboardEntries,
     createOpponentStats,
+    createFormByPlayer,
     getRankIcon,
     createPlayerMap,
     formatDate,
@@ -267,5 +268,84 @@ describe('createOpponentStats', () => {
 
     test('returns an empty list for no matches', () => {
         expect(createOpponentStats([], ada, [ada, grace])).toEqual([])
+    })
+})
+
+describe('createFormByPlayer', () => {
+    // Chronological helper: index 1 is oldest, higher indices are newer.
+    const dayMatch = (
+        id: string,
+        day: number,
+        overrides: Partial<Match> & { player1Id: string; player2Id: string }
+    ): Match => makeMatch({ id, playedAt: `2026-01-${String(day).padStart(2, '0')}T00:00:00.000Z`, ...overrides })
+
+    test('a streak longer than the form window is not truncated', () => {
+        // ada loses on day 1, then wins seven in a row through day 8 — shuffled
+        // in the input to prove sorting doesn't rely on array order.
+        const matches = [
+            dayMatch('m8', 8, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m1', 1, { player1Id: 'ada', player2Id: 'grace', winnerId: 'grace', loserId: 'ada' }),
+            dayMatch('m5', 5, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m2', 2, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m7', 7, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m3', 3, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m6', 6, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m4', 4, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+        ]
+
+        const form = createFormByPlayer(matches).get('ada')
+
+        expect(form?.recent).toEqual(['win', 'win', 'win', 'win', 'win'])
+        expect(form?.streak).toEqual({ type: 'win', count: 7 })
+    })
+
+    test('a streak of exactly one when the two most recent results differ', () => {
+        const matches = [
+            dayMatch('m1', 1, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m2', 2, { player1Id: 'ada', player2Id: 'grace', winnerId: 'grace', loserId: 'ada' }),
+        ]
+
+        const form = createFormByPlayer(matches).get('ada')
+
+        expect(form?.streak).toEqual({ type: 'loss', count: 1 })
+    })
+
+    test('alternating results give a streak of one throughout', () => {
+        const matches = [
+            dayMatch('m1', 1, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m2', 2, { player1Id: 'ada', player2Id: 'grace', winnerId: 'grace', loserId: 'ada' }),
+            dayMatch('m3', 3, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+        ]
+
+        const form = createFormByPlayer(matches).get('ada')
+
+        expect(form?.recent).toEqual(['win', 'loss', 'win'])
+        expect(form?.streak).toEqual({ type: 'win', count: 1 })
+    })
+
+    test('form shorter than the window is not padded', () => {
+        const matches = [dayMatch('m1', 1, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' })]
+
+        const form = createFormByPlayer(matches).get('ada')
+
+        expect(form?.recent).toEqual(['win'])
+    })
+
+    test('a player absent from every match is absent from the map', () => {
+        const matches = [dayMatch('m1', 1, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' })]
+
+        expect(createFormByPlayer(matches).has('rene')).toBe(false)
+    })
+
+    test('respects a custom limit', () => {
+        const matches = [
+            dayMatch('m1', 1, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m2', 2, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            dayMatch('m3', 3, { player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+        ]
+
+        const form = createFormByPlayer(matches, 2).get('ada')
+
+        expect(form?.recent).toEqual(['win', 'win'])
     })
 })

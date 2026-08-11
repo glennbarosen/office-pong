@@ -73,6 +73,24 @@ export interface OpponentStats {
     lastMatch: string
 }
 
+/** The outcome of one match from a single player's point of view. */
+export type MatchResult = 'win' | 'loss'
+
+/**
+ * A player's recent results and current streak, as derived by
+ * createFormByPlayer.
+ */
+export interface PlayerForm {
+    /** Newest-first, capped at FORM_LENGTH. */
+    recent: MatchResult[]
+    /**
+     * The run at the head of the player's full history — not capped at
+     * FORM_LENGTH, so a 9-match win streak reads as 9, not "5+".
+     * null for a player with no matches.
+     */
+    streak: { type: MatchResult; count: number } | null
+}
+
 /** One point on a player's derived ELO curve. */
 export interface EloHistoryPoint {
     matchNumber: number
