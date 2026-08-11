@@ -21,4 +21,10 @@ export interface ChartColors {
     grid: string
     text: string
     line: string
+    tooltipBackground: string
+    tooltipText: string
+    tooltipBorder: string
+    /** Win/loss emphasis inside tooltips, where the surface may be inverted. */
+    tooltipSuccess: string
+    tooltipDanger: string
 }

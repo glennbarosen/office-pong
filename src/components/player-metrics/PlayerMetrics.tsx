@@ -6,9 +6,8 @@ import { EloHistoryChart } from './EloHistoryChart'
 import { WinLossChart } from './WinLossChart'
 import { OpponentStatsChart } from './OpponentStatsChart'
 import { useThemeColors } from './useThemeColors'
-import { usePlayerMetricsData } from './usePlayerMetricsData'
+import { deriveEloHistory, usePlayerMetricsData } from './usePlayerMetricsData'
 import type { PlayerMetricsProps } from './types'
-import type { EloHistoryPoint } from '../../types'
 
 export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) {
     const [selectedOpponent, setSelectedOpponent] = useState<string>('all')
@@ -28,46 +27,19 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
             }
         }
 
-        // Filter matches for specific opponent
         const filteredMatches = playerMatches.filter((match) => {
             const isPlayer1 = match.player1Id === player.id
             const opponentId = isPlayer1 ? match.player2Id : match.player1Id
             return opponentId === selectedOpponent
         })
 
-        // Recalculate ELO history for filtered matches
-        const filteredEloHistory: EloHistoryPoint[] = []
-
-        if (filteredMatches.length > 0) {
-            // Use approximate starting ELO for filtered view
-            let currentElo = 1200 // Default starting point for filtered view
-
-            filteredMatches.forEach((match, index) => {
-                const eloChange = match.eloChanges[player.id] || 0
-                currentElo += eloChange
-
-                const isPlayer1 = match.player1Id === player.id
-                const opponentId = isPlayer1 ? match.player2Id : match.player1Id
-                const opponent = players.find((p) => p.id === opponentId)
-
-                const matchDate = new Date(match.playedAt)
-
-                filteredEloHistory.push({
-                    matchNumber: index + 1,
-                    elo: Math.round(currentElo),
-                    date: matchDate.toLocaleDateString('no-NO'),
-                    dateFormatted: matchDate.toISOString().slice(0, 10), // YYYY-MM-DD format
-                    opponent: opponent?.name || 'Ukjent',
-                    result: match.winnerId === player.id ? 'Win' : 'Loss',
-                })
-            })
-        }
-
         return {
-            eloHistory: filteredEloHistory,
+            // No reconciliation for a filtered curve — a series covering one
+            // opponent is not expected to end at the player's overall rating.
+            eloHistory: deriveEloHistory(filteredMatches, player, players),
             opponentStats: opponentStats.filter((stat) => stat.opponent.id === selectedOpponent),
         }
-    }, [selectedOpponent, eloHistory, opponentStats, playerMatches, player.id, players])
+    }, [selectedOpponent, eloHistory, opponentStats, playerMatches, player, players])
 
     // Get current theme for chart keys
     const currentTheme = typeof window !== 'undefined' ? document.body.getAttribute('data-theme') || 'light' : 'light'
