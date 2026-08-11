@@ -1,22 +1,15 @@
 import { useMemo } from 'react'
 import type { Player, Match } from '../../types/pong'
 import type { OpponentStats, EloHistoryPoint } from '../../types'
+import { formatDate } from '../../utils/gameUtils'
 
 export function usePlayerMetricsData(player: Player, matches: Match[], players: Player[]) {
     // Get all matches for this player
     const playerMatches = useMemo(() => {
         const filteredMatches = matches
-            .filter((match) => {
-                // Try different comparison methods in case of type mismatches
-                const directMatch = match.player1Id === player.id || match.player2Id === player.id
-                const stringMatch =
-                    String(match.player1Id) === String(player.id) || String(match.player2Id) === String(player.id)
-                const trimmedMatch =
-                    String(match.player1Id).trim() === String(player.id).trim() ||
-                    String(match.player2Id).trim() === String(player.id).trim()
-
-                return directMatch || stringMatch || trimmedMatch
-            })
+            // Plain equality: both sides are uuids straight from the database,
+            // so there is no whitespace or type variance to defend against.
+            .filter((match) => match.player1Id === player.id || match.player2Id === player.id)
             .sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime())
 
         return filteredMatches
@@ -87,7 +80,7 @@ export function usePlayerMetricsData(player: Player, matches: Match[], players: 
             history.push({
                 matchNumber: index + 1,
                 elo: Math.round(runningElo),
-                date: matchDate.toLocaleDateString('no-NO'),
+                date: formatDate(match.playedAt),
                 dateFormatted: matchDate.toISOString().slice(0, 10), // YYYY-MM-DD format
                 opponent: opponent?.name || 'Ukjent',
                 result: match.winnerId === player.id ? 'Win' : 'Loss',

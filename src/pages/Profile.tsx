@@ -9,7 +9,7 @@ import { InfoMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
 import { NotFound } from '../components/common/NotFound'
 import { PLAYER_NOT_FOUND } from '../lib/messages'
-import { createPlayerMap, resolveMatchPlayers } from '../utils/gameUtils'
+import { createLeaderboardEntries, createPlayerMap, formatDate, resolveMatchPlayers } from '../utils/gameUtils'
 
 interface ProfileProps {
     id: string
@@ -48,22 +48,24 @@ interface ProfileDetailsProps {
 }
 
 function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
-    const playerMatches = resolveMatchPlayers(
-        matches.filter((match: Match) => match.player1Id === player.id || match.player2Id === player.id),
-        createPlayerMap(players)
-    ).sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
+    // Already newest-first: the query orders by played_at DESC.
+    const rawPlayerMatches = matches.filter(
+        (match: Match) => match.player1Id === player.id || match.player2Id === player.id
+    )
+    const playerMatches = resolveMatchPlayers(rawPlayerMatches, createPlayerMap(players))
 
-    const winRate = player.matchesPlayed > 0 ? (player.wins / player.matchesPlayed) * 100 : 0
-    const isEligibleForRanking = player.matchesPlayed >= RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING
+    // winRate and eligibility are exactly what createLeaderboardEntries derives;
+    // recomputing them here is how the two definitions drift apart.
+    const entry = createLeaderboardEntries([player])[0]
+    const winRate = entry?.winRate ?? 0
+    const isEligibleForRanking = entry?.isEligibleForRanking ?? false
 
     return (
         <div className="flex flex-col gap-32">
             <Card variant="outlined" className="max-w-[400px] space-y-24">
                 <div>
                     <h1 className="heading-2">{player.name}</h1>
-                    <div className="text-text-subdued">
-                        Medlem siden {new Date(player.createdAt).toLocaleDateString('no-NO')}
-                    </div>
+                    <div className="text-text-subdued">Medlem siden {formatDate(player.createdAt)}</div>
                 </div>
 
                 <DescriptionList>
@@ -90,7 +92,8 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
             {/* Player Metrics Charts */}
             <div className="p-6">
                 <h2 className="heading-4 mb-4">Detaljert statistikk</h2>
-                <PlayerMetrics player={player} matches={matches} players={players} />
+                {/* Its own filter would redo the one above. */}
+                <PlayerMetrics player={player} matches={rawPlayerMatches} players={players} />
             </div>
 
             <div className="p-6">

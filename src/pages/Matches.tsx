@@ -26,9 +26,8 @@ export function Matches() {
     // Create a map for quick player lookup
     const playerMap = createPlayerMap(players)
 
-    const matchesWithPlayers: MatchWithPlayers[] = resolveMatchPlayers(matches, playerMap).sort(
-        (a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime() // Sort by newest first
-    )
+    // No client-side sort: the query already returns ORDER BY played_at DESC.
+    const matchesWithPlayers: MatchWithPlayers[] = resolveMatchPlayers(matches, playerMap)
 
     return (
         <QueryState queries={[matchesQuery, playersQuery]}>
