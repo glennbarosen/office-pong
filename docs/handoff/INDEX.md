@@ -11,13 +11,15 @@ Rather than one unreviewable mega-diff, the work is split into batches below. **
 | H1 | [Dead code & dependency cleanup](H1-dead-code.md) | **done, on `main`** | — | S |
 | H6 | [Tooling, CI & test infrastructure](H6-tooling-ci.md) | **done, on `main`** | H1 | M |
 | H2 | [Data layer correctness & DB hardening](H2-data-layer.md) | **done, on `main`** | H1 | L |
-| H3 | [Query client & SSR correctness](H3-query-ssr.md) | not started | H2 | M |
-| H4 | [Page & component dedup, shared types](H4-pages-components.md) | not started | H1, H3 | L |
-| H5 | [Accessibility & UX polish](H5-accessibility.md) | not started | H4 | M |
-| H7 | [Constants & Norwegian string centralization](H7-constants-i18n.md) | not started | H1 | M |
+| H3 | [Query client & SSR correctness](H3-query-ssr.md) | **done, branch `handoff-h3-h7`** | H2 | M |
+| H4 | [Page & component dedup, shared types](H4-pages-components.md) | **done, branch `handoff-h3-h7`** | H1, H3 | L |
+| H5 | [Accessibility & UX polish](H5-accessibility.md) | **done, branch `handoff-h3-h7`** | H4 | M |
+| H7 | [Constants & Norwegian string centralization](H7-constants-i18n.md) | **done, branch `handoff-h3-h7`** | H1 | M |
 | H8 | [Feature ideas](H8-feature-ideas.md) | n/a | — | — |
 
 **Recommended order:** H1 → H6 → H2 → H3 → H4 → H5. H1 goes first because every other batch describes files it deletes. H6 goes second so CI guards everything after it. H7 and H8 are independent — pick them up anytime.
+
+H3, H4, H5 and H7 landed together on one branch, `handoff-h3-h7`, as one commit per task (29 commits) rather than one PR per batch — see "Branch state" below for why and what that means for review. H8 is the only batch left in the queue.
 
 Batches are grouped by *file locality*, and each doc lists a `Touches:` glob set. Those sets are near-disjoint, so two batches can proceed on parallel branches without colliding. The exceptions are noted in the docs themselves (H4/H5 both edit JSX; H2/H3 both care about server-fn signatures).
 
@@ -41,8 +43,42 @@ The batch branches (`h1-dead-code`, `h6-tooling-ci`, `h2-data-layer`,
 `handoff-queue`) have been deleted — their commits all live in `main`. No PRs
 were ever opened for them; the work went straight to `main`.
 
-**Starting H3?** Branch from `main` — it is now the tip and carries H1, H6 and
-H2.
+**Update (2026-08-11, later the same day).** H3, H4, H5 and H7 are done, on
+branch `handoff-h3-h7` (branched from `main` at the commit above), not yet
+merged. Per-task commits (29 total, one per numbered task across the four
+docs), not one PR per batch as the recommended order suggests — the four were
+executed together in one session and landing them as a single branch with a
+granular commit history was the practical choice, at the cost of the
+per-batch-PR review flow this file otherwise recommends. A human should still
+review before merging; the branch has not been merged or pushed.
+
+Full details of what was verified and what wasn't are in each doc's own
+`Verify` section — **read those before trusting this batch is airtight**, in
+particular H5's: everything needing a real browser (keyboard-only navigation,
+a screen reader, the OS reduced-motion setting, Lighthouse/axe) was not run,
+because no browser automation was available in the session that did this
+work. All of it was verified at the code/markup level (ARIA attributes
+present in rendered HTML, computed contrast ratios, native form controls,
+the `matchMedia` guard in place) but nobody has actually used the app with a
+keyboard or a screen reader. Same caveat, smaller scope, for a few items in
+H4 and H7 (chart tooltip colors in an actual browser, the duplicate-name
+error message on the live form) — see those docs' Verify sections.
+
+What *was* run for every task: `pnpm types:check`, `pnpm lint`,
+`pnpm prettier:check`, and `pnpm vitest run` (70 tests once `DATABASE_URL` is
+set — the 6 server integration tests run for real against local Postgres,
+not skipped). Most individual commits were additionally checked against a
+running server via `curl` (SSR content, HTTP status codes, cookie behavior,
+DB-down error states) — this substituted for browser testing where it could,
+but cannot substitute for the browser-only items above. Early in the session
+(through H3 and part of H4) this was `pnpm build && pnpm start` against the
+real production server; partway through, at the user's request, verification
+switched to `pnpm dev` for the rest of the session instead of running further
+production builds.
+
+**Starting H8, or picking up the H5 residual items?** Branch from `main` once
+`handoff-h3-h7` is merged — or from `handoff-h3-h7` directly if it's still
+pending review and you want its work as a base.
 
 ### Two things that will bite you on push
 
@@ -85,11 +121,13 @@ The three real bugs and every "still open" claim below were re-checked and hold.
 
 If you only fix three things, fix these. Each is owned by the batch in brackets.
 
-1. **STILL OPEN. The `QueryClient` is a module-level singleton** (`src/router.tsx:5`) handed to every `getRouter()` call. On the server that is one cache shared across all requests and all users. [H3]
+1. **FIXED (H3, branch `handoff-h3-h7`).** The `QueryClient` was a module-level singleton handed to every `getRouter()` call. On the server that was one cache shared across all requests and all users — the highest-severity bug in the repo. Now constructed inside `getRouter()`; verified per-request by reading `@tanstack/start-server-core`'s source rather than by observing two live browser sessions (no browser automation was available), which is conclusive for *why* but not the same as watching it happen. [H3]
 2. **FIXED (H2, on `main`).** Persisted ELO was computed from client-supplied data. `src/lib/server/matches.ts:39` calls `EloService.calculateEloChanges(data.winnerData, data.loserData)` on `Player` objects the browser posted, then writes the result into `players.elo_rating`. A stale client cache silently corrupts ratings. [H2]
 3. **FIXED (H2, on `main`).** Players were created outside the match transaction (`src/lib/matchService.ts:58,91` call `addPlayer` before `addMatchWithPlayerUpdates`), so a failing match insert leaves orphaned players behind. [H2]
 
-Two more that are user-visible but narrower: `src/pages/Profile.tsx:20` flashes "Spiller ikke funnet" before data arrives [H4, **still open**], and matches whose `elo_changes` is the default `'{}'` rendered `+NaN` at `src/pages/Matches.tsx:99-113` [**fixed by H6, on `main`**; `noUncheckedIndexedAccess` surfaced it, and `src/pages/__tests__/Matches.test.tsx` pins it].
+Two more that were user-visible but narrower: `src/pages/Profile.tsx` flashed "Spiller ikke funnet" before data arrived [**fixed, H4, branch `handoff-h3-h7`** — verified against a production server, not just tests], and matches whose `elo_changes` is the default `'{}'` rendered `+NaN` at `src/pages/Matches.tsx:99-113` [**fixed by H6, on `main`**; `noUncheckedIndexedAccess` surfaced it, and `src/pages/__tests__/Matches.test.tsx` pins it].
+
+**A new one found and fixed during H7:** the deuce win-by-2 rule's code and its own comment disagreed — a score like 20-10 validated when it shouldn't have, per real table tennis rules. Owner sign-off obtained, then tightened across the API, the database (new migration), the README, and the tests. [H7, branch `handoff-h3-h7`]
 
 ## Conventions for every session
 

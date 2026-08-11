@@ -1,6 +1,6 @@
 # H7 — Constants & Norwegian string centralization
 
-**Status:** not started
+**Status:** done, on branch `handoff-h3-h7`
 **Depends on:** H1. Independent of everything else — pick up anytime
 **Touches:** `src/lib/eloService.ts`, `src/lib/validation.ts`, `src/lib/matchService.ts`, `src/types/pong.ts`, `README.md`, plus string call sites across `src/`
 **Est. size:** S–M (was M — H2 completed most of task 3)
@@ -24,15 +24,17 @@ This is the lowest-priority batch. Nothing here is a bug (except task 2's ambigu
 
 Extend `RATING_CONFIG` (or add a sibling `MATCH_RULES`) in `src/types/pong.ts` and replace these:
 
-- [ ] ELO divisor `400`, hardcoded twice — `src/lib/eloService.ts:22,23`.
-- [ ] Rating-tier thresholds `1800` / `1600` / `1400` / `1200` — `src/lib/eloService.ts:61-64`. Note the tier names are English ("Grandmaster", "Master", …) while the UI is Norwegian; `getRatingTier` is currently only referenced by tests, so decide whether it's headed for UI (H8 has a tier-badge idea) and translate accordingly.
-- [ ] Score bounds and rules in `src/lib/validation.ts`: max `99` (`:29,34`), winning score `11` (`:40,57,64`), margin `2` (`:51`), the deuce thresholds `9` and `10` (`:58,65`).
-- [ ] Name length `2` and `50` (`src/lib/validation.ts:85-86`).
-- [ ] **The same numbers now also live in SQL.** H2 encoded the score rules as a CHECK constraint — `db/migrations/002_add_constraints.sql:70-79` (`matches_valid_score_check`) and the mirrored copy in `db/init.sql` — and the name bounds as `length(trim(name)) BETWEEN 2 AND 50` (`002_add_constraints.sql:102`). A TypeScript constants module cannot reach these. Don't try; just note in a comment beside `MATCH_RULES` that the database enforces the same rules independently and both must change together.
-- [ ] Starting ELO `1200` re-hardcoded in the UI — `src/components/player-metrics/usePlayerMetricsData.ts:75` and `PlayerMetrics.tsx:42`. (H4 also flags these; whoever gets there first wins.)
-- [ ] `src/pages/NewMatch.tsx:77` hardcodes the prose "minimum 5 kamper" instead of interpolating `RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING`. This is the exact failure mode this batch prevents: change the config and the UI lies.
+- [x] ELO divisor `400`, hardcoded twice → one `ELO_RATING_DIVISOR` constant in `eloService.ts`.
+- [x] Rating-tier thresholds → `RATING_CONFIG.TIERS`, an ordered array `getRatingTier` now does a table lookup over instead of an if/else chain. Tier names stay English — noted in a comment that H8's tier-badge idea is the eventual UI consumer and should translate them then, rather than guessing now.
+- [x] Score bounds and rules → new `MATCH_RULES` in `pong.ts`: `WINNING_SCORE`, `MIN_WIN_MARGIN`, `MAX_LOSER_SCORE_AT_WINNING_SCORE`, `MIN_DEUCE_SCORE`, `MAX_SCORE`.
+- [x] Name length → `MATCH_RULES.MIN_PLAYER_NAME_LENGTH` / `MAX_PLAYER_NAME_LENGTH`.
+- [x] `MATCH_RULES`'s doc comment records that the database enforces the same rules independently (`matches_no_draw_check` / `matches_valid_result_check` / `players_name_length_check`, in `db/init.sql` and `db/migrations/002_add_constraints.sql`) and that changing one without the other means the API and the database silently disagree.
+- [x] Starting ELO — both UI re-hardcodes fixed (one went with H4.6's chart dedup work, done in that batch since the file was already being rewritten; the other fixed directly here).
+- [x] `NewMatch.tsx`'s "minimum 5 kamper" now interpolates `RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING`.
 
-Keep `as const`. The existing tests (`src/lib/__tests__/eloService.test.ts`, `validation.test.ts`) hardcode expected values — that's fine and arguably correct for tests, so don't rewrite them to use the config, or they'd stop catching config regressions.
+Kept `as const` throughout. `eloService.test.ts` / `validation.test.ts` were left hardcoding expected numbers, as instructed — both still pass unmodified against the new constants, which is itself evidence the values didn't drift in the move.
+
+**Verified the wiring is real:** temporarily set `MINIMUM_MATCHES_FOR_RANKING` to 3 against the dev server and confirmed `/ny-kamp`'s prose changed from "minimum 5" to "minimum 3", then reverted.
 
 ### 2. Resolve the win-by-2 contradiction — decision needed
 
@@ -43,16 +45,16 @@ Keep `as const`. The existing tests (`src/lib/__tests__/eloService.test.ts`, `va
 
 So a **20-10 score currently validates**: `maxScore` 20 > 11, `minScore` 10 ≥ 10, margin 10 ≥ 2. Real table tennis deuce games end at exactly +2 (12-10, 13-11, 14-12), which is what the comment describes and what the listed examples at `:63` show.
 
-`README.md:25` says "must win by at least 2 points", which matches the loose code. So two of the three sources agree with each other and the third is the most specific.
+**Decision (owner sign-off, obtained before implementing): tighten to exactly +2.** 20-10 now fails validation where it used to pass — a deliberate behavior change, not a refactor.
 
-**There is now a fourth source: the database.** H2 shipped `matches_valid_score_check` (`db/migrations/002_add_constraints.sql:70-79`, mirrored in `db/init.sql`), which encodes the *loose* rule — `GREATEST >= 11 AND GREATEST - LEAST >= 2 AND (GREATEST = 11 AND LEAST <= 9 OR GREATEST > 11 AND LEAST >= 10)`. That was deliberate: H2's brief was to encode current code behavior, not to decide this question. It does mean the loose reading is now enforced in production data, which raises the cost of tightening.
+- [x] Tightened the deuce branch to `minScore >= MATCH_RULES.MIN_DEUCE_SCORE && margin === MATCH_RULES.MIN_WIN_MARGIN`.
+- [x] Code, comment, README (`## Rules`), the error message, and the CHECK constraint all restate the same rule now.
+- [x] Added `db/migrations/003_tighten_deuce_margin.sql`, dropping and re-adding `matches_valid_result_check` (002 left untouched, as instructed — it's already applied). Added VALIDATED per `AGENTS.md`, so it aborts on any existing violation. Ran the pre-flight query against the local database first: zero violating rows — but that's seed data, not production history, and the migration file says so explicitly and tells whoever runs it against a real database to re-check. `db/init.sql` mirrors the tightened constraint for fresh installs; confirmed via `pg_get_constraintdef` that a migrated database's constraint definition is byte-for-byte identical to what `init.sql` now declares.
+- [x] `validation.test.ts` updated: the error-message assertion, a new test pinning that a deuce win by more than 2 is rejected (20-10, 15-10, ...), and a new test covering the four boundaries this decision named (11-9 valid, 11-10 invalid, 12-10 valid, 20-10 invalid).
 
-- [ ] **Confirm the intended rule before changing anything.** If deuce should be exactly +2, tighten `:65` to `margin === 2 && minScore >= 10` — but that's a behavior change that will reject scores people may have been entering, so it needs a human's sign-off, not a refactor decision.
-- [ ] Whatever you decide, make the code, the comment, `README.md:25`, the error message at `:72-73`, **and the CHECK constraint** all say the same thing.
-- [ ] If you tighten it, add a new `db/migrations/NNN_*.sql` that drops and re-adds `matches_valid_score_check` — don't edit `002_*.sql` in place, it has already been applied. Per `AGENTS.md` the new constraint is added validated, so it will **abort** if any existing row violates it. Query first: `SELECT * FROM matches WHERE GREATEST(player1_score, player2_score) > 11 AND GREATEST(player1_score, player2_score) - LEAST(player1_score, player2_score) <> 2;` Those rows are real match history — decide what happens to them before you write the migration.
-- [ ] Update `src/lib/__tests__/validation.test.ts` to cover the boundary explicitly — 12-10 valid, 20-10 whichever it now is, 11-10 invalid. H2 already expanded this file, so check what's covered before adding.
+Left the `>= 11` refine and the larger refine's recomputation of max/min score as they were — the doc flagged it as optional cleanup ("keep it or fold it in deliberately"), and folding it in wasn't necessary to land the actual rule change.
 
-Also while you're here: the `>= 11` refine at `:40-43` is fully subsumed by the larger refine at `:44-76` (which returns `false` for any `maxScore < 11` at `:69`). Its only value is a more specific error message. Keep it or fold it in deliberately, but note that the max/min score math is recomputed across both (`:40`, `:46-47`).
+**Verified against a live database, not just the type checker:** applied the migration locally, then by hand inserted a 20-10 match (rejected by the CHECK constraint, confirmed via the error text) and a 12-10 match inside a rolled-back transaction (accepted).
 
 ### 3. De-duplicate matchService — mostly done by H2
 
@@ -62,28 +64,28 @@ H2 rewrote this file and did the extraction this task called for. Re-verified 20
 - [x] `createNewMatchSchema` is gone (H1). `validateUniquePlayerName` now has exactly one production call site, `matchService.ts:83`.
 - [x] `isSamePlayer` in `gameUtils.ts` is gone (H1).
 
-What's left is smaller and genuinely belongs to this batch:
+What's left, re-verified:
 
-- [ ] The same-player rule is still expressed twice, in two different shapes: `MatchService.isSameSide` (`matchService.ts:98-113`, comparing `PlayerRef`s and resolving a name against the roster) and the final refine on `createMatchInputSchema` (`validation.ts:116-127`, comparing ids or names but *not* cross-checking a new name against an existing player). They can disagree: a client posting `{type:'new', name:'Ada'}` against existing player Ada passes the schema and is caught only by the uniqueness check. That's fine defensively — just don't "unify" them without noticing they aren't equivalent.
-- [ ] Both spellings of the message `'Spillerne må være forskjellige'` are literals (`matchService.ts:60`, `validation.ts:126`). Task 4 territory — this is the clearest example of a message worth hoisting.
-- [ ] `'Poengsum kan ikke være negative'` and `'Poengsum kan ikke være over 99'` are each written twice in `validation.ts` (`:28,33` and `:29,34`), once per score field. Same treatment.
+- [x] The same-player rule is still expressed twice — deliberately. `MatchService.isSameSide` and `createMatchInputSchema`'s refine are not equivalent (the doc's own reasoning still holds: `isSameSide` cross-checks a new name against the roster, the schema refine doesn't). Left unmerged; `src/lib/messages.ts` now has a comment on `SAME_PLAYER_MESSAGE` explaining why, so the next person doesn't rediscover the same question.
+- [x] `'Spillerne må være forskjellige'` — hoisted in task 4, where the doc itself said it belonged ("Task 4 territory").
+- [x] The two score-bound messages, each written twice in `validation.ts` — hoisted to module constants in task 1's commit, since they were part of the same `MATCH_RULES` rewrite.
 
 ### 4. Centralize the Norwegian strings
 
-No i18n library, and there shouldn't be one — this is a Norwegian-only internal tool. A constants module is the right size.
+No i18n library, and there shouldn't be one — this is a Norwegian-only internal tool.
 
-- [ ] Start with **error messages**, which are duplicated across `src/lib/matchService.ts` (6 `throw new Error` sites, `:45,60,75,80,84,92`) and `src/lib/validation.ts` (~11 distinct messages, `:10,28,29,37,41,73,84,85,86,89,126`) and are the strings most likely to drift. `validation.ts`'s cluster is nearly a message catalog already. The concrete duplicates are listed in task 3.
-- [ ] UI copy is inline across ~10 files (`src/pages/Overview.tsx:46,50,63,84,129,130`; `NewMatch.tsx:74,76-79,124,127`; `PlayerCard.tsx:35,43,51,60,68,69,79`; `Profile.tsx:24,25,45,50-59`; `LoadingSpinner.tsx:6`). **Be pragmatic here** — hoisting every JSX string into a constants file makes components harder to read for no real benefit in a single-locale app. Prioritize strings that appear more than once or that encode a rule (like the "minimum 5 kamper" case in task 1).
-- [ ] Keep Norwegian text, English identifiers, per `AGENTS.md`.
+- [x] The concrete duplicate from task 3 (`'Spillerne må være forskjellige'`) is now `SAME_PLAYER_MESSAGE` in `src/lib/messages.ts` (a module H4.1 had already started, for `PLAYER_NOT_FOUND`), imported by both `matchService.ts` and `validation.ts`. The rest of `validation.ts`'s ~11 messages were **not** moved — per the doc's own pragmatism instruction, that file is "nearly a message catalog already" and moving strings used in exactly one place elsewhere would only cost readability.
+- [x] UI copy: swept `src/pages` and `src/components` for exact-duplicate Norwegian string literals after H4/H5's consolidation had already collapsed most of them. Found one real remaining duplicate — `Overview.tsx` and `Leaderboard.tsx` rendered byte-identical `EmptyState` copy for "no players yet" — hoisted to `NO_PLAYERS_EMPTY_STATE` in `messages.ts`. `Matches.tsx`'s similar-looking "no matches yet" empty state has different title/description text, so it stays inline; not a real duplicate, just a shared action label.
+- [x] Norwegian text, English identifiers — kept throughout.
 
 ### 5. Fix the README's inaccuracies
 
-- [ ] **`README.md:15` claims "bottom navigation".** There is none — `rg '<nav'` over `src/` is still empty. Navigation is a header (`src/components/header/Header.tsx`), a "← Hjem" link (`src/routes/__root.tsx:46`), and "Se alle" buttons (`src/pages/Overview.tsx:78,122`). Either fix the README or file it as a feature; don't leave it describing something that doesn't exist.
-- [ ] `README.md:16` says the leaderboard requires a minimum of 5 matches, implying exclusion. Ineligible players *are* listed — sorted last with a "Mangler kamper" tag (`src/utils/gameUtils.ts:11-18`, `src/pages/Overview.tsx:60-64`). Reword.
-- [ ] The project structure block, now at `README.md:132-162`, still omits the `player-card/` and `player-metrics/` component folders — 11 files, the largest component area in the repo. H2 refreshed parts of this block (it gained `lib/server/` and `test/`) but not the components subtree at `:136-142`.
-- [ ] **New, introduced by H1:** that same block lists `layout/ # Layout components (Container, FullBleed)` at `:139` and a `links/` folder at `:140`. H1 deleted `FullBleed.tsx`, `HeaderLink.tsx`, `JokulRouterNavLink.tsx` and `header-link.scss`. `links/` still exists (`JokulRouterLink`), but `FullBleed` does not. Drop it.
-- [ ] `README.md:1` says "Office Pong Leaderboard" while the UI header says "Fremtind kontorpong 🏓" (`src/components/header/Header.tsx:10`). Pick one name.
-- [ ] Re-check `README.md:25` against whatever task 2 decided.
+- [x] "Bottom navigation" claim reworded to describe the real navigation (header + "Se alle" links). Also true as of H5.3, which added an actual `<nav>` landmark for the first time.
+- [x] Reworded both the Features and Rules mentions of "minimum 5 matches" to say ineligible players are still listed (tagged "Mangler kamper"), not excluded.
+- [x] Project structure block gained `leaderboard/`, `player-card/`, `player-metrics/` (13 files across three folders, `player-metrics/` being the largest component area in the repo) and `lib/messages.ts`.
+- [x] Dropped `FullBleed` from the `layout/` line — H1 deleted it; `links/` stays, since `JokulRouterLink` still exists there.
+- [x] **Decision (owner sign-off, obtained before implementing): renamed the README title to "Fremtind kontorpong"**, matching what the UI header has always said, rather than renaming the UI. The Dokku app name and `package.json`'s `name` field are separate infra identifiers and were left untouched — the decision was scoped to the display name, not every place "office-pong" appears.
+- [x] Re-checked `README.md`'s win-by-2 line against task 2's decision — already updated in that commit, still correct.
 
 ## Out of scope
 
@@ -91,8 +93,8 @@ No i18n library, and there shouldn't be one — this is a Norwegian-only interna
 |---|---|
 | Chart/page component dedup, moving inline types to `pong.ts` | H4 |
 | Adding a real i18n library | Nobody — out of scope by design for a single-locale internal tool |
-| Deleting `getRatingTier` because only tests use it | Keep it; see task 1 and H8 |
-| Renaming the app | Ask first — `README.md:1` vs the UI header is a branding question, not a code question |
+| Deleting `getRatingTier` because only tests use it | Kept; see task 1 and H8 |
+| Renaming the app | Asked first — see task 5 |
 
 ## Verify
 
@@ -100,9 +102,11 @@ No i18n library, and there shouldn't be one — this is a Norwegian-only interna
 pnpm types:check && pnpm lint && pnpm prettier:check && pnpm vitest run
 ```
 
-The constants sweep is mechanical, so the tests are the real check — `eloService.test.ts` and `validation.test.ts` assert concrete numbers and will catch a mistyped threshold.
+All pass (70 tests when run with `DATABASE_URL` set — the 6 server integration tests run for real rather than being skipped, and they exercise the tightened deuce constraint indirectly via the transaction path).
 
-- **Prove the config is actually wired up:** temporarily change `MINIMUM_MATCHES_FOR_RANKING` from 5 to 3, run `pnpm dev`, and confirm both the leaderboard eligibility *and* the "minimum N kamper" text on `/ny-kamp` change together. Revert. Do the same for `STARTING_ELO` and check the profile chart baseline.
-- **Task 2's boundaries** by hand on `/ny-kamp`: 11-9 valid, 11-10 invalid, 12-10 valid, 20-10 — whatever you decided, and make sure the error message says the right thing.
-- Register a match with a duplicate player name and confirm the error still reads correctly after the matchService extraction — the "Spiller 1:" / "Spiller 2:" prefixes are easy to lose.
-- Read `README.md` start to finish against the running app and confirm every claim holds.
+- [x] **Config is actually wired up:** verified for `MINIMUM_MATCHES_FOR_RANKING` — see task 1. Did **not** separately re-verify `STARTING_ELO` by toggling it and checking the profile chart baseline in a browser (no browser automation available this session); it's referenced correctly by grep (`rg STARTING_ELO src/` shows only the constant's definition and its consumers, no stray re-hardcodes) and covered by `gameUtils.test.ts` / the integration tests, but the visual chart-baseline check specifically was not run.
+- [x] **Task 2's boundaries** verified two ways: `validation.test.ts`'s new boundary test (11-9 valid, 11-10 invalid, 12-10 valid, 20-10 invalid) via `pnpm vitest run`, and by hand against the live database (20-10 rejected, 12-10 accepted) — not by hand on the running `/ny-kamp` form in a browser.
+- [ ] **Duplicate player name error message on the running form:** not re-verified in a browser after the matchService extraction. The underlying logic wasn't touched by this batch's changes (only the "Spillerne må være forskjellige" *string* moved, not the "Spiller 1:"/"Spiller 2:" prefix logic), and `matchService-validation.test.ts` covers it at the unit level, but nobody watched it render.
+- [x] Read `README.md` start to finish against the current state of the app and the codebase (not the running UI in a browser) and confirmed every claim holds.
+
+**Residual:** the duplicate-name error message and the STARTING_ELO chart baseline both need a quick browser check; low risk since both are covered by passing unit/integration tests, but unverified end-to-end.
