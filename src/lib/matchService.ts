@@ -1,6 +1,12 @@
-import type { Player, Match } from '../types/pong'
-import { firstIssueMessage, matchScoreSchema, playerNameSchema, validateUniquePlayerName } from './validation'
-import { RATING_CONFIG } from '../types/pong'
+import type { Player } from '../types/pong'
+import {
+    firstIssueMessage,
+    matchScoreSchema,
+    playerNameSchema,
+    validateUniquePlayerName,
+    type CreateMatchInput,
+    type PlayerRef,
+} from './validation'
 
 export interface MatchCreationData {
     player1Type: 'existing' | 'new'
@@ -13,22 +19,23 @@ export interface MatchCreationData {
     player2Score: number
 }
 
-export interface ProcessedMatchData {
-    matchData: Omit<Match, 'id'>
-    winnerData: Player
-    loserData: Player
+interface PlayerSide {
+    type: 'existing' | 'new'
+    id?: string
+    name?: string
 }
 
 export class MatchService {
     /**
-     * Validate and process match creation data
+     * Validate a match registration and reduce it to the payload the
+     * `createMatch` server function accepts.
+     *
+     * Pure: it neither creates players nor writes anything. The server performs
+     * every insert inside one transaction, so a failure cannot leave a new
+     * player stranded without their match. Validating here as well keeps the
+     * form's error messages immediate and in Norwegian.
      */
-    static async processMatchCreation(
-        data: MatchCreationData,
-        players: Player[],
-        addPlayer: (playerData: Omit<Player, 'id'>) => Promise<Player>
-    ): Promise<ProcessedMatchData> {
-        // Validate scores
+    static validateMatchCreation(data: MatchCreationData, players: Player[]): CreateMatchInput {
         const scoreValidation = matchScoreSchema.safeParse({
             player1Score: data.player1Score,
             player2Score: data.player2Score,
@@ -38,97 +45,70 @@ export class MatchService {
             throw new Error(firstIssueMessage(scoreValidation.error))
         }
 
-        // Get or create player 1
-        let player1Data: Player
-        if (data.player1Type === 'new') {
-            if (!data.player1Name?.trim()) {
-                throw new Error('Spiller 1 navn er påkrevd')
-            }
+        const player1 = MatchService.resolveSide(
+            { type: data.player1Type, id: data.player1Id, name: data.player1Name },
+            players,
+            1
+        )
+        const player2 = MatchService.resolveSide(
+            { type: data.player2Type, id: data.player2Id, name: data.player2Name },
+            players,
+            2
+        )
 
-            const nameValidation = playerNameSchema.safeParse(data.player1Name)
-            if (!nameValidation.success) {
-                throw new Error(`Spiller 1: ${firstIssueMessage(nameValidation.error)}`)
-            }
-
-            // Check if player with this name already exists
-            if (!validateUniquePlayerName(data.player1Name, players)) {
-                throw new Error(`En spiller med navnet "${data.player1Name.trim()}" finnes allerede i databasen`)
-            }
-
-            player1Data = await addPlayer({
-                name: data.player1Name.trim(),
-                eloRating: RATING_CONFIG.STARTING_ELO,
-                matchesPlayed: 0,
-                wins: 0,
-                losses: 0,
-                createdAt: new Date().toISOString(),
-            })
-        } else {
-            const existingPlayer1 = players.find((p) => p.id === data.player1Id)
-            if (!existingPlayer1) {
-                throw new Error('Vennligst velg spiller 1')
-            }
-            player1Data = existingPlayer1
-        }
-
-        // Get or create player 2
-        let player2Data: Player
-        if (data.player2Type === 'new') {
-            if (!data.player2Name?.trim()) {
-                throw new Error('Spiller 2 navn er påkrevd')
-            }
-
-            const nameValidation = playerNameSchema.safeParse(data.player2Name)
-            if (!nameValidation.success) {
-                throw new Error(`Spiller 2: ${firstIssueMessage(nameValidation.error)}`)
-            }
-
-            // Check if player with this name already exists
-            if (!validateUniquePlayerName(data.player2Name, players)) {
-                throw new Error(`En spiller med navnet "${data.player2Name.trim()}" finnes allerede i databasen`)
-            }
-
-            player2Data = await addPlayer({
-                name: data.player2Name.trim(),
-                eloRating: RATING_CONFIG.STARTING_ELO,
-                matchesPlayed: 0,
-                wins: 0,
-                losses: 0,
-                createdAt: new Date().toISOString(),
-            })
-        } else {
-            const existingPlayer2 = players.find((p) => p.id === data.player2Id)
-            if (!existingPlayer2) {
-                throw new Error('Vennligst velg spiller 2')
-            }
-            player2Data = existingPlayer2
-        }
-
-        // Check if players are the same
-        if (player1Data.name.trim().toLowerCase() === player2Data.name.trim().toLowerCase()) {
+        if (MatchService.isSameSide(player1, player2, players)) {
             throw new Error('Spillerne må være forskjellige')
         }
 
-        // Determine winner and loser
-        const isPlayer1Winner = data.player1Score > data.player2Score
-        const winnerData = isPlayer1Winner ? player1Data : player2Data
-        const loserData = isPlayer1Winner ? player2Data : player1Data
-
-        const matchData: Omit<Match, 'id'> = {
-            player1Id: player1Data.id,
-            player2Id: player2Data.id,
-            winnerId: winnerData.id,
-            loserId: loserData.id,
+        return {
+            player1,
+            player2,
             player1Score: data.player1Score,
             player2Score: data.player2Score,
-            playedAt: new Date().toISOString(),
-            eloChanges: {},
+        }
+    }
+
+    /** Validate one side and turn it into an id reference or a new-player name. */
+    private static resolveSide(side: PlayerSide, players: Player[], position: 1 | 2): PlayerRef {
+        if (side.type === 'new') {
+            if (!side.name?.trim()) {
+                throw new Error(`Spiller ${position} navn er påkrevd`)
+            }
+
+            const nameValidation = playerNameSchema.safeParse(side.name)
+            if (!nameValidation.success) {
+                throw new Error(`Spiller ${position}: ${firstIssueMessage(nameValidation.error)}`)
+            }
+
+            if (!validateUniquePlayerName(side.name, players)) {
+                throw new Error(`En spiller med navnet "${side.name.trim()}" finnes allerede i databasen`)
+            }
+
+            return { type: 'new', name: side.name.trim() }
         }
 
-        return {
-            matchData,
-            winnerData,
-            loserData,
+        const existingPlayer = players.find((player) => player.id === side.id)
+        if (!existingPlayer) {
+            throw new Error(`Vennligst velg spiller ${position}`)
         }
+
+        return { type: 'existing', id: existingPlayer.id }
+    }
+
+    private static isSameSide(player1: PlayerRef, player2: PlayerRef, players: Player[]): boolean {
+        if (player1.type === 'existing' && player2.type === 'existing') {
+            return player1.id === player2.id
+        }
+        if (player1.type === 'new' && player2.type === 'new') {
+            return player1.name.toLowerCase() === player2.name.toLowerCase()
+        }
+
+        // One of each: a new name matching the chosen player is already rejected
+        // by the uniqueness check, but compare explicitly rather than rely on it.
+        const newName = player1.type === 'new' ? player1.name : (player2 as { name: string }).name
+        const existingId = player1.type === 'existing' ? player1.id : (player2 as { id: string }).id
+        const existingPlayer = players.find((player) => player.id === existingId)
+
+        return existingPlayer?.name.trim().toLowerCase() === newName.toLowerCase()
     }
 }

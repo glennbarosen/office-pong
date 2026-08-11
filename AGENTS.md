@@ -19,13 +19,19 @@ React 18 + TypeScript, **TanStack Start** (full-stack SSR, migrated off a plain 
 
 ## Commands
 
-`pnpm dev` / `build` / `start` / `preview` / `lint` / `test` / `types:check` / `prettier` / `prettier:check`.
+`pnpm dev` / `build` / `start` / `preview` / `lint` / `test` (watch) / `test:run` (single run, what CI uses) / `types:check` / `prettier` / `prettier:check`.
 
-Local Postgres via Docker Compose: `pnpm db:up` (starts it, applies `db/init.sql` on first run), `pnpm db:down`, `pnpm db:reset` (wipes + recreates), `pnpm db:logs`.
+Local Postgres via Docker Compose: `pnpm db:up` (starts it, applies `db/init.sql` on first run), `pnpm db:down`, `pnpm db:reset` (wipes + recreates), `pnpm db:logs`, `pnpm db:migrate` (applies `db/migrations/` to `$DATABASE_URL`).
+
+CI (`.github/workflows/ci.yml`) runs lint, types:check, prettier:check, tests and build on every PR.
 
 ## Database
 
-Schema lives in `db/init.sql` (`players`: id, name, avatar, elo_rating, matches_played, wins, losses, created_at, last_played_at; `matches`: id, player1_id, player2_id, winner_id, loser_id, player1_score, player2_score, played_at, elo_changes jsonb). No migration tool — schema changes are hand-edited directly in that file; there's no versioned migration history. `DATABASE_URL` env var, see `.env.example`.
+Schema lives in `db/init.sql` (`players`: id, name, avatar, elo_rating, matches_played, wins, losses, created_at, last_played_at; `matches`: id, player1_id, player2_id, winner_id, loser_id, player1_score, player2_score, played_at, elo_changes jsonb), which also carries the indexes and CHECK constraints. `DATABASE_URL` env var, see `.env.example`.
+
+Changes to an already-deployed database go in `db/migrations/NNN_*.sql` (numbered, idempotent, applied in filename order by `pnpm db:migrate`) **and** in `db/init.sql`, so fresh installs and migrated databases converge. There is no migration-state table and no ORM — a `psql -f` loop is the whole tool. Constraints are added validated, so a migration aborts rather than touching rows that violate it; that's deliberate, since match history is the point of the app.
+
+Row shapes are declared once in `src/lib/server/mappers.ts` (`PlayerRow`/`MatchRow` + `mapPlayerRow`/`mapMatchRow`) — `pg` types `result.rows` as `any[]`, so cast once at the query and map, rather than reading columns ad hoc.
 
 ## Conventions
 
@@ -37,8 +43,12 @@ Schema lives in `db/init.sql` (`players`: id, name, avatar, elo_rating, matches_
 
 - `createServerFn(...).inputValidator()` — **not** `.validator()`. The latter is an older API name common in training data; using it silently breaks (root cause of a past bug, see `src/lib/server/matches.ts` for the correct usage).
 - SSR: guard any browser-only API (`localStorage`, `window`) with `typeof window === 'undefined'` — see `src/hooks/useTheme.ts`.
-- No test-render helper exists yet for mounting components with router/query providers — only pure-logic tests exist today (see Testing below). Write one if you add component/route tests; don't assume one is already there.
 
 ## Testing
 
-`pnpm test` runs Vitest in watch mode. Only `src/lib/__tests__/` has tests today (pure business logic — elo, match validation). No component/route tests exist. **No Playwright/E2E framework is installed** — don't assume E2E coverage exists or add one unprompted.
+`pnpm test` runs Vitest in watch mode; `pnpm test:run` is the single-shot form CI uses. Coverage (`--coverage`) reports on `src/lib/**` and `src/utils/**`; there is no threshold gate yet.
+
+- Pure logic: `src/lib/__tests__/` and `src/utils/__tests__/`.
+- Components: mount through `src/test/renderWithProviders.tsx`, which supplies a query client and a memory-history router. It is **async** — `await renderWithProviders(<Thing />)` — because the router renders nothing until its initial match resolves. Only smoke tests use it so far.
+- `src/lib/server/__tests__/*.integration.test.ts` need a real database and self-skip unless `DATABASE_URL` is set. They truncate both tables, so point them at a local database only: `pnpm db:up && pnpm test:run`.
+- **No Playwright/E2E framework is installed** — don't assume E2E coverage exists or add one unprompted.

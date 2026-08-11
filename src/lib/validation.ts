@@ -88,3 +88,42 @@ export const playerNameSchema = z
         /^[a-zA-ZæøåÆØÅ0-9\s\-_.]+$/,
         'Spillernavn kan kun inneholde bokstaver, tall, mellomrom og grunnleggende tegn'
     )
+
+/**
+ * One side of a match: either an existing player's id, or the name of a player
+ * to create.
+ */
+export const playerRefSchema = z.discriminatedUnion('type', [
+    z.object({ type: z.literal('existing'), id: z.uuid('Ugyldig spiller-ID') }),
+    z.object({ type: z.literal('new'), name: playerNameSchema }),
+])
+
+export type PlayerRef = z.infer<typeof playerRefSchema>
+
+/**
+ * Payload accepted by the `createMatch` server function.
+ *
+ * Ids and scores only — no ratings. The server reads current ratings from the
+ * database and computes ELO itself, so nothing the browser posts can influence
+ * a stored rating.
+ */
+export const createMatchInputSchema = z
+    .object({
+        player1: playerRefSchema,
+        player2: playerRefSchema,
+    })
+    .and(matchScoreSchema)
+    .refine(
+        (data) => {
+            if (data.player1.type === 'existing' && data.player2.type === 'existing') {
+                return data.player1.id !== data.player2.id
+            }
+            if (data.player1.type === 'new' && data.player2.type === 'new') {
+                return data.player1.name.trim().toLowerCase() !== data.player2.name.trim().toLowerCase()
+            }
+            return true
+        },
+        { message: 'Spillerne må være forskjellige' }
+    )
+
+export type CreateMatchInput = z.infer<typeof createMatchInputSchema>

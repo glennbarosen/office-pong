@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 
-import { usePlayers, useAddPlayer } from '../hooks/usePlayers'
-import { useAddMatchWithEloUpdates } from '../hooks/useMatches'
+import { usePlayers } from '../hooks/usePlayers'
+import { useCreateMatch } from '../hooks/useMatches'
 import { MatchService, type MatchCreationData } from '../lib/matchService'
 import { parseInteger } from '../utils/gameUtils'
 import { triggerMatchSuccessConfetti } from '../utils/confetti'
@@ -13,8 +13,7 @@ import { ErrorMessage, InfoMessage } from '@fremtind/jokul/message'
 export default function NewMatch() {
     const navigate = useNavigate()
     const { data: players = [] } = usePlayers()
-    const addMatch = useAddMatchWithEloUpdates()
-    const addPlayer = useAddPlayer()
+    const createMatch = useCreateMatch()
 
     const [player1Type, setPlayer1Type] = useState<'existing' | 'new'>('existing')
     const [player2Type, setPlayer2Type] = useState<'existing' | 'new'>('existing')
@@ -54,13 +53,11 @@ export default function NewMatch() {
                 player2Score: score2,
             }
 
-            const processedMatch = await MatchService.processMatchCreation(
-                matchCreationData,
-                players,
-                addPlayer.mutateAsync
-            )
+            // Validate here for immediate feedback; the server validates again
+            // and does every insert in one transaction.
+            const matchInput = MatchService.validateMatchCreation(matchCreationData, players)
 
-            await addMatch.mutateAsync(processedMatch)
+            await createMatch.mutateAsync(matchInput)
 
             // Trigger extreme celebratory confetti animation
             triggerMatchSuccessConfetti(() => {
@@ -119,9 +116,9 @@ export default function NewMatch() {
                     <Button
                         variant="primary"
                         type="submit"
-                        disabled={addMatch.isPending}
+                        disabled={createMatch.isPending}
                         loader={
-                            addMatch.isPending ? { showLoader: true, textDescription: 'Registrerer...' } : undefined
+                            createMatch.isPending ? { showLoader: true, textDescription: 'Registrerer...' } : undefined
                         }
                     >
                         Registrer kamp

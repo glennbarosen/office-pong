@@ -43,15 +43,6 @@ export default tseslint.config(
             globals: globals.node,
         },
     },
-    // `pg` types `result.rows` as `any[]`, so every row read trips the unsafe-* rules.
-    // H2 introduces typed row mappers in src/lib/server/mappers.ts; drop this block then.
-    {
-        files: ['src/lib/server/**/*.ts'],
-        rules: {
-            '@typescript-eslint/no-unsafe-assignment': 'off',
-            '@typescript-eslint/no-unsafe-member-access': 'off',
-        },
-    },
     {
         files: ['src/**/*.{test,spec}.{ts,tsx}'],
         plugins: { vitest },

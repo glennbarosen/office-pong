@@ -1,56 +1,33 @@
 import { createServerFn } from '@tanstack/react-start'
 import { pool } from './db'
-import type { Player } from '../../types/pong'
+import { mapPlayerRow, type PlayerRow } from './mappers'
+import { playerNameSchema } from '../validation'
+import { RATING_CONFIG } from '../../types/pong'
+
+export const PLAYER_COLUMNS = 'id, name, avatar, elo_rating, matches_played, wins, losses, created_at, last_played_at'
 
 export const getPlayers = createServerFn({ method: 'GET' }).handler(async () => {
-    const result = await pool.query(
-        'SELECT id, name, avatar, elo_rating, matches_played, wins, losses, created_at, last_played_at FROM players ORDER BY elo_rating DESC'
-    )
+    const result = await pool.query(`SELECT ${PLAYER_COLUMNS} FROM players ORDER BY elo_rating DESC`)
 
-    return result.rows.map(
-        (row): Player => ({
-            id: row.id,
-            name: row.name,
-            avatar: row.avatar ?? undefined,
-            eloRating: row.elo_rating,
-            matchesPlayed: row.matches_played,
-            wins: row.wins,
-            losses: row.losses,
-            createdAt: row.created_at,
-            lastPlayedAt: row.last_played_at ?? undefined,
-        })
-    )
+    return (result.rows as PlayerRow[]).map(mapPlayerRow)
 })
 
 export const addPlayer = createServerFn({ method: 'POST' })
-    .inputValidator((data: Omit<Player, 'id'>) => data)
+    // Validate at the boundary with the same schema the form uses, so the rules
+    // cannot drift between client and server.
+    .inputValidator((data: { name: string }) => ({ name: playerNameSchema.parse(data.name) }))
     .handler(async ({ data }) => {
         const result = await pool.query(
-            `INSERT INTO players (name, avatar, elo_rating, matches_played, wins, losses, created_at, last_played_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             RETURNING *`,
-            [
-                data.name,
-                data.avatar ?? null,
-                data.eloRating,
-                data.matchesPlayed,
-                data.wins,
-                data.losses,
-                data.createdAt,
-                data.lastPlayedAt ?? null,
-            ]
+            `INSERT INTO players (name, elo_rating, matches_played, wins, losses)
+             VALUES ($1, $2, 0, 0, 0)
+             RETURNING ${PLAYER_COLUMNS}`,
+            [data.name, RATING_CONFIG.STARTING_ELO]
         )
 
-        const row = result.rows[0]
-        return {
-            id: row.id,
-            name: row.name,
-            avatar: row.avatar ?? undefined,
-            eloRating: row.elo_rating,
-            matchesPlayed: row.matches_played,
-            wins: row.wins,
-            losses: row.losses,
-            createdAt: row.created_at,
-            lastPlayedAt: row.last_played_at ?? undefined,
-        } as Player
+        const row = (result.rows as PlayerRow[])[0]
+        if (!row) {
+            throw new Error('Kunne ikke opprette spilleren')
+        }
+
+        return mapPlayerRow(row)
     })
