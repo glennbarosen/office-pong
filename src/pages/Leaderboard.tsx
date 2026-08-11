@@ -20,7 +20,7 @@ export function Leaderboard() {
             <div className="space-y-8">
                 {leaderboardData.length > 0 && (
                     <div>
-                        <h2 className="heading-4 mb-4">Ledertavle</h2>
+                        <h1 className="heading-4 mb-4">Ledertavle</h1>
 
                         <CollapsibleTable>
                             <TableHead>

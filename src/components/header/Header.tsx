@@ -7,9 +7,12 @@ export const Header = () => {
 
     return (
         <header className="flex items-center justify-between py-8">
-            <h1 className="heading-1">
+            {/* Styled as a heading but not one: this is the site name, shown
+                on every page, so making it <h1> gave pages with a real title
+                two of them. Each page owns its own <h1>. */}
+            <p className="heading-1">
                 Fremtind kontorpong <span aria-hidden="true">🏓</span>
-            </h1>
+            </p>
             <Button
                 variant="ghost"
                 icon={<Icon>{isDark ? 'light_mode' : 'dark_mode'}</Icon>}

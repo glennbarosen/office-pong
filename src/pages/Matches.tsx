@@ -34,7 +34,7 @@ export function Matches() {
             <div>
                 {matchesWithPlayers.length > 0 && (
                     <div>
-                        <h2 className="heading-4 mb-4">Kamper</h2>
+                        <h1 className="heading-4 mb-4">Kamper</h1>
 
                         <CollapsibleTable>
                             <TableHead>

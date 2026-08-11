@@ -26,6 +26,9 @@ export function Overview() {
 
     return (
         <QueryState queries={[playersQuery, matchesQuery]}>
+            {/* The front page shows sections rather than a titled document, so
+                its heading is for screen readers and the document outline. */}
+            <h1 className="sr-only">Oversikt</h1>
             <div className="flex justify-end">
                 <Button as={Link} to="/ny-kamp" variant="primary">
                     Ny kamp
