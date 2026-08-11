@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { RATING_CONFIG, type Player, type Match } from '../../types/pong'
-import type { OpponentStats, EloHistoryPoint } from '../../types'
-import { formatDate } from '../../utils/gameUtils'
+import type { EloHistoryPoint } from '../../types'
+import { createOpponentStats, formatDate } from '../../utils/gameUtils'
 
 interface DeriveEloHistoryOptions {
     /**
@@ -79,44 +79,10 @@ export function usePlayerMetricsData(player: Player, matches: Match[], players: 
     }, [matches, player.id])
 
     // Calculate opponent statistics
-    const opponentStats = useMemo(() => {
-        const stats = new Map<string, OpponentStats>()
-
-        playerMatches.forEach((match) => {
-            const isPlayer1 = match.player1Id === player.id
-            const opponentId = isPlayer1 ? match.player2Id : match.player1Id
-            const opponent = players.find((p) => p.id === opponentId)
-
-            if (!opponent) return
-
-            const stat = stats.get(opponentId) ?? {
-                opponent,
-                wins: 0,
-                losses: 0,
-                winRate: 0,
-                totalMatches: 0,
-                averageScore: 0,
-                eloChange: 0,
-            }
-            stats.set(opponentId, stat)
-
-            stat.totalMatches++
-
-            if (match.winnerId === player.id) {
-                stat.wins++
-            } else {
-                stat.losses++
-            }
-
-            stat.winRate = (stat.wins / stat.totalMatches) * 100
-            stat.eloChange += match.eloChanges[player.id] || 0
-
-            const playerScore = isPlayer1 ? match.player1Score : match.player2Score
-            stat.averageScore = (stat.averageScore * (stat.totalMatches - 1) + playerScore) / stat.totalMatches
-        })
-
-        return Array.from(stats.values()).sort((a, b) => b.totalMatches - a.totalMatches)
-    }, [playerMatches, player.id, players])
+    const opponentStats = useMemo(
+        () => createOpponentStats(playerMatches, player, players),
+        [playerMatches, player, players]
+    )
 
     // Calculate ELO history - showing rating progression over time
     const eloHistory = useMemo(

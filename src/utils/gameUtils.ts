@@ -1,4 +1,11 @@
-import { RATING_CONFIG, type Player, type LeaderboardEntry, type Match, type MatchWithPlayers } from '../types/pong'
+import {
+    RATING_CONFIG,
+    type Player,
+    type LeaderboardEntry,
+    type Match,
+    type MatchWithPlayers,
+    type OpponentStats,
+} from '../types/pong'
 
 /**
  * Resolve each match's four player ids against a player map.
@@ -50,6 +57,63 @@ export function createLeaderboardEntries(players: Player[]): LeaderboardEntry[] 
             if (!a.isEligibleForRanking && b.isEligibleForRanking) return 1
             return b.eloRating - a.eloRating
         })
+}
+
+/**
+ * One player's record against each opponent they have faced, strongest
+ * rivalry (most matches) first.
+ *
+ * Pure, and deliberately not a hook: the profile page renders this as a table
+ * and the metrics hook feeds it to a chart, so it cannot live inside
+ * components/player-metrics/. `matches` is expected to already be filtered to
+ * this player's own matches; ordering is not assumed.
+ *
+ * Matches whose opponent is absent from `players` are dropped, matching
+ * resolveMatchPlayers — the foreign keys make that unreachable in practice.
+ */
+export function createOpponentStats(matches: Match[], player: Player, players: Player[]): OpponentStats[] {
+    const stats = new Map<string, OpponentStats>()
+
+    matches.forEach((match) => {
+        const isPlayer1 = match.player1Id === player.id
+        const opponentId = isPlayer1 ? match.player2Id : match.player1Id
+        const opponent = players.find((p) => p.id === opponentId)
+
+        if (!opponent) return
+
+        const stat = stats.get(opponentId) ?? {
+            opponent,
+            wins: 0,
+            losses: 0,
+            winRate: 0,
+            totalMatches: 0,
+            averageScore: 0,
+            eloChange: 0,
+            lastMatch: match.playedAt,
+        }
+        stats.set(opponentId, stat)
+
+        stat.totalMatches++
+
+        if (match.winnerId === player.id) {
+            stat.wins++
+        } else {
+            stat.losses++
+        }
+
+        stat.winRate = (stat.wins / stat.totalMatches) * 100
+        stat.eloChange += match.eloChanges[player.id] ?? 0
+
+        const playerScore = isPlayer1 ? match.player1Score : match.player2Score
+        stat.averageScore = (stat.averageScore * (stat.totalMatches - 1) + playerScore) / stat.totalMatches
+
+        // Max, not last-seen: callers pass both orderings.
+        if (match.playedAt > stat.lastMatch) {
+            stat.lastMatch = match.playedAt
+        }
+    })
+
+    return Array.from(stats.values()).sort((a, b) => b.totalMatches - a.totalMatches)
 }
 
 /**

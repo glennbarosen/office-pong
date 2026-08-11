@@ -64,6 +64,13 @@ export interface OpponentStats {
     totalMatches: number
     averageScore: number
     eloChange: number
+    /**
+     * When these two last met. The maximum playedAt of the pairing, not the
+     * last one iterated — callers feed matches in both orders (the profile
+     * page newest-first, straight from the query; the metrics hook
+     * oldest-first, for its ELO curve).
+     */
+    lastMatch: string
 }
 
 /** One point on a player's derived ELO curve. */

@@ -1,6 +1,13 @@
 import { describe, test, expect } from 'vitest'
-import { createLeaderboardEntries, getRankIcon, createPlayerMap, formatDate, parseInteger } from '../gameUtils'
-import { RATING_CONFIG, type Player } from '../../types/pong'
+import {
+    createLeaderboardEntries,
+    createOpponentStats,
+    getRankIcon,
+    createPlayerMap,
+    formatDate,
+    parseInteger,
+} from '../gameUtils'
+import { RATING_CONFIG, type Player, type Match } from '../../types/pong'
 
 const makePlayer = (overrides: Partial<Player> & { id: string; name: string }): Player => ({
     eloRating: RATING_CONFIG.STARTING_ELO,
@@ -8,6 +15,16 @@ const makePlayer = (overrides: Partial<Player> & { id: string; name: string }): 
     wins: 0,
     losses: 0,
     createdAt: '2026-01-01T00:00:00.000Z',
+    ...overrides,
+})
+
+const makeMatch = (overrides: Partial<Match> & { id: string; player1Id: string; player2Id: string }): Match => ({
+    winnerId: overrides.player1Id,
+    loserId: overrides.player2Id,
+    player1Score: 11,
+    player2Score: 5,
+    playedAt: '2026-01-01T00:00:00.000Z',
+    eloChanges: {},
     ...overrides,
 })
 
@@ -138,5 +155,117 @@ describe('parseInteger', () => {
 
     test('truncates a decimal string rather than rounding', () => {
         expect(parseInteger('11.9')).toBe(11)
+    })
+})
+
+describe('createOpponentStats', () => {
+    const ada = makePlayer({ id: 'ada', name: 'Ada' })
+    const grace = makePlayer({ id: 'grace', name: 'Grace' })
+    const rene = makePlayer({ id: 'rene', name: 'Rene' })
+
+    test('tallies wins, losses and win rate from ada perspective, either side of the match', () => {
+        const matches = [
+            // Ada wins as player1
+            makeMatch({ id: 'm1', player1Id: 'ada', player2Id: 'grace', winnerId: 'ada', loserId: 'grace' }),
+            // Ada loses as player2
+            makeMatch({
+                id: 'm2',
+                player1Id: 'grace',
+                player2Id: 'ada',
+                winnerId: 'grace',
+                loserId: 'ada',
+                player1Score: 11,
+                player2Score: 7,
+            }),
+        ]
+
+        const [stat] = createOpponentStats(matches, ada, [ada, grace])
+
+        expect(stat?.opponent.id).toBe('grace')
+        expect(stat?.wins).toBe(1)
+        expect(stat?.losses).toBe(1)
+        expect(stat?.totalMatches).toBe(2)
+        expect(stat?.winRate).toBe(50)
+    })
+
+    test('averages the score from whichever side the player was on', () => {
+        const matches = [
+            // Ada is player1, scores 11
+            makeMatch({ id: 'm1', player1Id: 'ada', player2Id: 'grace', player1Score: 11, player2Score: 5 }),
+            // Ada is player2, scores 9
+            makeMatch({
+                id: 'm2',
+                player1Id: 'grace',
+                player2Id: 'ada',
+                winnerId: 'ada',
+                loserId: 'grace',
+                player1Score: 7,
+                player2Score: 9,
+            }),
+        ]
+
+        const [stat] = createOpponentStats(matches, ada, [ada, grace])
+
+        expect(stat?.averageScore).toBe(10)
+    })
+
+    test('sums the eloChange keyed by the player, defaulting a missing entry to 0', () => {
+        const matches = [
+            makeMatch({
+                id: 'm1',
+                player1Id: 'ada',
+                player2Id: 'grace',
+                eloChanges: { ada: 16, grace: -16 },
+            }),
+            // No entry for ada — rows predating persisted elo_changes.
+            makeMatch({ id: 'm2', player1Id: 'ada', player2Id: 'grace', eloChanges: {} }),
+        ]
+
+        const [stat] = createOpponentStats(matches, ada, [ada, grace])
+
+        expect(stat?.eloChange).toBe(16)
+    })
+
+    test('lastMatch is the maximum playedAt regardless of input order', () => {
+        const older = makeMatch({
+            id: 'm1',
+            player1Id: 'ada',
+            player2Id: 'grace',
+            playedAt: '2026-01-01T00:00:00.000Z',
+        })
+        const newer = makeMatch({
+            id: 'm2',
+            player1Id: 'ada',
+            player2Id: 'grace',
+            playedAt: '2026-06-01T00:00:00.000Z',
+        })
+
+        const newestFirst = createOpponentStats([newer, older], ada, [ada, grace])
+        const oldestFirst = createOpponentStats([older, newer], ada, [ada, grace])
+
+        expect(newestFirst[0]?.lastMatch).toBe(newer.playedAt)
+        expect(oldestFirst[0]?.lastMatch).toBe(newer.playedAt)
+    })
+
+    test('drops a match whose opponent is not in the players list', () => {
+        const matches = [makeMatch({ id: 'm1', player1Id: 'ada', player2Id: 'ghost' })]
+
+        expect(createOpponentStats(matches, ada, [ada])).toEqual([])
+    })
+
+    test('sorts by total matches, strongest rivalry first', () => {
+        const matches = [
+            makeMatch({ id: 'm1', player1Id: 'ada', player2Id: 'grace' }),
+            makeMatch({ id: 'm2', player1Id: 'ada', player2Id: 'rene' }),
+            makeMatch({ id: 'm3', player1Id: 'ada', player2Id: 'rene' }),
+        ]
+
+        const stats = createOpponentStats(matches, ada, [ada, grace, rene])
+
+        expect(stats.map((stat) => stat.opponent.id)).toEqual(['rene', 'grace'])
+    })
+
+    test('returns an empty list for no matches', () => {
+        expect(createOpponentStats([], ada, [ada, grace])).toEqual([])
     })
 })
