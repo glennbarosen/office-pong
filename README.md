@@ -64,16 +64,37 @@ The Dokku server will automatically:
 1. Detect the new commits
 2. Build a Docker image using the `Dockerfile`
 3. Install dependencies with pnpm (using frozen lockfile)
-4. Start a new container
-5. Run healthchecks to verify the app is working
-6. Redirect traffic to the new container
-7. Gracefully shut down the old container after 60 seconds
+4. Run `db/migrate.sh` against the app's database (`app.json`'s `predeploy`
+   hook) — if this fails, the deploy stops here and the old container keeps
+   serving traffic
+5. Start a new container
+6. Run healthchecks to verify the app is working
+7. Redirect traffic to the new container
+8. Gracefully shut down the old container after 60 seconds
 
 ### Database migrations
 
-Deploys do **not** run migrations. Schema changes live in `db/migrations/`
-(numbered, idempotent) and have to be applied by hand, before the deploy that
-depends on them:
+Migrations run **automatically on every deploy**, via `app.json`'s
+`scripts.dokku.predeploy` hook — Dokku runs `sh db/migrate.sh` in a one-off
+container built from the new image, using the app's `DATABASE_URL`, before
+any traffic moves to it. If a migration fails, the deploy aborts and the
+previous container keeps running; nothing is left half-migrated.
+
+`db/migrate.sh` applies every file in `db/migrations/`, in filename order, and
+is safe to re-run — already-applied changes are no-ops. The runtime Docker
+image installs `postgresql-client` and copies `db/` in specifically so this
+script has what it needs at predeploy time (see `Dockerfile`).
+
+Constraints are added **validated**, so a migration aborts if existing rows
+violate one rather than modifying them. That is deliberate — the match history
+is the point of the app. Each migration lists pre-flight `SELECT`s in its header
+comment; **run those by hand before merging a migration that tightens an
+existing rule**, so you're not finding out about violating rows via a failed
+production deploy. If a deploy does abort on a migration, that pre-flight
+query is where to start.
+
+To apply a migration ahead of the deploy that needs it, or to run one by hand
+against production for any other reason:
 
 ```bash
 # From the Dokku host, against the app's database
@@ -82,14 +103,6 @@ dokku postgres:connect <postgres-service> < db/migrations/001_add_indexes.sql
 # Or locally, pointing at the production URL
 DATABASE_URL="$(dokku postgres:info <postgres-service> --dsn)" pnpm db:migrate
 ```
-
-`pnpm db:migrate` applies every file in filename order and is safe to re-run.
-
-Constraints are added **validated**, so a migration aborts if existing rows
-violate one rather than modifying them. That is deliberate — the match history
-is the point of the app. Each migration lists pre-flight `SELECT`s in its header
-comment; run those first. If one returns rows, decide what to do with them
-explicitly instead of letting a migration rewrite history.
 
 ### Monitor deployment
 
