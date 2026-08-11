@@ -13,8 +13,10 @@ This app helps you keep track of ping pong matches and rankings at the office wi
 ## Features
 
 - 📱 **Mobile-first design**, navigated via the header and "Se alle" links from the overview
-- 🏆 **ELO-based leaderboard**; players need 5 matches before their rating counts, but everyone is listed (tagged "Mangler kamper" until then)
-- 👤 **Player profiles** with stats and match history
+- 🏆 **ELO-based leaderboard**; players need 5 matches before their rating counts, but everyone is listed (tagged "Mangler kamper" until then), with a rating-tier badge (Nybegynner/Ekspert/Mester/Stormester) once they qualify
+- 🔥 **Form and streaks** — each player's last five results and current win/loss streak, on the leaderboard and their profile
+- 👤 **Player profiles** with stats, match history, and a head-to-head table against every opponent they've faced
+- 🖼️ **Avatars** on the profile page — initials on a colour swatch, or a real image if one is set
 - ⚡ **Quick match registration** with automatic player creation
 - 🎯 **Trust-based system** - no complicated authentication
 - 🇳🇴 **Norwegian text** throughout the app (because why not)
