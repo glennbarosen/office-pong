@@ -23,16 +23,25 @@ Batches are grouped by *file locality*, and each doc lists a `Touches:` glob set
 
 Update the Status column as you go, and tick the checklists inside each doc. That's the handoff state — there's nothing tracked outside these files.
 
-**Where this file lives.** These docs are on `main` so that every branch and
-every new session sees them. Keep it that way: if the queue only exists on the
-branch that happens to be doing the work, nobody else can read it. A batch's
-own status edit belongs in that batch's PR.
+**Where this file lives.** These docs belong on `main`, so that every branch and
+every new session sees them — if the queue only exists on the branch doing the
+work, nobody else can read it. `AGENTS.md` links here, and `AGENTS.md` is loaded
+into every session, which is what makes the queue discoverable at all.
+
+They are **not on `main` yet.** They sit on branch `handoff-queue` (docs +
+the `AGENTS.md` pointer, no code), which has been merged into `h2-data-layer`
+so the tip of the work stack carries them. Merge `handoff-queue` into `main`
+first, ahead of the batch branches; then a batch's own status edit rides in
+that batch's PR.
 
 **Branch state (2026-08-11).** H1, H6 and H2 are implemented but **not merged
 and not pushed** — they sit on local branches `h1-dead-code`, `h6-tooling-ci`
 and `h2-data-layer`, stacked in that order off `main`. Until they merge, `main`
 does not contain any of the work described as done below. Merge in queue order;
 each branch expects the previous one.
+
+**Starting H3?** Branch from `h2-data-layer` — it is the tip of the stack and
+H3 depends on H2. Nothing is pushed, so there are no PRs open yet.
 
 ## The three real bugs
 
