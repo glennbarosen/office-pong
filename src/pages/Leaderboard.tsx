@@ -1,31 +1,27 @@
-import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
+import { TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
 import { WarningTag } from '@fremtind/jokul/tag'
-import { useElementDimensions } from '@fremtind/jokul/hooks'
 import { usePlayers } from '../hooks/usePlayers'
 import { createLeaderboardEntries, formatDate } from '../utils/gameUtils'
 import { PlayerLink } from '../components/common/PlayerLink'
 import { EmptyState } from '../components/common/EmptyState'
 import { QueryState } from '../components/common/QueryState'
+import { CollapsibleTable } from '../components/common/CollapsibleTable'
 
 export function Leaderboard() {
     const playersQuery = usePlayers()
     const players = playersQuery.data ?? []
-
-    const [elementRef, dimensions] = useElementDimensions<HTMLTableElement>(350)
-
-    const shouldCollapse = dimensions.width <= 1000
 
     // Filter and sort players for leaderboard
     const leaderboardData = createLeaderboardEntries(players)
 
     return (
         <QueryState queries={[playersQuery]}>
-            <div className="space-y-8" ref={elementRef}>
+            <div className="space-y-8">
                 {leaderboardData.length > 0 && (
                     <div>
                         <h2 className="heading-4 mb-4">Ledertavle</h2>
 
-                        <Table fullWidth caption="" collapseToList data-collapse={shouldCollapse ? 'true' : undefined}>
+                        <CollapsibleTable>
                             <TableHead>
                                 <TableRow>
                                     <TableHeader>Plassering</TableHeader>
@@ -61,7 +57,7 @@ export function Leaderboard() {
                                     </TableRow>
                                 ))}
                             </TableBody>
-                        </Table>
+                        </CollapsibleTable>
                     </div>
                 )}
 

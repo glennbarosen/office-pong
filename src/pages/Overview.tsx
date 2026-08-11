@@ -1,11 +1,15 @@
 import { Button } from '@fremtind/jokul/button'
-import { Card } from '@fremtind/jokul/card'
-import { WarningTag } from '@fremtind/jokul/tag'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches } from '../hooks/useMatches'
 import { Link } from '@tanstack/react-router'
-import { createLeaderboardEntries, createPlayerMap, getRankIcon } from '../utils/gameUtils'
+import { createLeaderboardEntries, createPlayerMap, resolveMatchPlayers } from '../utils/gameUtils'
 import { QueryState } from '../components/common/QueryState'
+import { EmptyState } from '../components/common/EmptyState'
+import { LeaderboardCard } from '../components/leaderboard/LeaderboardCard'
+import { MatchCard } from '../components/match-card/MatchCard'
+
+/** The overview is a digest: the leading few players and the newest few matches. */
+const OVERVIEW_LIMIT = 5
 
 export function Overview() {
     const playersQuery = usePlayers()
@@ -13,29 +17,12 @@ export function Overview() {
     const players = playersQuery.data ?? []
     const matches = matchesQuery.data ?? []
 
-    // Create a map for quick player lookup
     const playerMap = createPlayerMap(players)
 
-    // Filter and sort players for leaderboard
     const leaderboardData = createLeaderboardEntries(players)
 
-    // Get recent matches with player names
-    const recentMatches = matches
-        .slice()
-        .sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
-        .slice(0, 5)
-        .map((match) => {
-            const player1 = playerMap.get(match.player1Id)
-            const player2 = playerMap.get(match.player2Id)
-            const winner = playerMap.get(match.winnerId)
-
-            return {
-                ...match,
-                player1Name: player1?.name || 'Ukjent',
-                player2Name: player2?.name || 'Ukjent',
-                winnerName: winner?.name || 'Ukjent',
-            }
-        })
+    // Already ordered newest-first by the query.
+    const recentMatches = resolveMatchPlayers(matches, playerMap).slice(0, OVERVIEW_LIMIT)
 
     return (
         <QueryState queries={[playersQuery, matchesQuery]}>
@@ -45,32 +32,10 @@ export function Overview() {
                 </Button>
             </div>
             <div className="flex flex-col gap-12">
-                <h2 className="heading-4">Topp 5</h2>
-                {leaderboardData.slice(0, 5).map((player, i) => {
-                    return (
-                        <Card key={player.id} variant="low" padding="xl" clickable asChild>
-                            <Link to="/profil/$id" params={{ id: player.id }} className="no-underline">
-                                <div className="flex items-start gap-12">
-                                    <div className="body">{getRankIcon(i + 1)}</div>
-                                    <div className="flex flex-1 flex-col">
-                                        <div className="flex items-center justify-between">
-                                            <div className="body">{player.name}</div>
-                                            {player.isEligibleForRanking ? (
-                                                <div className="body font-bold">{player.eloRating}</div>
-                                            ) : (
-                                                <WarningTag>Mangler kamper</WarningTag>
-                                            )}
-                                        </div>
-                                        <div className="text-text-subdued">
-                                            {player.wins} seire - {player.losses} tap ({player.winRate.toFixed(0)}%
-                                            seier)
-                                        </div>
-                                    </div>
-                                </div>
-                            </Link>
-                        </Card>
-                    )
-                })}
+                <h2 className="heading-4">Topp {OVERVIEW_LIMIT}</h2>
+                {leaderboardData.slice(0, OVERVIEW_LIMIT).map((player, index) => (
+                    <LeaderboardCard key={player.id} player={player} rank={index + 1} />
+                ))}
                 <div className="flex justify-center">
                     <Button as={Link} to="/ledertavle" variant="secondary">
                         Se alle
@@ -79,42 +44,10 @@ export function Overview() {
             </div>
 
             <div className="flex flex-col gap-12">
-                <h2 className="heading-4">Siste 5 kamper</h2>
-                {recentMatches.map((match) => {
-                    const isPlayer1Winner = match.winnerId === match.player1Id
-                    return (
-                        <Card key={match.id} variant="low" padding="xl">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <Link
-                                            to="/profil/$id"
-                                            params={{ id: match.player1Id }}
-                                            className="font-medium text-text-interactive hover:underline"
-                                        >
-                                            {match.player1Name}
-                                        </Link>
-                                        {isPlayer1Winner && <span className="text-green-600">🏆</span>}
-                                    </div>
-                                    <span className="text-text-subdued">vs</span>
-                                    <div className="flex items-center gap-4">
-                                        <Link
-                                            to="/profil/$id"
-                                            params={{ id: match.player2Id }}
-                                            className="font-medium text-text-interactive hover:underline"
-                                        >
-                                            {match.player2Name}
-                                        </Link>
-                                        {!isPlayer1Winner && <span>🏆</span>}
-                                    </div>
-                                </div>
-                                <div className="body font-bold">
-                                    {match.player1Score} - {match.player2Score}
-                                </div>
-                            </div>
-                        </Card>
-                    )
-                })}
+                <h2 className="heading-4">Siste {OVERVIEW_LIMIT} kamper</h2>
+                {recentMatches.map((match) => (
+                    <MatchCard key={match.id} match={match} />
+                ))}
                 <div className="flex justify-center">
                     <Button as={Link} to="/kamper" variant="secondary">
                         Se alle
@@ -123,10 +56,12 @@ export function Overview() {
             </div>
 
             {players.length === 0 && (
-                <div className="px-4 py-12 text-center">
-                    <p className="mb-4 text-text-subdued">Ingen spillere registrert ennå</p>
-                    <p className="small text-text-subdued">Start ved å registrere en ny kamp</p>
-                </div>
+                <EmptyState
+                    title="Ingen spillere registrert ennå"
+                    description="Start ved å registrere en ny kamp"
+                    actionText="Registrer første kamp"
+                    actionTo="/ny-kamp"
+                />
             )}
         </QueryState>
     )

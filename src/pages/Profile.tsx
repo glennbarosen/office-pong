@@ -9,6 +9,7 @@ import { InfoMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
 import { NotFound } from '../components/common/NotFound'
 import { PLAYER_NOT_FOUND } from '../lib/messages'
+import { createPlayerMap, resolveMatchPlayers } from '../utils/gameUtils'
 
 interface ProfileProps {
     id: string
@@ -47,9 +48,10 @@ interface ProfileDetailsProps {
 }
 
 function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
-    const playerMatches = matches
-        .filter((match: Match) => match.player1Id === player.id || match.player2Id === player.id)
-        .sort((a: Match, b: Match) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
+    const playerMatches = resolveMatchPlayers(
+        matches.filter((match: Match) => match.player1Id === player.id || match.player2Id === player.id),
+        createPlayerMap(players)
+    ).sort((a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
 
     const winRate = player.matchesPlayed > 0 ? (player.wins / player.matchesPlayed) * 100 : 0
     const isEligibleForRanking = player.matchesPlayed >= RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING
@@ -96,7 +98,7 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                 {playerMatches.length > 0 ? (
                     <div className="space-y-4">
                         {playerMatches.map((match) => (
-                            <MatchCard key={match.id} match={match} currentPlayerId={player.id} players={players} />
+                            <MatchCard key={match.id} match={match} currentPlayerId={player.id} />
                         ))}
                     </div>
                 ) : (

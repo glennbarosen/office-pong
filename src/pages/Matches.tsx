@@ -1,4 +1,4 @@
-import { Table, TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
+import { TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
 import { SuccessTag } from '@fremtind/jokul/tag'
 import { useMatches } from '../hooks/useMatches'
 import { usePlayers } from '../hooks/usePlayers'
@@ -8,7 +8,7 @@ import { PlayerLink } from '../components/common/PlayerLink'
 import { DateDisplay } from '../components/common/DateDisplay'
 import { EmptyState } from '../components/common/EmptyState'
 import { QueryState } from '../components/common/QueryState'
-import { useElementDimensions } from '@fremtind/jokul/hooks'
+import { CollapsibleTable } from '../components/common/CollapsibleTable'
 
 const formatEloChange = (change: number | undefined): string => {
     if (change === undefined) {
@@ -26,22 +26,18 @@ export function Matches() {
     // Create a map for quick player lookup
     const playerMap = createPlayerMap(players)
 
-    const [elementRef, dimensions] = useElementDimensions<HTMLTableElement>(350)
-
-    const shouldCollapse = dimensions.width <= 1000
-
     const matchesWithPlayers: MatchWithPlayers[] = resolveMatchPlayers(matches, playerMap).sort(
         (a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime() // Sort by newest first
     )
 
     return (
         <QueryState queries={[matchesQuery, playersQuery]}>
-            <div ref={elementRef}>
+            <div>
                 {matchesWithPlayers.length > 0 && (
                     <div>
                         <h2 className="heading-4 mb-4">Kamper</h2>
 
-                        <Table caption="" fullWidth collapseToList data-collapse={shouldCollapse ? 'true' : undefined}>
+                        <CollapsibleTable>
                             <TableHead>
                                 <TableRow>
                                     <TableHeader>Dato</TableHeader>
@@ -97,7 +93,7 @@ export function Matches() {
                                     </TableRow>
                                 ))}
                             </TableBody>
-                        </Table>
+                        </CollapsibleTable>
                     </div>
                 )}
 
