@@ -69,6 +69,28 @@ The Dokku server will automatically:
 6. Redirect traffic to the new container
 7. Gracefully shut down the old container after 60 seconds
 
+### Database migrations
+
+Deploys do **not** run migrations. Schema changes live in `db/migrations/`
+(numbered, idempotent) and have to be applied by hand, before the deploy that
+depends on them:
+
+```bash
+# From the Dokku host, against the app's database
+dokku postgres:connect <postgres-service> < db/migrations/001_add_indexes.sql
+
+# Or locally, pointing at the production URL
+DATABASE_URL="$(dokku postgres:info <postgres-service> --dsn)" pnpm db:migrate
+```
+
+`pnpm db:migrate` applies every file in filename order and is safe to re-run.
+
+Constraints are added **validated**, so a migration aborts if existing rows
+violate one rather than modifying them. That is deliberate — the match history
+is the point of the app. Each migration lists pre-flight `SELECT`s in its header
+comment; run those first. If one returns rows, decide what to do with them
+explicitly instead of letting a migration rewrite history.
+
 ### Monitor deployment
 
 Watch logs in real-time:
