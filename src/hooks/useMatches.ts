@@ -16,9 +16,16 @@ export function useCreateMatch() {
 
     return useMutation({
         mutationFn: (input: CreateMatchInput) => createMatch({ data: input }),
+        // Seeding the list with the server's own row (not an optimistic guess —
+        // the server computes elo_changes, so a fabricated entry would be wrong)
+        // makes /kamper correct immediately, before the refetch lands.
         onSuccess: (newMatch) => {
             queryClient.setQueryData(queryKeys.matches, (old: Match[] = []) => [newMatch, ...old])
-            // A match always changes two ratings, and may have created players.
+        },
+        // onSettled, not onSuccess: a failed write may still have altered state,
+        // and both lists derive from the match that was just registered.
+        onSettled: () => {
+            void queryClient.invalidateQueries({ queryKey: queryKeys.matches })
             void queryClient.invalidateQueries({ queryKey: queryKeys.players })
         },
     })
