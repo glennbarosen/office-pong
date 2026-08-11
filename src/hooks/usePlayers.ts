@@ -5,6 +5,6 @@ import { queryKeys } from '../lib/queryKeys'
 export function usePlayers() {
     return useQuery({
         queryKey: queryKeys.players,
-        queryFn: () => getPlayers(),
+        queryFn: getPlayers,
     })
 }

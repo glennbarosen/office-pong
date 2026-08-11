@@ -7,7 +7,7 @@ import { queryKeys } from '../lib/queryKeys'
 export function useMatches() {
     return useQuery({
         queryKey: queryKeys.matches,
-        queryFn: () => getMatches(),
+        queryFn: getMatches,
     })
 }
 
