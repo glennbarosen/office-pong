@@ -5,6 +5,10 @@
 **Touches:** `src/router.tsx`, `src/hooks/*`, `src/routes/*`
 **Est. size:** M
 
+> **Line references verified against `h2-data-layer` (2026-08-11).** H2 rewrote
+> both hooks and H1 deleted `useUpdatePlayer`, so the numbers below are the
+> post-stack ones, not `main`'s. Branch from `h2-data-layer`.
+
 ## Why
 
 The app migrated from a TanStack Router SPA to TanStack Start, but the data layer never followed. No route has a `loader`, so despite full SSR every page ships an empty shell and fetches after hydration. Worse, the `QueryClient` is a module-level singleton, which on the server means one cache shared across every request and every user — the highest-severity bug in the repo.
@@ -24,18 +28,18 @@ The app migrated from a TanStack Router SPA to TanStack Start, but the data laye
 
 ### 2. Query key factory
 
-`['players']` and `['matches']` are hand-written inline in six places: `src/hooks/useMatches.ts:7,28,29` and `src/hooks/usePlayers.ts:7,18,31`.
+`['players']` and `['matches']` are hand-written inline in five places: `src/hooks/useMatches.ts:8,19,21` and `src/hooks/usePlayers.ts:7,18`. (It was six on `main`; H1 deleted `useUpdatePlayer`, which held the sixth.)
 
 - [ ] Add `src/lib/queryKeys.ts` exporting something like `queryKeys.players` / `queryKeys.matches` with `as const` keys.
-- [ ] Replace all six literals. This matters immediately for task 3 — the missing invalidation below is exactly the class of bug a factory prevents.
+- [ ] Replace all five literals. This matters immediately for task 3 — the missing invalidation below is exactly the class of bug a factory prevents.
 
 ### 3. Fix the match mutation's cache updates
 
-`src/hooks/useMatches.ts:27-30` prepends the new match via `setQueryData(['matches'], ...)` and invalidates only `['players']`. **`['matches']` is never invalidated**, so the match list's correctness rests entirely on that manual prepend staying accurate forever — and after H2 the server-returned match will be the only source of the real `elo_changes`.
+`src/hooks/useMatches.ts:18-22` prepends the new match via `setQueryData(['matches'], ...)` and invalidates only `['players']`. **`['matches']` is never invalidated**, so the match list's correctness rests entirely on that manual prepend staying accurate forever. H2 has landed, so the server-returned match is now the only source of the real `elo_changes` — the prepend is the sole thing keeping `/kamper` truthful.
 
 - [ ] Invalidate both keys in `onSettled` (which runs on error too, unlike `onSuccess`).
 - [ ] Optionally keep the `setQueryData` prepend as a genuine optimistic update — but then do it properly: move it to `onMutate`, snapshot the previous value, and roll back in `onError`. A prepend in `onSuccess` with no rollback is the worst of both worlds.
-- [ ] Same treatment for `useAddPlayer` (`src/hooks/usePlayers.ts:12-21`) if H2 hasn't folded player creation into the match mutation.
+- [ ] **`useAddPlayer` (`src/hooks/usePlayers.ts:12-21`) has no callers left.** H2 moved player creation into the match transaction, which removed the only one; `rg 'useAddPlayer' src/` now hits nothing but the declaration. Delete it rather than fixing its cache handling — and decide the same for the `addPlayer` server fn it wraps (`src/lib/server/players.ts:14`), which is then also unreferenced. This is dead code H1 couldn't have seen, since H2 created it.
 
 ### 4. Wire up SSR data loading
 
@@ -64,8 +68,8 @@ Only `errorComponent` exists, at the root (`src/routes/__root.tsx:26`).
 
 ### 7. Minor cleanups
 
-- [ ] Drop the pointless closures: `queryFn: () => getMatches()` (`useMatches.ts:8`) and `() => getPlayers()` (`usePlayers.ts:8`) can be `queryFn: getMatches` / `getPlayers`.
-- [ ] `usePlayers.ts` has two structurally identical mutation hooks. H1 deletes `useUpdatePlayer` (`:23`); if it somehow survived, delete it here.
+- [ ] Drop the pointless closures: `queryFn: () => getMatches()` (`useMatches.ts:9`) and `() => getPlayers()` (`usePlayers.ts:8`) can be `queryFn: getMatches` / `getPlayers`.
+- [x] `useUpdatePlayer` — deleted by H1. Nothing left to do; `usePlayers.ts` now has one mutation hook, and task 3 wants that one gone too.
 
 ## Out of scope
 

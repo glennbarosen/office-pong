@@ -43,6 +43,28 @@ each branch expects the previous one.
 **Starting H3?** Branch from `h2-data-layer` — it is the tip of the stack and
 H3 depends on H2. Nothing is pushed, so there are no PRs open yet.
 
+**Docs re-verified against the stack (2026-08-11, at `d634f08`).** The audit was
+written against `main` (`1c44639`); H1, H6 and H2 have since rewritten
+`validation.ts`, `matchService.ts`, both hooks, `Matches.tsx` and every file in
+`player-metrics/`. Every line reference in H3, H4, H5 and H7 has been re-checked
+and corrected against the tip of the stack, so **read those docs against
+`h2-data-layer`, not `main`** — on `main` the numbers will not line up. What
+changed materially:
+
+- **H7 task 3 is now mostly done** — H2's rewrite performed the `matchService`
+  extraction the task described. What remains is rewritten in place.
+- **H7 task 2 gained a fourth source of truth.** H2 shipped a
+  `matches_valid_score_check` CHECK constraint encoding the *loose* win-by-2
+  reading, so tightening the rule now needs a migration against real match
+  history, not just a code edit.
+- **H3 gained an item:** `useAddPlayer` and the `addPlayer` server fn have no
+  callers left — H2 removed the last one. That's dead code H1 could not have
+  seen.
+- **H7 task 5 gained an item:** H1 deleted `FullBleed.tsx`, which the README's
+  project-structure block still lists.
+
+The three real bugs and every "still open" claim below were re-checked and hold.
+
 ## The three real bugs
 
 If you only fix three things, fix these. Each is owned by the batch in brackets.

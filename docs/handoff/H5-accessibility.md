@@ -5,6 +5,12 @@
 **Touches:** `src/components/**`, `src/pages/**`, `src/routes/__root.tsx`, `src/utils/confetti.ts`
 **Est. size:** M
 
+> **Line references verified against `h2-data-layer` (2026-08-11).** The headline
+> finding is unchanged — `rg 'aria-|role=|alt=|htmlFor|tabIndex|sr-only' src/`
+> still returns exactly one hit, and `rg 'reduced-motion' src/` and `rg '<nav'`
+> are still empty. Only line numbers in `NewMatch.tsx`, `PlayerLink.tsx`,
+> `Matches.tsx` and `confetti.ts` moved.
+
 ## Why
 
 The entire application contains **one** accessibility attribute. `rg 'aria-|role=|alt=|htmlFor|tabIndex|sr-only' src/` returns a single hit: `aria-label="Bytt tema"` at `src/components/header/Header.tsx:15`. Nothing is announced to screen readers, rank and trophy emoji carry meaning with no text alternative, the confetti burst has no reduced-motion escape, and every loading state blanks the whole page.
@@ -18,7 +24,7 @@ This is an internal office tool, so the stakes are lower than a public product �
 ### 1. Announce asynchronous state
 
 - [ ] `src/components/common/LoadingSpinner.tsx:6-11` is a plain `<div>` with a `'Laster...'` default. Add `role="status"` and `aria-live="polite"` so the change is announced. Check whether Jøkul ships a loader component first.
-- [ ] The form error at `src/pages/NewMatch.tsx:115` renders silently. Put it in a live region, set `aria-invalid` on the offending fields, and move focus to the error (or the first bad field) on failed submit.
+- [ ] The form error at `src/pages/NewMatch.tsx:112` renders silently. Put it in a live region, set `aria-invalid` on the offending fields, and move focus to the error (or the first bad field) on failed submit.
 - [ ] If H4's shared query-state wrapper landed, the error branch there needs the same treatment — one live region for the page rather than per-component.
 
 ### 2. Give meaning-bearing emoji text alternatives
@@ -35,7 +41,7 @@ The distinction matters: decorative emoji get `aria-hidden`, informational emoji
 
 - [ ] There is no `<nav>` anywhere — `rg '<nav'` is empty. `src/routes/__root.tsx:49` has `<main>` and that's the only landmark. Wrap the header's navigation links in `<nav>`.
 - [ ] Add a skip link to `<main>` as the first focusable element.
-- [ ] Note that `README.md:15` claims the app has "bottom navigation" and it does not — navigation is the header plus "Se alle" links (`Overview.tsx:77,121`). H7 owns fixing the README; just don't let the claim confuse you into looking for a component that doesn't exist.
+- [ ] Note that `README.md:15` claims the app has "bottom navigation" and it does not — navigation is the header plus "Se alle" links (`Overview.tsx:78,122`). H7 owns fixing the README; just don't let the claim confuse you into looking for a component that doesn't exist.
 
 ### 4. Make the player-type toggle a real control
 
@@ -45,20 +51,20 @@ The distinction matters: decorative emoji get `aria-hidden`, informational emoji
 
 ### 5. Respect `prefers-reduced-motion`
 
-- [ ] `src/utils/confetti.ts` is ~180 lines of particle bursts (`triggerMatchSuccessConfetti`, called from `src/pages/NewMatch.tsx:65`) with **no** reduced-motion guard — `rg 'reduced-motion' src/` is empty. Check `window.matchMedia('(prefers-reduced-motion: reduce)')` and skip the animation (the `onComplete` callback must still fire, since `NewMatch.tsx` sequences on it).
+- [ ] `src/utils/confetti.ts` is ~160 lines of particle bursts (`triggerMatchSuccessConfetti`, `:9`, called from `src/pages/NewMatch.tsx:63`) with **no** reduced-motion guard — `rg 'reduced-motion' src/` is empty. Check `window.matchMedia('(prefers-reduced-motion: reduce)')` and skip the animation (the `onComplete` callback must still fire, since `NewMatch.tsx` sequences the navigation on it).
 - [ ] Jøkul's `useBrowserPreferences` (already used in `src/hooks/useTheme.ts:1,7`) may expose this preference — check before adding a raw `matchMedia` call.
 - [ ] Audit any CSS transitions in `src/styles/` and the SCSS files for the same guard.
 
 ### 6. Replace page-blanking spinners with skeletons
 
-`src/pages/Leaderboard.tsx:20-22`, `Matches.tsx:56-58`, and `Overview.tsx:38-40` each swap the entire page for a text spinner, so every refetch collapses the layout and shifts focus.
+`src/pages/Leaderboard.tsx:20-22`, `Matches.tsx:68-70`, and `Overview.tsx:38-40` each swap the entire page for a text spinner, so every refetch collapses the layout and shifts focus.
 
 - [ ] Render skeleton rows that preserve layout dimensions instead. If H4 extracted a shared query-state wrapper, the skeleton belongs there, parameterized by row count.
 - [ ] Keep the `role="status"` announcement from task 1 — a skeleton is silent to a screen reader otherwise.
 
 ### 7. Fix the router typing suppression
 
-- [ ] `src/components/common/PlayerLink.tsx:17` carries `// @ts-expect-error - Router typing issue with params` over `params={{ id: playerId }}`. Resolve it properly — this is the generic `Link as={RouterLink}` polymorphism losing route-param types. Options: type the wrapper's props against the route's param type, or use TanStack's `Link` directly with Jøkul styling. If it genuinely can't be typed, keep the suppression but replace the vague comment with a specific explanation and a link to the upstream issue.
+- [ ] `src/components/common/PlayerLink.tsx:15` carries `// @ts-expect-error - Router typing issue with params` over `params={{ id: playerId }}` (`:16`). Resolve it properly — this is the generic `Link as={RouterLink}` polymorphism losing route-param types. Options: type the wrapper's props against the route's param type, or use TanStack's `Link` directly with Jøkul styling. If it genuinely can't be typed, keep the suppression but replace the vague comment with a specific explanation and a link to the upstream issue.
 
 ### 8. General sweep
 
