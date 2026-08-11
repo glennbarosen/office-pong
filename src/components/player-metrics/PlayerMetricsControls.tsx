@@ -27,8 +27,8 @@ export function PlayerMetricsControls({
     opponentStats,
 }: PlayerMetricsControlsProps) {
     return (
-        <Card className="p-4 sm:p-8">
-            <div className="space-y-6 sm:space-y-8">
+        <Card padding="m">
+            <div className="space-y-16 sm:space-y-24">
                 <div>
                     {/* Jøkul renders and associates the label itself; a bare <label> here
                         was visually adjacent but tied to no control. */}
@@ -47,12 +47,12 @@ export function PlayerMetricsControls({
                     />
                 </div>
 
-                <div className="flex flex-wrap gap-2 pt-4 sm:gap-4" style={{ marginTop: '1.5rem' }}>
+                <div className="flex flex-wrap gap-8 pt-16 sm:gap-12">
                     <Button
                         variant={showEloHistory ? 'primary' : 'secondary'}
                         density="compact"
                         onClick={onToggleEloHistory}
-                        className="text-xs sm:text-sm sm:px-3 py-1 px-2 sm:py-2"
+                        className="text-xs sm:text-sm"
                     >
                         ELO-utvikling
                     </Button>
@@ -60,7 +60,7 @@ export function PlayerMetricsControls({
                         variant={showWinLossRatio ? 'primary' : 'secondary'}
                         density="compact"
                         onClick={onToggleWinLossRatio}
-                        className="text-xs sm:text-sm sm:px-3 py-1 px-2 sm:py-2"
+                        className="text-xs sm:text-sm"
                     >
                         Seier/tap-forhold
                     </Button>
@@ -68,7 +68,7 @@ export function PlayerMetricsControls({
                         variant={showOpponentStats ? 'primary' : 'secondary'}
                         density="compact"
                         onClick={onToggleOpponentStats}
-                        className="text-xs sm:text-sm sm:px-3 py-1 px-2 sm:py-2"
+                        className="text-xs sm:text-sm"
                     >
                         Motstanderstatistikk
                     </Button>

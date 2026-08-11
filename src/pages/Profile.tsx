@@ -75,7 +75,7 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
 
     return (
         <div className="flex flex-col gap-32">
-            <Card variant="outlined" className="max-w-[400px] space-y-24">
+            <Card variant="outlined" padding="l" className="space-y-24">
                 <div className="flex items-center gap-16">
                     <PlayerAvatar player={player} size="lg" />
                     <div>
@@ -117,22 +117,22 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                 )}
             </Card>
 
-            <div className="p-6">
-                <h2 className="heading-4 mb-4">Innbyrdes oppgjør</h2>
+            <Card variant="outlined" padding="l">
+                <h2 className="heading-4 mb-16">Innbyrdes oppgjør</h2>
                 <HeadToHeadTable stats={opponentStats} />
-            </div>
+            </Card>
 
             {/* Player Metrics Charts */}
-            <div className="p-6">
-                <h2 className="heading-4 mb-4">Detaljert statistikk</h2>
+            <Card variant="outlined" padding="l">
+                <h2 className="heading-4 mb-16">Detaljert statistikk</h2>
                 {/* Its own filter would redo the one above. */}
                 <PlayerMetrics player={player} matches={rawPlayerMatches} players={players} />
-            </div>
+            </Card>
 
-            <div className="p-6">
-                <h2 className="heading-4 mb-4">Kamphistorikk</h2>
+            <Card variant="outlined" padding="l">
+                <h2 className="heading-4 mb-16">Kamphistorikk</h2>
                 {playerMatches.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-12">
                         {playerMatches.map((match) => (
                             <MatchCard key={match.id} match={match} currentPlayerId={player.id} />
                         ))}
@@ -142,7 +142,7 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                         <p className="text-text-subdued">Ingen kamper spilt ennå</p>
                     </div>
                 )}
-            </div>
+            </Card>
         </div>
     )
 }

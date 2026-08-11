@@ -15,7 +15,7 @@ export function EmptyState({ title, description, actionText, actionTo, children 
             <p className="mb-4 text-text-subdued">{title}</p>
             {description && <p className="small text-text-subdued">{description}</p>}
             {actionText && actionTo && (
-                <div className="mt-6">
+                <div className="mt-16">
                     <Button as={Link} to={actionTo} variant="primary">
                         {actionText}
                     </Button>

@@ -21,7 +21,7 @@ interface LeaderboardCardProps {
  */
 export function LeaderboardCard({ player, rank, form }: LeaderboardCardProps) {
     return (
-        <Card variant="low" padding="xl" clickable asChild>
+        <Card variant="low" padding="m" clickable asChild>
             <Link to="/profil/$id" params={{ id: player.id }} className="no-underline">
                 <div className="flex items-start gap-12">
                     <div className="body">
