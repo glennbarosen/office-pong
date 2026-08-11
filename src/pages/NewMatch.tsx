@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 
 import { usePlayers } from '../hooks/usePlayers'
 import { useCreateMatch } from '../hooks/useMatches'
+import { RATING_CONFIG } from '../types/pong'
 import { MatchService, type MatchCreationData } from '../lib/matchService'
 import { parseInteger } from '../utils/gameUtils'
 import { triggerMatchSuccessConfetti } from '../utils/confetti'
@@ -85,8 +86,8 @@ export function NewMatch() {
 
             <QueryState queries={[playersQuery]}>
                 <InfoMessage title="Tillitsbasert system" className="mb-6">
-                    Vi stoler på at du registrerer kampen ærlig. Systemet krever minimum 5 kamper for å være kvalifisert
-                    for ledertavlen.
+                    Vi stoler på at du registrerer kampen ærlig. Systemet krever minimum{' '}
+                    {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper for å være kvalifisert for ledertavlen.
                 </InfoMessage>
 
                 <form onSubmit={(e) => void handleSubmit(e)} className="space-y-8">

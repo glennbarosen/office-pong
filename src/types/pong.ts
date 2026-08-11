@@ -81,4 +81,40 @@ export const RATING_CONFIG = {
     STARTING_ELO: 1200,
     K_FACTOR: 32,
     MINIMUM_MATCHES_FOR_RANKING: 5,
+    /** Rating thresholds for getRatingTier, lowest first. */
+    TIERS: [
+        { minRating: 1800, tier: 'Grandmaster', color: 'platinum' },
+        { minRating: 1600, tier: 'Master', color: 'gold' },
+        { minRating: 1400, tier: 'Expert', color: 'silver' },
+        { minRating: 0, tier: 'Novice', color: 'bronze' },
+    ] as const,
+} as const
+
+/**
+ * Table-tennis match rules: score bounds, win condition, deuce handling, and
+ * player-name length. Read by validation.ts and (the divisor only) by
+ * eloService.ts — see AGENTS.md, which asks that match rules live in those
+ * two files plus matchService.ts rather than being reimplemented inline.
+ *
+ * The database enforces the same rules independently, in
+ * `matches_no_draw_check` / `matches_valid_result_check` /
+ * `players_name_length_check` (db/init.sql and
+ * db/migrations/002_add_constraints.sql). TypeScript cannot reach SQL, so
+ * there is no shared source of truth across the two — change both together,
+ * or the API and the database will silently disagree about what a valid
+ * match looks like.
+ */
+export const MATCH_RULES = {
+    /** A game is first to this many points. */
+    WINNING_SCORE: 11,
+    /** The winner's margin must be at least this, always. */
+    MIN_WIN_MARGIN: 2,
+    /** Below WINNING_SCORE the loser may have any score from 0 up to this. */
+    MAX_LOSER_SCORE_AT_WINNING_SCORE: 9,
+    /** From WINNING_SCORE - 1 (deuce), both players must have reached at least this. */
+    MIN_DEUCE_SCORE: 10,
+    /** A recorded score above this is almost certainly a typo, not a real game. */
+    MAX_SCORE: 99,
+    MIN_PLAYER_NAME_LENGTH: 2,
+    MAX_PLAYER_NAME_LENGTH: 50,
 } as const
