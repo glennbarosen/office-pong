@@ -5,7 +5,7 @@
 **Touches:** `src/components/**`, `src/pages/**`, `src/routes/__root.tsx`, `src/utils/confetti.ts`
 **Est. size:** M
 
-> **Line references verified against `h2-data-layer` (2026-08-11).** The headline
+> **Line references verified against `main` (2026-08-11, at `9935591`).** The headline
 > finding is unchanged — `rg 'aria-|role=|alt=|htmlFor|tabIndex|sr-only' src/`
 > still returns exactly one hit, and `rg 'reduced-motion' src/` and `rg '<nav'`
 > are still empty. Only line numbers in `NewMatch.tsx`, `PlayerLink.tsx`,

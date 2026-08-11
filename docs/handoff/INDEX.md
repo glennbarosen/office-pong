@@ -8,9 +8,9 @@ Rather than one unreviewable mega-diff, the work is split into batches below. **
 
 | # | Batch | Status | Depends on | Size |
 |---|-------|--------|------------|------|
-| H1 | [Dead code & dependency cleanup](H1-dead-code.md) | **done, unmerged** | — | S |
-| H6 | [Tooling, CI & test infrastructure](H6-tooling-ci.md) | **done, unmerged** | H1 | M |
-| H2 | [Data layer correctness & DB hardening](H2-data-layer.md) | **done, unmerged** | H1 | L |
+| H1 | [Dead code & dependency cleanup](H1-dead-code.md) | **done, on `main`** | — | S |
+| H6 | [Tooling, CI & test infrastructure](H6-tooling-ci.md) | **done, on `main`** | H1 | M |
+| H2 | [Data layer correctness & DB hardening](H2-data-layer.md) | **done, on `main`** | H1 | L |
 | H3 | [Query client & SSR correctness](H3-query-ssr.md) | not started | H2 | M |
 | H4 | [Page & component dedup, shared types](H4-pages-components.md) | not started | H1, H3 | L |
 | H5 | [Accessibility & UX polish](H5-accessibility.md) | not started | H4 | M |
@@ -26,30 +26,29 @@ Update the Status column as you go, and tick the checklists inside each doc. Tha
 **Where this file lives.** These docs belong on `main`, so that every branch and
 every new session sees them — if the queue only exists on the branch doing the
 work, nobody else can read it. `AGENTS.md` links here, and `AGENTS.md` is loaded
-into every session, which is what makes the queue discoverable at all.
+into every session, which is what makes the queue discoverable at all. They are
+on `main` now.
 
-They are **not on `main` yet.** They sit on branch `handoff-queue` (docs +
-the `AGENTS.md` pointer, no code), which has been merged into `h2-data-layer`
-so the tip of the work stack carries them. Merge `handoff-queue` into `main`
-first, ahead of the batch branches; then a batch's own status edit rides in
-that batch's PR.
+**Branch state (2026-08-11).** H1, H6 and H2 are **merged into local `main`**.
+The stack was linear (`h1-dead-code` → `h6-tooling-ci` → `h2-data-layer`, with
+`handoff-queue` merged in), so it landed as a single fast-forward rather than
+three merges. Verified green before landing: `lint`, `types:check`,
+`prettier:check`, `build`, and all 63 tests — including the 6 server
+integration tests, run against a real local Postgres rather than skipped.
 
-**Branch state (2026-08-11).** H1, H6 and H2 are implemented but **not merged
-and not pushed** — they sit on local branches `h1-dead-code`, `h6-tooling-ci`
-and `h2-data-layer`, stacked in that order off `main`. Until they merge, `main`
-does not contain any of the work described as done below. Merge in queue order;
-each branch expects the previous one.
+The old batch branches (`h1-dead-code`, `h6-tooling-ci`, `h2-data-layer`) are
+now fully contained in `main` and can be deleted. No PRs were ever opened for
+them; the work went straight to `main`.
 
-**Starting H3?** Branch from `h2-data-layer` — it is the tip of the stack and
-H3 depends on H2. Nothing is pushed, so there are no PRs open yet.
+**Starting H3?** Branch from `main` — it is now the tip and carries H1, H6 and
+H2.
 
-**Docs re-verified against the stack (2026-08-11, at `d634f08`).** The audit was
-written against `main` (`1c44639`); H1, H6 and H2 have since rewritten
-`validation.ts`, `matchService.ts`, both hooks, `Matches.tsx` and every file in
-`player-metrics/`. Every line reference in H3, H4, H5 and H7 has been re-checked
-and corrected against the tip of the stack, so **read those docs against
-`h2-data-layer`, not `main`** — on `main` the numbers will not line up. What
-changed materially:
+**Docs re-verified (2026-08-11).** The audit was written against the old `main`
+(`1c44639`); H1, H6 and H2 rewrote `validation.ts`, `matchService.ts`, both
+hooks, `Matches.tsx` and every file in `player-metrics/`. Every line reference
+in H3, H4, H5 and H7 has been re-checked and corrected against the post-merge
+`main`, so the numbers in those docs line up with what you get by checking out
+`main` today. What changed materially:
 
 - **H7 task 3 is now mostly done** — H2's rewrite performed the `matchService`
   extraction the task described. What remains is rewritten in place.
@@ -70,10 +69,10 @@ The three real bugs and every "still open" claim below were re-checked and hold.
 If you only fix three things, fix these. Each is owned by the batch in brackets.
 
 1. **STILL OPEN. The `QueryClient` is a module-level singleton** (`src/router.tsx:5`) handed to every `getRouter()` call. On the server that is one cache shared across all requests and all users. [H3]
-2. **FIXED on `h2-data-layer`.** Persisted ELO was computed from client-supplied data. `src/lib/server/matches.ts:39` calls `EloService.calculateEloChanges(data.winnerData, data.loserData)` on `Player` objects the browser posted, then writes the result into `players.elo_rating`. A stale client cache silently corrupts ratings. [H2]
-3. **FIXED on `h2-data-layer`.** Players were created outside the match transaction (`src/lib/matchService.ts:58,91` call `addPlayer` before `addMatchWithPlayerUpdates`), so a failing match insert leaves orphaned players behind. [H2]
+2. **FIXED (H2, on `main`).** Persisted ELO was computed from client-supplied data. `src/lib/server/matches.ts:39` calls `EloService.calculateEloChanges(data.winnerData, data.loserData)` on `Player` objects the browser posted, then writes the result into `players.elo_rating`. A stale client cache silently corrupts ratings. [H2]
+3. **FIXED (H2, on `main`).** Players were created outside the match transaction (`src/lib/matchService.ts:58,91` call `addPlayer` before `addMatchWithPlayerUpdates`), so a failing match insert leaves orphaned players behind. [H2]
 
-Two more that are user-visible but narrower: `src/pages/Profile.tsx:20` flashes "Spiller ikke funnet" before data arrives [H4, **still open**], and matches whose `elo_changes` is the default `'{}'` rendered `+NaN` at `src/pages/Matches.tsx:99-113` [**fixed on `h6-tooling-ci`**; `noUncheckedIndexedAccess` surfaced it, and `src/pages/__tests__/Matches.test.tsx` pins it].
+Two more that are user-visible but narrower: `src/pages/Profile.tsx:20` flashes "Spiller ikke funnet" before data arrives [H4, **still open**], and matches whose `elo_changes` is the default `'{}'` rendered `+NaN` at `src/pages/Matches.tsx:99-113` [**fixed by H6, on `main`**; `noUncheckedIndexedAccess` surfaced it, and `src/pages/__tests__/Matches.test.tsx` pins it].
 
 ## Conventions for every session
 
@@ -88,13 +87,26 @@ Two more that are user-visible but narrower: `src/pages/Profile.tsx:20` flashes 
 ### Before you finish
 
 ```bash
-pnpm prettier          # 12 files are unformatted on HEAD; see H1
+pnpm prettier:check    # H1 formatted the tree; keep it that way
 pnpm lint
 pnpm types:check
-pnpm vitest run        # `pnpm test` is watch mode — H6 adds a `test:run` script
+pnpm test:run          # `pnpm test` is watch mode
 ```
 
-One branch and one PR per handoff. Don't fold two batches into one PR — the point of the split is reviewable diffs.
+CI (`.github/workflows/ci.yml`, added by H6) runs exactly these plus `build` on
+every PR, so a green local run means a green CI run.
+
+The 6 server integration tests self-skip unless `DATABASE_URL` is set. Skipped
+is not passed — if you touched anything under `src/lib/server/`, run them for
+real:
+
+```bash
+pnpm db:up
+DATABASE_URL='postgresql://postgres:postgres@localhost:5432/office_pong' pnpm test:run
+```
+
+One branch per handoff. Don't fold two batches into one — the point of the split
+is reviewable diffs.
 
 ### Scope discipline
 

@@ -5,7 +5,7 @@
 **Touches:** `src/pages/**`, `src/components/**`, `src/types/pong.ts`
 **Est. size:** L
 
-> **Line references verified against `h2-data-layer` (2026-08-11).** H2 reworked
+> **Line references verified against `main` (2026-08-11, at `9935591`).** H2 reworked
 > `Matches.tsx` and every file in `player-metrics/`; H6's
 > `noUncheckedIndexedAccess` changed the shape of the chart casts. Numbers below
 > are post-stack. `Overview.tsx`, `Leaderboard.tsx` and `Profile.tsx` are

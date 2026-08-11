@@ -5,9 +5,9 @@
 **Touches:** `src/router.tsx`, `src/hooks/*`, `src/routes/*`
 **Est. size:** M
 
-> **Line references verified against `h2-data-layer` (2026-08-11).** H2 rewrote
+> **Line references verified against `main` (2026-08-11, at `9935591`).** H2 rewrote
 > both hooks and H1 deleted `useUpdatePlayer`, so the numbers below are the
-> post-stack ones, not `main`'s. Branch from `h2-data-layer`.
+> post-merge ones. H1, H6 and H2 are now on `main` — branch from there.
 
 ## Why
 

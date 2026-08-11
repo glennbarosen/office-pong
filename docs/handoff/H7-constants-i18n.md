@@ -5,10 +5,10 @@
 **Touches:** `src/lib/eloService.ts`, `src/lib/validation.ts`, `src/lib/matchService.ts`, `src/types/pong.ts`, `README.md`, plus string call sites across `src/`
 **Est. size:** S–M (was M — H2 completed most of task 3)
 
-> **Line references verified against `h2-data-layer` (2026-08-11).** H2 rewrote
+> **Line references verified against `main` (2026-08-11, at `9935591`).** H2 rewrote
 > `validation.ts` and `matchService.ts` wholesale, which invalidated most of this
 > doc's original numbers and **completed most of task 3**. Numbers below are
-> post-stack. Branch from `h2-data-layer`, not `main`.
+> post-merge. H1, H6 and H2 are now on `main` — branch from there.
 
 ## Why
 
