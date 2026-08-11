@@ -36,7 +36,7 @@ describe('Validation Schemas', () => {
             })
             expect(result.success).toBe(false)
             expect(result.error?.issues[0]?.message).toBe(
-                'Ugyldig resultat: Må vinne med minst 2 poengs margin. Ved 11 poeng kan motstanderen ha 0-9 poeng. Ved deuce (10-10+) må begge ha minst 10 poeng.'
+                'Ugyldig resultat: Må vinne med nøyaktig 2 poengs margin. Ved 11 poeng kan motstanderen ha 0-9 poeng. Ved deuce (10-10+) må begge ha minst 10 poeng, og vinneren må vinne med nøyaktig 2.'
             )
         })
 
@@ -148,6 +148,41 @@ describe('Validation Schemas', () => {
                     player2Score: score2,
                 })
                 expect(result.success).toBe(false)
+            })
+        })
+
+        // The behavior H7.2 changed: deuce used to accept any margin >= 2, so
+        // a runaway score like 20-10 validated. Real table tennis deuce games
+        // end at exactly +2 — a margin greater than that means the game kept
+        // going past when it should have ended.
+        test('should reject a deuce win by more than 2 points', () => {
+            const overshotMargin = [
+                [20, 10],
+                [15, 10],
+                [14, 10],
+                [16, 12],
+            ]
+
+            overshotMargin.forEach(([score1, score2]) => {
+                const result = matchScoreSchema.safeParse({
+                    player1Score: score1,
+                    player2Score: score2,
+                })
+                expect(result.success).toBe(false)
+            })
+        })
+
+        // The three boundaries called out when this rule was decided.
+        test('boundary: 11-9 valid, 11-10 invalid, 12-10 valid, 20-10 invalid', () => {
+            const cases: Array<[number, number, boolean]> = [
+                [11, 9, true],
+                [11, 10, false],
+                [12, 10, true],
+                [20, 10, false],
+            ]
+
+            cases.forEach(([player1Score, player2Score, expected]) => {
+                expect(matchScoreSchema.safeParse({ player1Score, player2Score }).success).toBe(expected)
             })
         })
 

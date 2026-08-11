@@ -22,7 +22,7 @@ This app helps you keep track of ping pong matches and rankings at the office wi
 ## Rules
 
 - First to 11 points wins
-- Must win by at least 2 points
+- Must win by at least 2 points; past 11 (deuce), the winner's margin must be exactly 2 (12-10, 13-11, ...)
 - New players start with 1200 ELO
 - Minimum 5 matches to appear on leaderboard
 

@@ -60,18 +60,19 @@ export const matchScoreSchema = z
                 return minScore <= MATCH_RULES.MAX_LOSER_SCORE_AT_WINNING_SCORE
             }
 
-            // Past WINNING_SCORE: deuce. Both players must have reached
-            // MIN_DEUCE_SCORE, and the margin requirement above already
-            // covers "win by at least MIN_WIN_MARGIN" (games: 12-10, 13-11, ...).
+            // Past WINNING_SCORE: deuce. Real table tennis deuce games end at
+            // exactly +2 (12-10, 13-11, 14-12, ...) — a bigger margin means
+            // the game kept going past the point it should have ended, so
+            // it's rejected rather than accepted as "won by at least 2".
             if (maxScore > MATCH_RULES.WINNING_SCORE) {
-                return minScore >= MATCH_RULES.MIN_DEUCE_SCORE
+                return minScore >= MATCH_RULES.MIN_DEUCE_SCORE && margin === MATCH_RULES.MIN_WIN_MARGIN
             }
 
             // Below WINNING_SCORE: not a completed game.
             return false
         },
         {
-            message: `Ugyldig resultat: Må vinne med minst ${MATCH_RULES.MIN_WIN_MARGIN} poengs margin. Ved ${MATCH_RULES.WINNING_SCORE} poeng kan motstanderen ha 0-${MATCH_RULES.MAX_LOSER_SCORE_AT_WINNING_SCORE} poeng. Ved deuce (${MATCH_RULES.MIN_DEUCE_SCORE}-${MATCH_RULES.MIN_DEUCE_SCORE}+) må begge ha minst ${MATCH_RULES.MIN_DEUCE_SCORE} poeng.`,
+            message: `Ugyldig resultat: Må vinne med nøyaktig ${MATCH_RULES.MIN_WIN_MARGIN} poengs margin. Ved ${MATCH_RULES.WINNING_SCORE} poeng kan motstanderen ha 0-${MATCH_RULES.MAX_LOSER_SCORE_AT_WINNING_SCORE} poeng. Ved deuce (${MATCH_RULES.MIN_DEUCE_SCORE}-${MATCH_RULES.MIN_DEUCE_SCORE}+) må begge ha minst ${MATCH_RULES.MIN_DEUCE_SCORE} poeng, og vinneren må vinne med nøyaktig ${MATCH_RULES.MIN_WIN_MARGIN}.`,
             path: ['player1Score'],
         }
     )

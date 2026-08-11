@@ -107,11 +107,16 @@ export const RATING_CONFIG = {
 export const MATCH_RULES = {
     /** A game is first to this many points. */
     WINNING_SCORE: 11,
-    /** The winner's margin must be at least this, always. */
+    /**
+     * The winner's margin. At exactly WINNING_SCORE this is a floor — 11-0 is
+     * as valid as 11-9. Past WINNING_SCORE (deuce) it is exact: real table
+     * tennis deuce games end at precisely +2 (12-10, 13-11, ...), not "+2 or
+     * more".
+     */
     MIN_WIN_MARGIN: 2,
-    /** Below WINNING_SCORE the loser may have any score from 0 up to this. */
+    /** At exactly WINNING_SCORE, the loser may have any score from 0 up to this. */
     MAX_LOSER_SCORE_AT_WINNING_SCORE: 9,
-    /** From WINNING_SCORE - 1 (deuce), both players must have reached at least this. */
+    /** Past WINNING_SCORE (deuce), both players must have reached at least this. */
     MIN_DEUCE_SCORE: 10,
     /** A recorded score above this is almost certainly a typo, not a real game. */
     MAX_SCORE: 99,
