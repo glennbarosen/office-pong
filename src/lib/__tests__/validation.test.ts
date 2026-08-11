@@ -17,7 +17,7 @@ describe('Validation Schemas', () => {
                 player2Score: 11,
             })
             expect(result.success).toBe(false)
-            expect(result.error?.issues[0].message).toBe('Kampen kan ikke ende uavgjort - én spiller må vinne')
+            expect(result.error?.issues[0]?.message).toBe('Kampen kan ikke ende uavgjort - én spiller må vinne')
         })
 
         test('should reject scores where no player reaches 11', () => {
@@ -26,7 +26,7 @@ describe('Validation Schemas', () => {
                 player2Score: 8,
             })
             expect(result.success).toBe(false)
-            expect(result.error?.issues[0].message).toBe('Minst én spiller må ha 11 poeng eller mer for å vinne')
+            expect(result.error?.issues[0]?.message).toBe('Minst én spiller må ha 11 poeng eller mer for å vinne')
         })
 
         test('should reject invalid margin when score is above 11', () => {
@@ -35,7 +35,7 @@ describe('Validation Schemas', () => {
                 player2Score: 11,
             })
             expect(result.success).toBe(false)
-            expect(result.error?.issues[0].message).toBe(
+            expect(result.error?.issues[0]?.message).toBe(
                 'Ugyldig resultat: Må vinne med minst 2 poengs margin. Ved 11 poeng kan motstanderen ha 0-9 poeng. Ved deuce (10-10+) må begge ha minst 10 poeng.'
             )
         })
@@ -157,7 +157,7 @@ describe('Validation Schemas', () => {
                 player2Score: 11,
             })
             expect(result.success).toBe(false)
-            expect(result.error?.issues[0].message).toBe('Poengsum kan ikke være negative')
+            expect(result.error?.issues[0]?.message).toBe('Poengsum kan ikke være negative')
         })
     })
 

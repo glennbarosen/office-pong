@@ -89,7 +89,7 @@ export function usePlayerMetricsData(player: Player, matches: Match[], players: 
                 matchNumber: index + 1,
                 elo: Math.round(runningElo),
                 date: matchDate.toLocaleDateString('no-NO'),
-                dateFormatted: matchDate.toISOString().split('T')[0], // YYYY-MM-DD format
+                dateFormatted: matchDate.toISOString().slice(0, 10), // YYYY-MM-DD format
                 opponent: opponent?.name || 'Ukjent',
                 result: match.winnerId === player.id ? 'Win' : 'Loss',
             })

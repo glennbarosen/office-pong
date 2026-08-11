@@ -10,6 +10,13 @@ services:
         volumes:
             - office_pong_db_data:/var/lib/postgresql/data
             - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+        # Without this, `pnpm db:up && pnpm dev` races the cold start.
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U postgres -d office_pong']
+            interval: 5s
+            timeout: 5s
+            retries: 10
+            start_period: 10s
 
 volumes:
     office_pong_db_data:

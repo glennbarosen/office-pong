@@ -15,7 +15,7 @@ export function useAddPlayer() {
     return useMutation({
         mutationFn: (playerData: Omit<Player, 'id'>) => addPlayer({ data: playerData }),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['players'] })
+            void queryClient.invalidateQueries({ queryKey: ['players'] })
         },
     })
 }

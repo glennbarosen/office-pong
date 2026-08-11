@@ -10,6 +10,7 @@
         /* Bundler mode */
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,
+        "verbatimModuleSyntax": true,
         "moduleDetection": "force",
         "noEmit": true,
         "jsx": "react-jsx",
@@ -18,6 +19,9 @@
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
+        "noUncheckedIndexedAccess": true,
+        "erasableSyntaxOnly": true,
+        "noUncheckedSideEffectImports": true,
         "noFallthroughCasesInSwitch": true
     },
     "include": ["src"]

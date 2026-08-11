@@ -55,7 +55,7 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
                     matchNumber: index + 1,
                     elo: Math.round(currentElo),
                     date: matchDate.toLocaleDateString('no-NO'),
-                    dateFormatted: matchDate.toISOString().split('T')[0], // YYYY-MM-DD format
+                    dateFormatted: matchDate.toISOString().slice(0, 10), // YYYY-MM-DD format
                     opponent: opponent?.name || 'Ukjent',
                     result: match.winnerId === player.id ? 'Win' : 'Loss',
                 })

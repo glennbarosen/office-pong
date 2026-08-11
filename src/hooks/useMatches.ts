@@ -26,7 +26,7 @@ export function useAddMatchWithEloUpdates() {
         },
         onSuccess: (newMatch) => {
             queryClient.setQueryData(['matches'], (old: Match[] = []) => [newMatch, ...old])
-            queryClient.invalidateQueries({ queryKey: ['players'] })
+            void queryClient.invalidateQueries({ queryKey: ['players'] })
         },
     })
 }

@@ -2,6 +2,15 @@ import { z } from 'zod'
 import type { Player } from '../types/pong'
 
 /**
+ * First validation message from a failed parse.
+ *
+ * Zod always populates `issues` on failure, but `noUncheckedIndexedAccess`
+ * cannot know that, so the fallback exists purely to keep the type honest.
+ */
+export const firstIssueMessage = (error: z.ZodError, fallback = 'Ugyldig verdi'): string =>
+    error.issues[0]?.message ?? fallback
+
+/**
  * Check if a player name already exists in the database
  */
 export const validateUniquePlayerName = (name: string, existingPlayers: Player[]): boolean => {

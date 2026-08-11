@@ -1,0 +1,30 @@
+# Keep the build context small, and never ship host-built native modules.
+node_modules
+**/node_modules
+
+# Build output — the image builds its own.
+.output
+dist
+dist-ssr
+coverage
+
+# VCS and CI
+.git
+.gitignore
+.github
+
+# Local environment and data
+.env
+.env.*
+!.env.example
+docker-compose.yml
+
+# Docs and editor cruft
+docs
+README.md
+AGENTS.md
+CLAUDE.md
+.vscode
+.idea
+.DS_Store
+*.log

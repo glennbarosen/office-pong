@@ -52,8 +52,9 @@ export function OpponentStatsChart({ data, chartColors, currentTheme, selectedOp
                             />
                             <Tooltip
                                 content={({ active, payload, label }) => {
-                                    if (active && payload && payload.length) {
-                                        const data = payload[0].payload as OpponentStats
+                                    const entry = payload?.[0] as { payload: OpponentStats } | undefined
+                                    if (active && entry) {
+                                        const data = entry.payload
                                         return (
                                             <div
                                                 style={{

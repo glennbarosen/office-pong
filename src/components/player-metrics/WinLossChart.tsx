@@ -44,7 +44,8 @@ export function WinLossChart({ player, chartColors, currentTheme }: WinLossChart
                             </Pie>
                             <Tooltip
                                 content={({ active, payload }) => {
-                                    if (active && payload && payload.length) {
+                                    const entry = payload?.[0] as { name?: string; value?: number } | undefined
+                                    if (active && entry) {
                                         return (
                                             <div
                                                 style={{
@@ -60,14 +61,12 @@ export function WinLossChart({ player, chartColors, currentTheme }: WinLossChart
                                                     maxWidth: isMobile ? '180px' : 'none',
                                                 }}
                                             >
-                                                <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>
-                                                    {payload[0].name}
-                                                </p>
-                                                <p style={{ margin: '0 0 4px 0' }}>Antall: {payload[0].value}</p>
+                                                <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>{entry.name}</p>
+                                                <p style={{ margin: '0 0 4px 0' }}>Antall: {entry.value}</p>
                                                 <p style={{ margin: '0' }}>
                                                     Prosent:{' '}
                                                     {(
-                                                        ((payload[0].value as number) / (player.wins + player.losses)) *
+                                                        ((entry.value ?? 0) / (player.wins + player.losses)) *
                                                         100
                                                     ).toFixed(1)}
                                                     %

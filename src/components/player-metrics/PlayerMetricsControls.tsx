@@ -30,10 +30,11 @@ export function PlayerMetricsControls({
         <Card className="p-4 sm:p-8">
             <div className="space-y-6 sm:space-y-8">
                 <div>
-                    <label className="text-sm font-medium mb-3 block">Filtrer mot motstander</label>
+                    {/* Jøkul renders and associates the label itself; a bare <label> here
+                        was visually adjacent but tied to no control. */}
                     <NativeSelect
                         name="opponent-filter"
-                        label=""
+                        label="Filtrer mot motstander"
                         items={[
                             { value: 'all', label: 'Alle motstandere' },
                             ...opponentStats.map((stat) => ({

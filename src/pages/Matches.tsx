@@ -15,6 +15,16 @@ interface MatchWithPlayerNames extends Match {
     player2Name: string
     winnerName: string
     loserName: string
+    // Undefined for legacy rows stored with the schema default '{}'::jsonb.
+    winnerEloChange: number | undefined
+    loserEloChange: number | undefined
+}
+
+const formatEloChange = (change: number | undefined): string => {
+    if (change === undefined) {
+        return '–'
+    }
+    return change > 0 ? `+${change}` : `${change}`
 }
 
 export function Matches() {
@@ -46,6 +56,8 @@ export function Matches() {
                 player2Name: player2.name,
                 winnerName: winner.name,
                 loserName: loser.name,
+                winnerEloChange: match.eloChanges[match.winnerId],
+                loserEloChange: match.eloChanges[match.loserId],
             }
         })
         .filter((match): match is MatchWithPlayerNames => match !== null)
@@ -96,21 +108,21 @@ export function Matches() {
                                         <div>
                                             <div
                                                 className={`font-bold ${
-                                                    match.eloChanges[match.winnerId] > 0
+                                                    (match.winnerEloChange ?? 0) > 0
                                                         ? 'text-background-alert-success'
                                                         : 'text-text-subdued'
                                                 }`}
                                             >
-                                                {match.winnerName}: +{Math.abs(match.eloChanges[match.winnerId])}
+                                                {match.winnerName}: {formatEloChange(match.winnerEloChange)}
                                             </div>
                                             <div
                                                 className={`font-bold ${
-                                                    match.eloChanges[match.loserId] < 0
+                                                    (match.loserEloChange ?? 0) < 0
                                                         ? 'text-background-alert-error'
                                                         : 'text-text-subdued'
                                                 }`}
                                             >
-                                                {match.loserName}: {match.eloChanges[match.loserId]}
+                                                {match.loserName}: {formatEloChange(match.loserEloChange)}
                                             </div>
                                         </div>
                                     </TableCell>

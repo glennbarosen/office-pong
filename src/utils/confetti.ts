@@ -15,7 +15,7 @@ export const triggerMatchSuccessConfetti = (onComplete?: () => void) => {
         }
 
         function fire(particleRatio: number, opts: Parameters<typeof confetti>[0]) {
-            confetti({
+            void confetti({
                 ...defaults,
                 ...opts,
                 particleCount: Math.floor(count * particleRatio),
@@ -61,7 +61,7 @@ export const triggerMatchSuccessConfetti = (onComplete?: () => void) => {
 
     // Second explosion from left
     setTimeout(() => {
-        confetti({
+        void confetti({
             particleCount: 150,
             angle: 60,
             spread: 55,
@@ -72,7 +72,7 @@ export const triggerMatchSuccessConfetti = (onComplete?: () => void) => {
 
     // Third explosion from right
     setTimeout(() => {
-        confetti({
+        void confetti({
             particleCount: 150,
             angle: 120,
             spread: 55,
@@ -83,7 +83,7 @@ export const triggerMatchSuccessConfetti = (onComplete?: () => void) => {
 
     // Final center explosion
     setTimeout(() => {
-        confetti({
+        void confetti({
             particleCount: 300,
             spread: 360,
             origin: { x: 0.5, y: 0.5 },
@@ -140,7 +140,7 @@ export const triggerMatchSuccessConfetti = (onComplete?: () => void) => {
 
             const particleCount = 50 * (timeLeft / duration)
 
-            confetti({
+            void confetti({
                 particleCount,
                 startVelocity: randomInRange(50, 100),
                 spread: randomInRange(50, 100),

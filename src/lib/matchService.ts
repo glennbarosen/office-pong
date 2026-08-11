@@ -1,5 +1,5 @@
 import type { Player, Match } from '../types/pong'
-import { matchScoreSchema, playerNameSchema, validateUniquePlayerName } from './validation'
+import { firstIssueMessage, matchScoreSchema, playerNameSchema, validateUniquePlayerName } from './validation'
 import { RATING_CONFIG } from '../types/pong'
 
 export interface MatchCreationData {
@@ -35,7 +35,7 @@ export class MatchService {
         })
 
         if (!scoreValidation.success) {
-            throw new Error(scoreValidation.error.issues[0].message)
+            throw new Error(firstIssueMessage(scoreValidation.error))
         }
 
         // Get or create player 1
@@ -47,7 +47,7 @@ export class MatchService {
 
             const nameValidation = playerNameSchema.safeParse(data.player1Name)
             if (!nameValidation.success) {
-                throw new Error(`Spiller 1: ${nameValidation.error.issues[0].message}`)
+                throw new Error(`Spiller 1: ${firstIssueMessage(nameValidation.error)}`)
             }
 
             // Check if player with this name already exists
@@ -80,7 +80,7 @@ export class MatchService {
 
             const nameValidation = playerNameSchema.safeParse(data.player2Name)
             if (!nameValidation.success) {
-                throw new Error(`Spiller 2: ${nameValidation.error.issues[0].message}`)
+                throw new Error(`Spiller 2: ${firstIssueMessage(nameValidation.error)}`)
             }
 
             // Check if player with this name already exists

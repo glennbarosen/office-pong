@@ -64,7 +64,7 @@ export default function NewMatch() {
 
             // Trigger extreme celebratory confetti animation
             triggerMatchSuccessConfetti(() => {
-                navigate({ to: '/' })
+                void navigate({ to: '/' })
             })
         } catch (error) {
             console.error('Error creating match:', error)
@@ -81,7 +81,7 @@ export default function NewMatch() {
                 ledertavlen.
             </InfoMessage>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-8">
                 {/* Player Cards */}
                 <div className="grid gap-8 md:grid-cols-2 md:gap-12">
                     <PlayerCard
@@ -126,7 +126,7 @@ export default function NewMatch() {
                     >
                         Registrer kamp
                     </Button>
-                    <Button variant="tertiary" type="button" onClick={() => navigate({ to: '/' })}>
+                    <Button variant="tertiary" type="button" onClick={() => void navigate({ to: '/' })}>
                         Avbryt
                     </Button>
                 </div>

@@ -72,8 +72,9 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
                             formatter={(value) => [value, 'ELO Rating']}
                             labelFormatter={(label) => `Kamp ${label}`}
                             content={({ active, payload, label }) => {
-                                if (active && payload && payload.length) {
-                                    const data = payload[0].payload as EloHistoryPoint
+                                const entry = payload?.[0] as { payload: EloHistoryPoint } | undefined
+                                if (active && entry) {
+                                    const data = entry.payload
                                     return (
                                         <div
                                             style={{

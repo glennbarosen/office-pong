@@ -25,10 +25,12 @@ describe('MatchService player name validation', () => {
         },
     ]
 
-    const mockAddPlayer = vi.fn().mockImplementation(async (playerData: Omit<Player, 'id'>) => ({
-        ...playerData,
-        id: '3',
-    }))
+    const mockAddPlayer = vi.fn().mockImplementation((playerData: Omit<Player, 'id'>) =>
+        Promise.resolve({
+            ...playerData,
+            id: '3',
+        })
+    )
 
     describe('validateUniquePlayerName', () => {
         it('should return true for unique player names', () => {
