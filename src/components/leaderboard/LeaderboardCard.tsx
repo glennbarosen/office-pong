@@ -2,7 +2,7 @@ import { Card } from '@fremtind/jokul/card'
 import { WarningTag } from '@fremtind/jokul/tag'
 import { Link } from '@tanstack/react-router'
 import type { LeaderboardEntry } from '../../types'
-import { getRankIcon } from '../../utils/gameUtils'
+import { RankIcon } from './RankIcon'
 
 interface LeaderboardCardProps {
     player: LeaderboardEntry
@@ -20,7 +20,9 @@ export function LeaderboardCard({ player, rank }: LeaderboardCardProps) {
         <Card variant="low" padding="xl" clickable asChild>
             <Link to="/profil/$id" params={{ id: player.id }} className="no-underline">
                 <div className="flex items-start gap-12">
-                    <div className="body">{getRankIcon(rank)}</div>
+                    <div className="body">
+                        <RankIcon rank={rank} />
+                    </div>
                     <div className="flex flex-1 flex-col">
                         <div className="flex items-center justify-between">
                             <div className="body">{player.name}</div>

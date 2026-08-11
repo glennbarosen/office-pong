@@ -3,6 +3,7 @@ import { WarningTag } from '@fremtind/jokul/tag'
 import { usePlayers } from '../hooks/usePlayers'
 import { createLeaderboardEntries, formatDate } from '../utils/gameUtils'
 import { PlayerLink } from '../components/common/PlayerLink'
+import { RankIcon } from '../components/leaderboard/RankIcon'
 import { EmptyState } from '../components/common/EmptyState'
 import { QueryState } from '../components/common/QueryState'
 import { CollapsibleTable } from '../components/common/CollapsibleTable'
@@ -37,7 +38,9 @@ export function Leaderboard() {
                             <TableBody>
                                 {leaderboardData.map((player, index: number) => (
                                     <TableRow key={player.id}>
-                                        <TableCell data-th="Plassering">{index + 1}.</TableCell>
+                                        <TableCell data-th="Plassering">
+                                            <RankIcon rank={index + 1} />
+                                        </TableCell>
                                         <TableCell data-th="Spiller">
                                             <PlayerLink playerId={player.id} playerName={player.name} />
                                         </TableCell>

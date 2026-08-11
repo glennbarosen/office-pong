@@ -67,7 +67,7 @@ function NeutralMatchCard({ match }: { match: MatchWithPlayers }) {
                         >
                             {match.player1.name}
                         </Link>
-                        {isPlayer1Winner && <span className="text-green-600">🏆</span>}
+                        {isPlayer1Winner && <WinnerTrophy playerName={match.player1.name} />}
                     </div>
                     <span className="text-text-subdued">vs</span>
                     <div className="flex items-center gap-4">
@@ -80,7 +80,7 @@ function NeutralMatchCard({ match }: { match: MatchWithPlayers }) {
                         </Link>
                         {/* The overview's copy of this lacked the colour on
                             player 2's trophy only; an oversight, not a rule. */}
-                        {!isPlayer1Winner && <span className="text-green-600">🏆</span>}
+                        {!isPlayer1Winner && <WinnerTrophy playerName={match.player2.name} />}
                     </div>
                 </div>
                 <div className="body font-bold">
@@ -88,5 +88,17 @@ function NeutralMatchCard({ match }: { match: MatchWithPlayers }) {
                 </div>
             </div>
         </Card>
+    )
+}
+
+/**
+ * The trophy is the only thing marking which player won, so it needs a text
+ * alternative rather than being decorative.
+ */
+function WinnerTrophy({ playerName }: { playerName: string }) {
+    return (
+        <span role="img" aria-label={`${playerName} vant`} className="text-green-600">
+            🏆
+        </span>
     )
 }
