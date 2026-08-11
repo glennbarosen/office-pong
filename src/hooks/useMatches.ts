@@ -1,14 +1,20 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Match } from '../types/pong'
 import type { CreateMatchInput } from '../lib/validation'
 import { getMatches, createMatch } from '../lib/server/matches'
 import { queryKeys } from '../lib/queryKeys'
 
+/**
+ * Shared by the hook and by the route loaders, so a loader can never prefetch
+ * under a different key or with different options than the component reads.
+ */
+export const matchesQueryOptions = queryOptions({
+    queryKey: queryKeys.matches,
+    queryFn: getMatches,
+})
+
 export function useMatches() {
-    return useQuery({
-        queryKey: queryKeys.matches,
-        queryFn: getMatches,
-    })
+    return useQuery(matchesQueryOptions)
 }
 
 export function useCreateMatch() {
