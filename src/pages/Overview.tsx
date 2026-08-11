@@ -5,11 +5,13 @@ import { usePlayers } from '../hooks/usePlayers'
 import { useMatches } from '../hooks/useMatches'
 import { Link } from '@tanstack/react-router'
 import { createLeaderboardEntries, createPlayerMap, getRankIcon } from '../utils/gameUtils'
-import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { QueryState } from '../components/common/QueryState'
 
 export function Overview() {
-    const { data: players = [], isLoading: isLoadingPlayers } = usePlayers()
-    const { data: matches = [], isLoading: isLoadingMatches } = useMatches()
+    const playersQuery = usePlayers()
+    const matchesQuery = useMatches()
+    const players = playersQuery.data ?? []
+    const matches = matchesQuery.data ?? []
 
     // Create a map for quick player lookup
     const playerMap = createPlayerMap(players)
@@ -35,12 +37,8 @@ export function Overview() {
             }
         })
 
-    if (isLoadingPlayers || isLoadingMatches) {
-        return <LoadingSpinner />
-    }
-
     return (
-        <>
+        <QueryState queries={[playersQuery, matchesQuery]}>
             <div className="flex justify-end">
                 <Button as={Link} to="/ny-kamp" variant="primary">
                     Ny kamp
@@ -130,6 +128,6 @@ export function Overview() {
                     <p className="small text-text-subdued">Start ved å registrere en ny kamp</p>
                 </div>
             )}
-        </>
+        </QueryState>
     )
 }
