@@ -62,9 +62,8 @@ export class EloService {
     /**
      * Get ELO rating display with appropriate styling context.
      *
-     * Only referenced by tests today — H8's tier-badge idea is the eventual
-     * caller. Tier names stay English pending that UI decision (the rest of
-     * the app is Norwegian); translate them when this actually reaches the UI.
+     * Rendered by TierBadge (src/components/leaderboard/TierBadge.tsx) on the
+     * leaderboard and profile — H9 gave this its first real caller.
      */
     static getRatingTier(rating: number): {
         tier: string

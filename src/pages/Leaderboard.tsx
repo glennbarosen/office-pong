@@ -6,6 +6,7 @@ import { createFormByPlayer, createLeaderboardEntries, formatDate } from '../uti
 import { PlayerLink } from '../components/common/PlayerLink'
 import { RankIcon } from '../components/leaderboard/RankIcon'
 import { FormIndicator } from '../components/leaderboard/FormIndicator'
+import { TierBadge } from '../components/leaderboard/TierBadge'
 import { EmptyState } from '../components/common/EmptyState'
 import { NO_PLAYERS_EMPTY_STATE } from '../lib/messages'
 import { QueryState } from '../components/common/QueryState'
@@ -53,7 +54,11 @@ export function Leaderboard() {
                                         </TableCell>
                                         <TableCell data-th="ELO rating">
                                             {player.eloRating}{' '}
-                                            {!player.isEligibleForRanking && <WarningTag>Mangler kamper</WarningTag>}
+                                            {player.isEligibleForRanking ? (
+                                                <TierBadge rating={player.eloRating} />
+                                            ) : (
+                                                <WarningTag>Mangler kamper</WarningTag>
+                                            )}
                                         </TableCell>
                                         <TableCell data-th="Kamper">{player.matchesPlayed}</TableCell>
                                         <TableCell data-th="Seire">{player.wins}</TableCell>

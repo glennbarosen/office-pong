@@ -7,6 +7,7 @@ import { MatchCard } from '../components/match-card/MatchCard'
 import { PlayerMetrics } from '../components/player-metrics/PlayerMetrics'
 import { HeadToHeadTable } from '../components/head-to-head/HeadToHeadTable'
 import { FormIndicator } from '../components/leaderboard/FormIndicator'
+import { TierBadge } from '../components/leaderboard/TierBadge'
 import { PlayerAvatar } from '../components/common/PlayerAvatar'
 import { InfoMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
@@ -86,6 +87,14 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                 <DescriptionList>
                     <DescriptionTerm>ELO Rating</DescriptionTerm>
                     <DescriptionDetail>{player.eloRating}</DescriptionDetail>
+                    {isEligibleForRanking && (
+                        <>
+                            <DescriptionTerm>Nivå</DescriptionTerm>
+                            <DescriptionDetail>
+                                <TierBadge rating={player.eloRating} />
+                            </DescriptionDetail>
+                        </>
+                    )}
                     <DescriptionTerm>Antall kamper</DescriptionTerm>
                     <DescriptionDetail>{player.wins + player.losses}</DescriptionDetail>
                     <DescriptionTerm>Seire</DescriptionTerm>

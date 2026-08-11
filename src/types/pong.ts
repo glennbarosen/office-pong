@@ -108,10 +108,10 @@ export const RATING_CONFIG = {
     MINIMUM_MATCHES_FOR_RANKING: 5,
     /** Rating thresholds for getRatingTier, lowest first. */
     TIERS: [
-        { minRating: 1800, tier: 'Grandmaster', color: 'platinum' },
-        { minRating: 1600, tier: 'Master', color: 'gold' },
-        { minRating: 1400, tier: 'Expert', color: 'silver' },
-        { minRating: 0, tier: 'Novice', color: 'bronze' },
+        { minRating: 1800, tier: 'Stormester', color: 'platinum' },
+        { minRating: 1600, tier: 'Mester', color: 'gold' },
+        { minRating: 1400, tier: 'Ekspert', color: 'silver' },
+        { minRating: 0, tier: 'Nybegynner', color: 'bronze' },
     ] as const,
 } as const
 

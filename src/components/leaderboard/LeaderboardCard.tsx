@@ -5,6 +5,7 @@ import type { LeaderboardEntry } from '../../types'
 import type { PlayerForm } from '../../types/pong'
 import { RankIcon } from './RankIcon'
 import { FormIndicator } from './FormIndicator'
+import { TierBadge } from './TierBadge'
 
 interface LeaderboardCardProps {
     player: LeaderboardEntry
@@ -30,7 +31,10 @@ export function LeaderboardCard({ player, rank, form }: LeaderboardCardProps) {
                         <div className="flex items-center justify-between">
                             <div className="body">{player.name}</div>
                             {player.isEligibleForRanking ? (
-                                <div className="body font-bold">{player.eloRating}</div>
+                                <div className="flex items-center gap-8">
+                                    <div className="body font-bold">{player.eloRating}</div>
+                                    <TierBadge rating={player.eloRating} />
+                                </div>
                             ) : (
                                 <WarningTag>Mangler kamper</WarningTag>
                             )}

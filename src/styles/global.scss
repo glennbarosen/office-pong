@@ -14,3 +14,29 @@ body,
     margin: 0;
     padding: 0;
 }
+
+/**
+ * Rating-tier colours for TierBadge (src/components/leaderboard/TierBadge.tsx).
+ *
+ * Not a Jøkul token — bronze/silver/gold/platinum isn't part of the design
+ * system — so defined here the same way Jøkul defines its own: a variable per
+ * [data-theme], not a single fixed hex. A flat colour cannot pass 4.5:1
+ * contrast as text against both a near-white and a near-black surface at
+ * once (light's --jkl-color-background-container is #f9f9f9, dark's is
+ * #313030), so light and dark genuinely need different values, not just a
+ * lighter/darker tweak of one hue. Each value below is individually verified
+ * >= 4.5:1 against its own theme's background-container.
+ */
+[data-theme='light'] {
+    --tier-bronze: #7c4a1e;
+    --tier-silver: #52525b;
+    --tier-gold: #8a6a00;
+    --tier-platinum: #3730a3;
+}
+
+[data-theme='dark'] {
+    --tier-bronze: #e0a458;
+    --tier-silver: #d4d4d8;
+    --tier-gold: #fbbf24;
+    --tier-platinum: #a5b4fc;
+}
