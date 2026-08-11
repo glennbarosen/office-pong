@@ -173,6 +173,26 @@ function computeStreak(results: MatchResult[]): PlayerForm['streak'] {
 }
 
 /**
+ * First grapheme of a name's first word plus the first grapheme of its last
+ * word — the fallback PlayerAvatar shows for a player with no avatar image.
+ *
+ * Array.from, not indexing: a name may contain a character outside the BMP,
+ * and Æ/Ø/Å must survive as themselves rather than being read as half a
+ * surrogate pair.
+ */
+export function initialsForName(name: string): string {
+    const words = name.trim().split(/\s+/).filter(Boolean)
+    if (words.length === 0) return ''
+
+    const firstLetter = (word: string) => Array.from(word)[0] ?? ''
+
+    const first = firstLetter(words[0] ?? '')
+    const last = words.length > 1 ? firstLetter(words[words.length - 1] ?? '') : ''
+
+    return (first + last).toUpperCase()
+}
+
+/**
  * Get rank icon for leaderboard position
  */
 export function getRankIcon(rank: number): string {

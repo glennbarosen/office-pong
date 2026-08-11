@@ -7,6 +7,7 @@ import { MatchCard } from '../components/match-card/MatchCard'
 import { PlayerMetrics } from '../components/player-metrics/PlayerMetrics'
 import { HeadToHeadTable } from '../components/head-to-head/HeadToHeadTable'
 import { FormIndicator } from '../components/leaderboard/FormIndicator'
+import { PlayerAvatar } from '../components/common/PlayerAvatar'
 import { InfoMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
 import { NotFound } from '../components/common/NotFound'
@@ -74,9 +75,12 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
     return (
         <div className="flex flex-col gap-32">
             <Card variant="outlined" className="max-w-[400px] space-y-24">
-                <div>
-                    <h1 className="heading-2">{player.name}</h1>
-                    <div className="text-text-subdued">Medlem siden {formatDate(player.createdAt)}</div>
+                <div className="flex items-center gap-16">
+                    <PlayerAvatar player={player} size="lg" />
+                    <div>
+                        <h1 className="heading-2">{player.name}</h1>
+                        <div className="text-text-subdued">Medlem siden {formatDate(player.createdAt)}</div>
+                    </div>
                 </div>
 
                 <DescriptionList>

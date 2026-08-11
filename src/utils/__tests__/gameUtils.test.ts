@@ -7,6 +7,7 @@ import {
     createPlayerMap,
     formatDate,
     parseInteger,
+    initialsForName,
 } from '../gameUtils'
 import { RATING_CONFIG, type Player, type Match } from '../../types/pong'
 
@@ -347,5 +348,31 @@ describe('createFormByPlayer', () => {
         const form = createFormByPlayer(matches, 2).get('ada')
 
         expect(form?.recent).toEqual(['win', 'win'])
+    })
+})
+
+describe('initialsForName', () => {
+    test('takes the first letter of a one-word name', () => {
+        expect(initialsForName('Ada')).toBe('A')
+    })
+
+    test('takes the first letter of the first and last word for a two-word name', () => {
+        expect(initialsForName('Ada Lovelace')).toBe('AL')
+    })
+
+    test('ignores middle names for a three-word name', () => {
+        expect(initialsForName('Ada Katherine Lovelace')).toBe('AL')
+    })
+
+    test('keeps Norwegian letters as themselves rather than stripping them', () => {
+        expect(initialsForName('Åse Ørn')).toBe('ÅØ')
+    })
+
+    test('collapses repeated whitespace', () => {
+        expect(initialsForName('  Ada   Lovelace  ')).toBe('AL')
+    })
+
+    test('returns an empty string for an empty name', () => {
+        expect(initialsForName('   ')).toBe('')
     })
 })

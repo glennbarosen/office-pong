@@ -1,6 +1,7 @@
 import { TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
 import type { OpponentStats } from '../../types'
 import { PlayerLink } from '../common/PlayerLink'
+import { PlayerAvatar } from '../common/PlayerAvatar'
 import { EmptyState } from '../common/EmptyState'
 import { CollapsibleTable } from '../common/CollapsibleTable'
 import { formatDate } from '../../utils/gameUtils'
@@ -38,7 +39,10 @@ export function HeadToHeadTable({ stats }: HeadToHeadTableProps) {
                 {stats.map((stat) => (
                     <TableRow key={stat.opponent.id}>
                         <TableCell data-th="Motstander">
-                            <PlayerLink playerId={stat.opponent.id} playerName={stat.opponent.name} />
+                            <div className="flex items-center gap-8">
+                                <PlayerAvatar player={stat.opponent} />
+                                <PlayerLink playerId={stat.opponent.id} playerName={stat.opponent.name} />
+                            </div>
                         </TableCell>
                         <TableCell data-th="Kamper">{stat.totalMatches}</TableCell>
                         <TableCell data-th="Seire">{stat.wins}</TableCell>
