@@ -3,6 +3,7 @@ import { routeTree } from './routeTree.gen'
 import { QueryClient, dehydrate, hydrate, type DehydratedState } from '@tanstack/react-query'
 import { RoutePending } from './components/common/RoutePending'
 import { RouteNotFound } from './components/common/NotFound'
+import { RootErrorComponent } from './components/errors/RootErrorComponent'
 
 export function getRouter() {
     // Must be constructed per router, not at module scope. TanStack Start calls
@@ -26,6 +27,10 @@ export function getRouter() {
         },
         defaultPendingComponent: RoutePending,
         defaultNotFoundComponent: RouteNotFound,
+        // A loader that throws is caught by its own route, not by the root, so
+        // without this a failing loader renders TanStack's built-in English
+        // "Something went wrong!" screen instead of the app's Norwegian one.
+        defaultErrorComponent: RootErrorComponent,
         // Carries what the loaders fetched on the server into the browser's
         // cache. Without this the client refetches everything SSR just
         // rendered, which is most of the point of having loaders at all.
