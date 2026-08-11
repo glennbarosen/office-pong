@@ -2,7 +2,7 @@ import { Button } from '@fremtind/jokul/button'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches } from '../hooks/useMatches'
 import { Link } from '@tanstack/react-router'
-import { createLeaderboardEntries, createPlayerMap, resolveMatchPlayers } from '../utils/gameUtils'
+import { createFormByPlayer, createLeaderboardEntries, createPlayerMap, resolveMatchPlayers } from '../utils/gameUtils'
 import { QueryState } from '../components/common/QueryState'
 import { EmptyState } from '../components/common/EmptyState'
 import { NO_PLAYERS_EMPTY_STATE } from '../lib/messages'
@@ -21,6 +21,7 @@ export function Overview() {
     const playerMap = createPlayerMap(players)
 
     const leaderboardData = createLeaderboardEntries(players)
+    const formByPlayer = createFormByPlayer(matches)
 
     // Already ordered newest-first by the query.
     const recentMatches = resolveMatchPlayers(matches, playerMap).slice(0, OVERVIEW_LIMIT)
@@ -38,7 +39,12 @@ export function Overview() {
             <div className="flex flex-col gap-12">
                 <h2 className="heading-4">Topp {OVERVIEW_LIMIT}</h2>
                 {leaderboardData.slice(0, OVERVIEW_LIMIT).map((player, index) => (
-                    <LeaderboardCard key={player.id} player={player} rank={index + 1} />
+                    <LeaderboardCard
+                        key={player.id}
+                        player={player}
+                        rank={index + 1}
+                        form={formByPlayer.get(player.id)}
+                    />
                 ))}
                 <div className="flex justify-center">
                     <Button as={Link} to="/ledertavle" variant="secondary">

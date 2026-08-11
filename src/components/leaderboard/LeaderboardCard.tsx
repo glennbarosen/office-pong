@@ -2,11 +2,14 @@ import { Card } from '@fremtind/jokul/card'
 import { WarningTag } from '@fremtind/jokul/tag'
 import { Link } from '@tanstack/react-router'
 import type { LeaderboardEntry } from '../../types'
+import type { PlayerForm } from '../../types/pong'
 import { RankIcon } from './RankIcon'
+import { FormIndicator } from './FormIndicator'
 
 interface LeaderboardCardProps {
     player: LeaderboardEntry
     rank: number
+    form: PlayerForm | undefined
 }
 
 /**
@@ -15,7 +18,7 @@ interface LeaderboardCardProps {
  * The compact counterpart to the leaderboard table: same entries from
  * createLeaderboardEntries, fewer columns, used where only the top few matter.
  */
-export function LeaderboardCard({ player, rank }: LeaderboardCardProps) {
+export function LeaderboardCard({ player, rank, form }: LeaderboardCardProps) {
     return (
         <Card variant="low" padding="xl" clickable asChild>
             <Link to="/profil/$id" params={{ id: player.id }} className="no-underline">
@@ -34,6 +37,9 @@ export function LeaderboardCard({ player, rank }: LeaderboardCardProps) {
                         </div>
                         <div className="text-text-subdued">
                             {player.wins} seire - {player.losses} tap ({player.winRate.toFixed(0)}% seier)
+                        </div>
+                        <div className="mt-4">
+                            <FormIndicator form={form} />
                         </div>
                     </div>
                 </div>

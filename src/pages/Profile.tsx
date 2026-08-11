@@ -6,11 +6,13 @@ import { useMatches } from '../hooks/useMatches'
 import { MatchCard } from '../components/match-card/MatchCard'
 import { PlayerMetrics } from '../components/player-metrics/PlayerMetrics'
 import { HeadToHeadTable } from '../components/head-to-head/HeadToHeadTable'
+import { FormIndicator } from '../components/leaderboard/FormIndicator'
 import { InfoMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
 import { NotFound } from '../components/common/NotFound'
 import { PLAYER_NOT_FOUND } from '../lib/messages'
 import {
+    createFormByPlayer,
     createLeaderboardEntries,
     createOpponentStats,
     createPlayerMap,
@@ -61,6 +63,7 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
     )
     const playerMatches = resolveMatchPlayers(rawPlayerMatches, createPlayerMap(players))
     const opponentStats = createOpponentStats(rawPlayerMatches, player, players)
+    const form = createFormByPlayer(rawPlayerMatches).get(player.id)
 
     // winRate and eligibility are exactly what createLeaderboardEntries derives;
     // recomputing them here is how the two definitions drift apart.
@@ -87,6 +90,10 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                     <DescriptionDetail>{player.losses}</DescriptionDetail>
                     <DescriptionTerm>Seiersprosent</DescriptionTerm>
                     <DescriptionDetail>{winRate.toFixed(0)}%</DescriptionDetail>
+                    <DescriptionTerm>Form</DescriptionTerm>
+                    <DescriptionDetail>
+                        <FormIndicator form={form} />
+                    </DescriptionDetail>
                 </DescriptionList>
 
                 {!isEligibleForRanking && (
