@@ -1,8 +1,11 @@
 name: CI
 
+# PR-only: this used to also run on every push to main, which meant it ran a
+# second time (redundantly) right after the PR that already ran it merged.
+# The actual gate on main is the required-status-check branch protection
+# rule, not this trigger — a merge only lands once the check has passed on
+# the PR itself.
 on:
-    push:
-        branches: [main]
     pull_request:
 
 concurrency:
