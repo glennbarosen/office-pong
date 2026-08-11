@@ -1,4 +1,4 @@
-# Office Pong Leaderboard
+# Fremtind kontorpong
 
 A mobile-first ping pong leaderboard app for the office! 🏓
 
@@ -12,8 +12,8 @@ This app helps you keep track of ping pong matches and rankings at the office wi
 
 ## Features
 
-- 📱 **Mobile-first design** with bottom navigation
-- 🏆 **ELO-based leaderboard** requiring minimum 5 matches
+- 📱 **Mobile-first design**, navigated via the header and "Se alle" links from the overview
+- 🏆 **ELO-based leaderboard**; players need 5 matches before their rating counts, but everyone is listed (tagged "Mangler kamper" until then)
 - 👤 **Player profiles** with stats and match history
 - ⚡ **Quick match registration** with automatic player creation
 - 🎯 **Trust-based system** - no complicated authentication
@@ -24,7 +24,7 @@ This app helps you keep track of ping pong matches and rankings at the office wi
 - First to 11 points wins
 - Must win by at least 2 points; past 11 (deuce), the winner's margin must be exactly 2 (12-10, 13-11, ...)
 - New players start with 1200 ELO
-- Minimum 5 matches to appear on leaderboard
+- Minimum 5 matches before a player is eligible to be ranked — they still appear on the leaderboard before that, sorted last with a "Mangler kamper" tag
 
 ## Quick Start
 
@@ -133,18 +133,22 @@ ssh root@your-server-ip "dokku ps:inspect office-pong"
 
 ```
 src/
-├── components/         # Reusable UI components
-│   ├── common/        # Common components (DateDisplay, LoadingSpinner, etc.)
-│   ├── header/        # Top header
-│   ├── layout/        # Layout components (Container, FullBleed)
-│   ├── links/         # Router links with Jøkul styling
-│   ├── match-card/    # Match card component
-│   └── errors/        # Error handling components
+├── components/         # Reusable UI components, one folder per domain
+│   ├── common/        # Shared building blocks (EmptyState, QueryState, LoadingSpinner, PlayerLink, ...)
+│   ├── header/         # Top header
+│   ├── layout/         # Layout components (Container)
+│   ├── leaderboard/    # Leaderboard row/card components (RankIcon, LeaderboardCard)
+│   ├── links/          # Router links with Jøkul styling
+│   ├── match-card/     # Match row/card component
+│   ├── player-card/    # The player-selection card used on the new-match form
+│   ├── player-metrics/ # A profile's charts (ELO history, win/loss, opponent stats)
+│   └── errors/         # Error handling components
 ├── hooks/             # Custom React hooks
 ├── lib/               # Core business logic and services
 │   ├── eloService.ts  # ELO rating calculations
 │   ├── matchService.ts # Match operations
 │   ├── validation.ts  # Zod schemas and match validation rules
+│   ├── messages.ts    # Norwegian strings shared across modules
 │   ├── server/        # createServerFn DB access (db.ts, players.ts, matches.ts)
 │   └── __tests__/     # Unit tests
 ├── pages/             # Main page components
