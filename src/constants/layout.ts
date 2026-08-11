@@ -14,7 +14,7 @@
  * `sm:` classes; they must agree or the chart restyles at a different width
  * than the card around it.
  */
-export const MOBILE_BREAKPOINT = 640
+export const MOBILE_BREAKPOINT = 680
 
 /**
  * Container width at or below which a table collapses into a list.

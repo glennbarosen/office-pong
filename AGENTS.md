@@ -2,12 +2,6 @@
 
 Mobile-first, trust-based ELO ping-pong leaderboard for the office. Norwegian UI text, English code identifiers, no auth. Feature/rules/deployment detail: see `README.md`.
 
-> **Planned work lives in [`docs/handoff/INDEX.md`](./docs/handoff/INDEX.md).** It
-> is the only record of which improvement batches are done, in progress, or
-> still open, and which branch carries each one. Read it before starting
-> anything non-trivial, and update it as part of the same PR — a batch marked
-> done in one branch and nowhere else is invisible to whoever comes next.
-
 ## Stack
 
 React 18 + TypeScript, **TanStack Start** (full-stack SSR, migrated off a plain TanStack Router SPA), Vite 7 + Nitro (`node` preset, builds to `.output/`), TanStack Query (server state), raw **PostgreSQL via `pg`** (no ORM), Zod, Jøkul design system + Tailwind (Jøkul preset) + SCSS, Vitest + Testing Library.

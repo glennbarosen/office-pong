@@ -19,8 +19,8 @@ export function WinLossChart({ player, chartColors, currentTheme }: WinLossChart
     ]
 
     return (
-        <Card className="p-3 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold sm:mb-6 mb-4">Seier/Tap-forhold</h3>
+        <Card padding="m">
+            <h3 className="text-base sm:text-lg font-semibold mb-16">Seier/Tap-forhold</h3>
             <div className="flex justify-center">
                 <div className="h-[280px] w-full max-w-sm overflow-hidden sm:h-[320px] sm:max-w-md">
                     <ResponsiveContainer width="100%" height="100%">

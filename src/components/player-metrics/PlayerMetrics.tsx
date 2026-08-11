@@ -49,14 +49,14 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
 
     if (playerMatches.length === 0) {
         return (
-            <Card className="sm:p-6 p-4">
+            <Card padding="m">
                 <EmptyState title="Ingen kampdata" description="Denne spilleren har ikke spilt noen kamper ennå." />
             </Card>
         )
     }
 
     return (
-        <div className="sm:space-y-6 space-y-4">
+        <div className="space-y-16 sm:space-y-24">
             <PlayerMetricsControls
                 selectedOpponent={selectedOpponent}
                 onOpponentChange={setSelectedOpponent}

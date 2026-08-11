@@ -5,11 +5,22 @@ import { RATING_CONFIG, type Match, type Player } from '../types/pong'
 import { useMatches } from '../hooks/useMatches'
 import { MatchCard } from '../components/match-card/MatchCard'
 import { PlayerMetrics } from '../components/player-metrics/PlayerMetrics'
+import { HeadToHeadTable } from '../components/head-to-head/HeadToHeadTable'
+import { FormIndicator } from '../components/leaderboard/FormIndicator'
+import { TierBadge } from '../components/leaderboard/TierBadge'
+import { PlayerAvatar } from '../components/common/PlayerAvatar'
 import { InfoMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
 import { NotFound } from '../components/common/NotFound'
 import { PLAYER_NOT_FOUND } from '../lib/messages'
-import { createLeaderboardEntries, createPlayerMap, formatDate, resolveMatchPlayers } from '../utils/gameUtils'
+import {
+    createFormByPlayer,
+    createLeaderboardEntries,
+    createOpponentStats,
+    createPlayerMap,
+    formatDate,
+    resolveMatchPlayers,
+} from '../utils/gameUtils'
 
 interface ProfileProps {
     id: string
@@ -53,6 +64,8 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
         (match: Match) => match.player1Id === player.id || match.player2Id === player.id
     )
     const playerMatches = resolveMatchPlayers(rawPlayerMatches, createPlayerMap(players))
+    const opponentStats = createOpponentStats(rawPlayerMatches, player, players)
+    const form = createFormByPlayer(rawPlayerMatches).get(player.id)
 
     // winRate and eligibility are exactly what createLeaderboardEntries derives;
     // recomputing them here is how the two definitions drift apart.
@@ -62,15 +75,26 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
 
     return (
         <div className="flex flex-col gap-32">
-            <Card variant="outlined" className="max-w-[400px] space-y-24">
-                <div>
-                    <h1 className="heading-2">{player.name}</h1>
-                    <div className="text-text-subdued">Medlem siden {formatDate(player.createdAt)}</div>
+            <Card variant="outlined" padding="l" className="space-y-24">
+                <div className="flex items-center gap-16">
+                    <PlayerAvatar player={player} size="lg" />
+                    <div>
+                        <h1 className="heading-2">{player.name}</h1>
+                        <div className="text-text-subdued">Medlem siden {formatDate(player.createdAt)}</div>
+                    </div>
                 </div>
 
                 <DescriptionList>
                     <DescriptionTerm>ELO Rating</DescriptionTerm>
                     <DescriptionDetail>{player.eloRating}</DescriptionDetail>
+                    {isEligibleForRanking && (
+                        <>
+                            <DescriptionTerm>Nivå</DescriptionTerm>
+                            <DescriptionDetail>
+                                <TierBadge rating={player.eloRating} />
+                            </DescriptionDetail>
+                        </>
+                    )}
                     <DescriptionTerm>Antall kamper</DescriptionTerm>
                     <DescriptionDetail>{player.wins + player.losses}</DescriptionDetail>
                     <DescriptionTerm>Seire</DescriptionTerm>
@@ -79,6 +103,10 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                     <DescriptionDetail>{player.losses}</DescriptionDetail>
                     <DescriptionTerm>Seiersprosent</DescriptionTerm>
                     <DescriptionDetail>{winRate.toFixed(0)}%</DescriptionDetail>
+                    <DescriptionTerm>Form</DescriptionTerm>
+                    <DescriptionDetail>
+                        <FormIndicator form={form} />
+                    </DescriptionDetail>
                 </DescriptionList>
 
                 {!isEligibleForRanking && (
@@ -89,17 +117,22 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                 )}
             </Card>
 
+            <Card variant="outlined" padding="l">
+                <h2 className="heading-4 mb-16">Innbyrdes oppgjør</h2>
+                <HeadToHeadTable stats={opponentStats} />
+            </Card>
+
             {/* Player Metrics Charts */}
-            <div className="p-6">
-                <h2 className="heading-4 mb-4">Detaljert statistikk</h2>
+            <Card variant="outlined" padding="l">
+                <h2 className="heading-4 mb-16">Detaljert statistikk</h2>
                 {/* Its own filter would redo the one above. */}
                 <PlayerMetrics player={player} matches={rawPlayerMatches} players={players} />
-            </div>
+            </Card>
 
-            <div className="p-6">
-                <h2 className="heading-4 mb-4">Kamphistorikk</h2>
+            <Card variant="outlined" padding="l">
+                <h2 className="heading-4 mb-16">Kamphistorikk</h2>
                 {playerMatches.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-12">
                         {playerMatches.map((match) => (
                             <MatchCard key={match.id} match={match} currentPlayerId={player.id} />
                         ))}
@@ -109,7 +142,7 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                         <p className="text-text-subdued">Ingen kamper spilt ennå</p>
                     </div>
                 )}
-            </div>
+            </Card>
         </div>
     )
 }

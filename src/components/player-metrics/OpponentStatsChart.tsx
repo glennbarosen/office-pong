@@ -18,8 +18,8 @@ export function OpponentStatsChart({ data, chartColors, currentTheme, selectedOp
     if (data.length === 0) return null
 
     return (
-        <Card className="p-3 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold sm:mb-6 mb-4">
+        <Card padding="m">
+            <h3 className="text-base sm:text-lg font-semibold mb-16">
                 Motstanderstatistikk
                 {selectedOpponent !== 'all' && ' (filtrert)'}
             </h3>

@@ -73,10 +73,10 @@ describe('EloService', () => {
 
     describe('getRatingTier', () => {
         test('should return correct tiers for different ratings', () => {
-            expect(EloService.getRatingTier(1000).tier).toBe('Novice')
-            expect(EloService.getRatingTier(1500).tier).toBe('Expert')
-            expect(EloService.getRatingTier(1700).tier).toBe('Master')
-            expect(EloService.getRatingTier(1900).tier).toBe('Grandmaster')
+            expect(EloService.getRatingTier(1000).tier).toBe('Nybegynner')
+            expect(EloService.getRatingTier(1500).tier).toBe('Ekspert')
+            expect(EloService.getRatingTier(1700).tier).toBe('Mester')
+            expect(EloService.getRatingTier(1900).tier).toBe('Stormester')
         })
     })
 })

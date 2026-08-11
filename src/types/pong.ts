@@ -64,6 +64,31 @@ export interface OpponentStats {
     totalMatches: number
     averageScore: number
     eloChange: number
+    /**
+     * When these two last met. The maximum playedAt of the pairing, not the
+     * last one iterated — callers feed matches in both orders (the profile
+     * page newest-first, straight from the query; the metrics hook
+     * oldest-first, for its ELO curve).
+     */
+    lastMatch: string
+}
+
+/** The outcome of one match from a single player's point of view. */
+export type MatchResult = 'win' | 'loss'
+
+/**
+ * A player's recent results and current streak, as derived by
+ * createFormByPlayer.
+ */
+export interface PlayerForm {
+    /** Newest-first, capped at FORM_LENGTH. */
+    recent: MatchResult[]
+    /**
+     * The run at the head of the player's full history — not capped at
+     * FORM_LENGTH, so a 9-match win streak reads as 9, not "5+".
+     * null for a player with no matches.
+     */
+    streak: { type: MatchResult; count: number } | null
 }
 
 /** One point on a player's derived ELO curve. */
@@ -83,10 +108,10 @@ export const RATING_CONFIG = {
     MINIMUM_MATCHES_FOR_RANKING: 5,
     /** Rating thresholds for getRatingTier, lowest first. */
     TIERS: [
-        { minRating: 1800, tier: 'Grandmaster', color: 'platinum' },
-        { minRating: 1600, tier: 'Master', color: 'gold' },
-        { minRating: 1400, tier: 'Expert', color: 'silver' },
-        { minRating: 0, tier: 'Novice', color: 'bronze' },
+        { minRating: 1800, tier: 'Stormester', color: 'platinum' },
+        { minRating: 1600, tier: 'Mester', color: 'gold' },
+        { minRating: 1400, tier: 'Ekspert', color: 'silver' },
+        { minRating: 0, tier: 'Nybegynner', color: 'bronze' },
     ] as const,
 } as const
 
