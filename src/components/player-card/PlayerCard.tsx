@@ -1,5 +1,6 @@
-import { Button } from '@fremtind/jokul/button'
 import { Card } from '@fremtind/jokul/card'
+import { SegmentedControl } from '@fremtind/jokul/segmented-control'
+import { SegmentedControlButton } from '@fremtind/jokul/segmented-control-button'
 import { NativeSelect } from '@fremtind/jokul/select'
 import { TextInput } from '@fremtind/jokul/text-input'
 import type { SelectOption } from '../../types'
@@ -41,24 +42,32 @@ export function PlayerCard({
             <div className="space-y-6">
                 <div className="text-center">
                     <h2 className="heading-4 mb-2">Spiller {playerNumber}</h2>
-                    <div className="flex gap-8">
-                        <Button
-                            variant={playerType === 'existing' ? 'primary' : 'secondary'}
-                            density="compact"
-                            type="button"
-                            onClick={() => onPlayerTypeChange('existing')}
+                    {/* A real radio group, not two buttons whose selected state
+                        was conveyed by colour alone. The legend is visually
+                        hidden because the heading above already says which
+                        player this is; screen readers still get the grouping. */}
+                    <SegmentedControl
+                        legend={`Spiller ${playerNumber}: eksisterende eller ny`}
+                        labelProps={{ srOnly: true }}
+                        density="compact"
+                    >
+                        <SegmentedControlButton
+                            name={`player${playerNumber}Type`}
+                            value="existing"
+                            checked={playerType === 'existing'}
+                            onChange={() => onPlayerTypeChange('existing')}
                         >
                             Eksisterende
-                        </Button>
-                        <Button
-                            variant={playerType === 'new' ? 'primary' : 'secondary'}
-                            density="compact"
-                            type="button"
-                            onClick={() => onPlayerTypeChange('new')}
+                        </SegmentedControlButton>
+                        <SegmentedControlButton
+                            name={`player${playerNumber}Type`}
+                            value="new"
+                            checked={playerType === 'new'}
+                            onChange={() => onPlayerTypeChange('new')}
                         >
                             Ny spiller
-                        </Button>
-                    </div>
+                        </SegmentedControlButton>
+                    </SegmentedControl>
                 </div>
 
                 {playerType === 'existing' ? (
