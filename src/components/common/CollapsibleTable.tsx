@@ -1,13 +1,7 @@
 import type { ReactNode } from 'react'
 import { Table } from '@fremtind/jokul/table'
 import { useElementDimensions } from '@fremtind/jokul/hooks'
-
-/**
- * Width at or below which the table collapses into a list. Measured on the
- * table's own container rather than the viewport, so a narrow column collapses
- * even on a wide screen.
- */
-const COLLAPSE_TO_LIST_WIDTH = 1000
+import { TABLE_COLLAPSE_WIDTH } from '../../constants/layout'
 
 interface CollapsibleTableProps {
     /** TableHead and TableBody. */
@@ -23,7 +17,7 @@ interface CollapsibleTableProps {
  */
 export function CollapsibleTable({ children, className }: CollapsibleTableProps) {
     const [elementRef, dimensions] = useElementDimensions<HTMLDivElement>(350)
-    const shouldCollapse = dimensions.width <= COLLAPSE_TO_LIST_WIDTH
+    const shouldCollapse = dimensions.width <= TABLE_COLLAPSE_WIDTH
 
     return (
         <div ref={elementRef} className={className}>

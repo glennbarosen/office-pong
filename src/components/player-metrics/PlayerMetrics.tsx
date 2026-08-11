@@ -6,6 +6,7 @@ import { EloHistoryChart } from './EloHistoryChart'
 import { WinLossChart } from './WinLossChart'
 import { OpponentStatsChart } from './OpponentStatsChart'
 import { useThemeColors } from './useThemeColors'
+import { useTheme } from '../../hooks/useTheme'
 import { deriveEloHistory, usePlayerMetricsData } from './usePlayerMetricsData'
 import type { PlayerMetricsProps } from './types'
 
@@ -41,8 +42,10 @@ export function PlayerMetrics({ player, matches, players }: PlayerMetricsProps) 
         }
     }, [selectedOpponent, eloHistory, opponentStats, playerMatches, player, players])
 
-    // Get current theme for chart keys
-    const currentTheme = typeof window !== 'undefined' ? document.body.getAttribute('data-theme') || 'light' : 'light'
+    // Chart `key`s include the theme so Recharts remounts and repaints on a
+    // theme switch. From useTheme — the one owner — not a third read of
+    // body[data-theme].
+    const { theme: currentTheme } = useTheme()
 
     if (playerMatches.length === 0) {
         return (

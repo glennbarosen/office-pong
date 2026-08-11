@@ -1,7 +1,7 @@
 import { Card } from '@fremtind/jokul/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import type { OpponentStats, ChartColors } from '../../types'
-import { useIsMobile } from './useIsMobile'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { ChartTooltip, ChartTooltipRow } from './ChartTooltip'
 import { firstPayload } from './chartPayload'
 import { categoryAxisProps, axisProps, yAxisWidth } from './chartAxes'

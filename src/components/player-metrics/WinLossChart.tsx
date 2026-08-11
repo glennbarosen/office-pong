@@ -2,7 +2,7 @@ import { Card } from '@fremtind/jokul/card'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import type { Player } from '../../types/pong'
 import type { ChartColors } from '../../types'
-import { useIsMobile } from './useIsMobile'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { ChartTooltip, ChartTooltipRow } from './ChartTooltip'
 
 interface WinLossChartProps {
