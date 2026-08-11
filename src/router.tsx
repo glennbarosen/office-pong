@@ -1,6 +1,8 @@
 import { createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 import { QueryClient, dehydrate, hydrate, type DehydratedState } from '@tanstack/react-query'
+import { RoutePending } from './components/common/RoutePending'
+import { RouteNotFound } from './components/common/NotFound'
 
 export function getRouter() {
     // Must be constructed per router, not at module scope. TanStack Start calls
@@ -22,6 +24,8 @@ export function getRouter() {
         context: {
             queryClient,
         },
+        defaultPendingComponent: RoutePending,
+        defaultNotFoundComponent: RouteNotFound,
         // Carries what the loaders fetched on the server into the browser's
         // cache. Without this the client refetches everything SSR just
         // rendered, which is most of the point of having loaders at all.
