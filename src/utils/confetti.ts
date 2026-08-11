@@ -1,12 +1,33 @@
 import confetti from 'canvas-confetti'
 
 /**
+ * Whether the user has asked for less motion.
+ *
+ * A raw matchMedia call rather than Jøkul's useBrowserPreferences (which does
+ * expose prefersReducedMotion) because this is a plain utility, not a
+ * component — checking here means a future caller cannot forget to, which is
+ * the whole point of the guard.
+ */
+const prefersReducedMotion = () =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
  * Extreme celebratory confetti animation for successful match submissions
  * Creates multiple sequential confetti explosions with various colors and patterns
+ *
+ * Skipped entirely for users who prefer reduced motion — a full-screen particle
+ * burst is exactly what that setting exists to prevent. `onComplete` still
+ * fires, immediately rather than after the 3.5s celebration, because the caller
+ * sequences navigation on it.
  *
  * @param onComplete - Callback function to execute after the confetti animation completes
  */
 export const triggerMatchSuccessConfetti = (onComplete?: () => void) => {
+    if (prefersReducedMotion()) {
+        onComplete?.()
+        return
+    }
+
     // 🎉 EXTREME CELEBRATORY CONFETTI EXPLOSION! 🎉
     const fireConfetti = () => {
         const count = 200
