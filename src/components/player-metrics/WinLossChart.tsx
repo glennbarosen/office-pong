@@ -1,8 +1,9 @@
 import { Card } from '@fremtind/jokul/card'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import type { Player } from '../../types/pong'
-import type { ChartColors } from './types'
-import { useIsMobile } from './useIsMobile'
+import type { ChartColors } from '../../types'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { ChartTooltip, ChartTooltipRow } from './ChartTooltip'
 
 interface WinLossChartProps {
     player: Player
@@ -45,36 +46,22 @@ export function WinLossChart({ player, chartColors, currentTheme }: WinLossChart
                             <Tooltip
                                 content={({ active, payload }) => {
                                     const entry = payload?.[0] as { name?: string; value?: number } | undefined
-                                    if (active && entry) {
-                                        return (
-                                            <div
-                                                style={{
-                                                    backgroundColor: '#1f2937',
-                                                    color: 'white',
-                                                    padding: isMobile ? '8px' : '12px',
-                                                    border: '1px solid #4b5563',
-                                                    borderRadius: '8px',
-                                                    boxShadow:
-                                                        '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                                                    fontSize: isMobile ? '12px' : '14px',
-                                                    opacity: 1,
-                                                    maxWidth: isMobile ? '180px' : 'none',
-                                                }}
-                                            >
-                                                <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>{entry.name}</p>
-                                                <p style={{ margin: '0 0 4px 0' }}>Antall: {entry.value}</p>
-                                                <p style={{ margin: '0' }}>
-                                                    Prosent:{' '}
-                                                    {(
-                                                        ((entry.value ?? 0) / (player.wins + player.losses)) *
-                                                        100
-                                                    ).toFixed(1)}
-                                                    %
-                                                </p>
-                                            </div>
-                                        )
-                                    }
-                                    return null
+                                    if (!active || !entry) return null
+
+                                    const total = player.wins + player.losses
+                                    const percent = total > 0 ? ((entry.value ?? 0) / total) * 100 : 0
+
+                                    return (
+                                        <ChartTooltip
+                                            title={entry.name}
+                                            chartColors={chartColors}
+                                            isMobile={isMobile}
+                                            maxWidth="180px"
+                                        >
+                                            <ChartTooltipRow>Antall: {entry.value}</ChartTooltipRow>
+                                            <ChartTooltipRow last>Prosent: {percent.toFixed(1)}%</ChartTooltipRow>
+                                        </ChartTooltip>
+                                    )
                                 }}
                             />
                         </PieChart>

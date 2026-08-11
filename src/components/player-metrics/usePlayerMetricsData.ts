@@ -1,22 +1,78 @@
 import { useMemo } from 'react'
-import type { Player, Match } from '../../types/pong'
-import type { OpponentStats, EloHistoryPoint } from './types'
+import { RATING_CONFIG, type Player, type Match } from '../../types/pong'
+import type { OpponentStats, EloHistoryPoint } from '../../types'
+import { formatDate } from '../../utils/gameUtils'
+
+interface DeriveEloHistoryOptions {
+    /**
+     * Nudge the derived curve so it ends at the player's stored rating.
+     *
+     * Only correct for a player's complete history. A subset filtered to one
+     * opponent is not expected to end at the overall rating, so leave it off
+     * there — that difference is why this used to exist as two loops.
+     */
+    reconcileToCurrentRating?: boolean
+}
+
+/**
+ * Rebuild a player's rating curve by replaying the per-match ELO deltas.
+ *
+ * The single derivation. It previously existed twice — once in this hook with
+ * the reconciliation below, once inline in PlayerMetrics without it — so the
+ * filtered and unfiltered charts silently disagreed about how a curve is built.
+ */
+export function deriveEloHistory(
+    playerMatches: Match[],
+    player: Player,
+    players: Player[],
+    { reconcileToCurrentRating = false }: DeriveEloHistoryOptions = {}
+): EloHistoryPoint[] {
+    if (playerMatches.length === 0) return []
+
+    const history: EloHistoryPoint[] = []
+    let runningElo: number = RATING_CONFIG.STARTING_ELO
+
+    playerMatches.forEach((match, index) => {
+        runningElo += match.eloChanges[player.id] ?? 0
+
+        const isPlayer1 = match.player1Id === player.id
+        const opponentId = isPlayer1 ? match.player2Id : match.player1Id
+        const opponent = players.find((p) => p.id === opponentId)
+
+        history.push({
+            matchNumber: index + 1,
+            elo: Math.round(runningElo),
+            date: formatDate(match.playedAt),
+            dateFormatted: new Date(match.playedAt).toISOString().slice(0, 10), // YYYY-MM-DD
+            opponent: opponent?.name ?? 'Ukjent',
+            result: match.winnerId === player.id ? 'Win' : 'Loss',
+        })
+    })
+
+    // Replaying the deltas can drift from the stored rating — rows predating
+    // persisted elo_changes contribute nothing. Spread the difference across
+    // the curve so it lands on the real value.
+    if (reconcileToCurrentRating && Math.abs(runningElo - player.eloRating) > ELO_RECONCILE_THRESHOLD) {
+        const adjustment = (player.eloRating - runningElo) / history.length
+
+        history.forEach((point, index) => {
+            point.elo = Math.round(point.elo + adjustment * (index + 1))
+        })
+    }
+
+    return history
+}
+
+/** Below this the derived curve is close enough; nudging it would be noise. */
+const ELO_RECONCILE_THRESHOLD = 10
 
 export function usePlayerMetricsData(player: Player, matches: Match[], players: Player[]) {
     // Get all matches for this player
     const playerMatches = useMemo(() => {
         const filteredMatches = matches
-            .filter((match) => {
-                // Try different comparison methods in case of type mismatches
-                const directMatch = match.player1Id === player.id || match.player2Id === player.id
-                const stringMatch =
-                    String(match.player1Id) === String(player.id) || String(match.player2Id) === String(player.id)
-                const trimmedMatch =
-                    String(match.player1Id).trim() === String(player.id).trim() ||
-                    String(match.player2Id).trim() === String(player.id).trim()
-
-                return directMatch || stringMatch || trimmedMatch
-            })
+            // Plain equality: both sides are uuids straight from the database,
+            // so there is no whitespace or type variance to defend against.
+            .filter((match) => match.player1Id === player.id || match.player2Id === player.id)
             .sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime())
 
         return filteredMatches
@@ -33,20 +89,17 @@ export function usePlayerMetricsData(player: Player, matches: Match[], players: 
 
             if (!opponent) return
 
-            if (!stats.has(opponentId)) {
-                stats.set(opponentId, {
-                    opponentId,
-                    opponentName: opponent.name,
-                    wins: 0,
-                    losses: 0,
-                    winRate: 0,
-                    totalMatches: 0,
-                    averageScore: 0,
-                    eloChange: 0,
-                })
+            const stat = stats.get(opponentId) ?? {
+                opponent,
+                wins: 0,
+                losses: 0,
+                winRate: 0,
+                totalMatches: 0,
+                averageScore: 0,
+                eloChange: 0,
             }
+            stats.set(opponentId, stat)
 
-            const stat = stats.get(opponentId)!
             stat.totalMatches++
 
             if (match.winnerId === player.id) {
@@ -66,46 +119,12 @@ export function usePlayerMetricsData(player: Player, matches: Match[], players: 
     }, [playerMatches, player.id, players])
 
     // Calculate ELO history - showing rating progression over time
-    const eloHistory = useMemo(() => {
-        if (playerMatches.length === 0) return []
-
-        const history: EloHistoryPoint[] = []
-
-        // Start with the starting ELO (1200) and build forward
-        let runningElo = 1200 // Standard chess/ping pong starting rating
-
-        playerMatches.forEach((match, index) => {
-            // Apply the ELO change from this match
-            const eloChange = match.eloChanges?.[player.id] || 0
-            runningElo += eloChange
-
-            const isPlayer1 = match.player1Id === player.id
-            const opponentId = isPlayer1 ? match.player2Id : match.player1Id
-            const opponent = players.find((p) => p.id === opponentId)
-
-            const matchDate = new Date(match.playedAt)
-
-            history.push({
-                matchNumber: index + 1,
-                elo: Math.round(runningElo),
-                date: matchDate.toLocaleDateString('no-NO'),
-                dateFormatted: matchDate.toISOString().slice(0, 10), // YYYY-MM-DD format
-                opponent: opponent?.name || 'Ukjent',
-                result: match.winnerId === player.id ? 'Win' : 'Loss',
-            })
-        })
-
-        // If we have a mismatch with current ELO, adjust proportionally
-        if (history.length > 0 && Math.abs(runningElo - player.eloRating) > 10) {
-            const adjustment = (player.eloRating - runningElo) / history.length
-
-            history.forEach((point, index) => {
-                point.elo = Math.round(point.elo + adjustment * (index + 1))
-            })
-        }
-
-        return history
-    }, [playerMatches, player.id, player.eloRating, players])
+    const eloHistory = useMemo(
+        // Reconciled against the stored rating: this is the player's whole
+        // history, so its end point should be where they actually are.
+        () => deriveEloHistory(playerMatches, player, players, { reconcileToCurrentRating: true }),
+        [playerMatches, player, players]
+    )
 
     return {
         playerMatches,

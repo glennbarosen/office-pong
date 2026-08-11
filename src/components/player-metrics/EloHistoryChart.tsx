@@ -1,7 +1,10 @@
 import { Card } from '@fremtind/jokul/card'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import type { EloHistoryPoint, ChartColors } from './types'
-import { useIsMobile } from './useIsMobile'
+import type { EloHistoryPoint, ChartColors } from '../../types'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { ChartTooltip, ChartTooltipRow } from './ChartTooltip'
+import { firstPayload } from './chartPayload'
+import { axisProps, yAxisWidth } from './chartAxes'
 
 interface EloHistoryChartProps {
     data: EloHistoryPoint[]
@@ -44,9 +47,7 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
                                       }
                                     : undefined
                             }
-                            tick={{ fontSize: isMobile ? 10 : 12, fill: chartColors.text }}
-                            axisLine={{ stroke: chartColors.grid }}
-                            tickLine={{ stroke: chartColors.grid }}
+                            {...axisProps(chartColors, isMobile)}
                             type="number"
                             scale="linear"
                             domain={['dataMin', 'dataMax']}
@@ -62,53 +63,39 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
                                     fontSize: isMobile ? '10px' : '12px',
                                 },
                             }}
-                            width={isMobile ? 60 : 80}
-                            tick={{ fontSize: isMobile ? 10 : 12, fill: chartColors.text }}
-                            axisLine={{ stroke: chartColors.grid }}
-                            tickLine={{ stroke: chartColors.grid }}
+                            width={yAxisWidth(isMobile)}
+                            {...axisProps(chartColors, isMobile)}
                             domain={['dataMin - 50', 'dataMax + 50']}
                         />
                         <Tooltip
                             formatter={(value) => [value, 'ELO Rating']}
                             labelFormatter={(label) => `Kamp ${label}`}
                             content={({ active, payload, label }) => {
-                                const entry = payload?.[0] as { payload: EloHistoryPoint } | undefined
-                                if (active && entry) {
-                                    const data = entry.payload
-                                    return (
-                                        <div
-                                            style={{
-                                                backgroundColor: '#1f2937',
-                                                color: 'white',
-                                                padding: isMobile ? '8px' : '12px',
-                                                border: '1px solid #4b5563',
-                                                borderRadius: '8px',
-                                                boxShadow:
-                                                    '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                                                fontSize: isMobile ? '12px' : '14px',
-                                                opacity: 1,
-                                                maxWidth: isMobile ? '200px' : 'none',
-                                            }}
-                                        >
-                                            <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>Kamp {label}</p>
-                                            <p style={{ margin: '0 0 4px 0' }}>ELO: {data.elo}</p>
-                                            <p style={{ margin: '0 0 4px 0' }}>Motstander: {data.opponent}</p>
-                                            <p style={{ margin: '0 0 4px 0' }}>
-                                                Resultat:{' '}
-                                                <span
-                                                    style={{
-                                                        color: data.result === 'Win' ? '#34d399' : '#f87171',
-                                                        fontWeight: 'bold',
-                                                    }}
-                                                >
-                                                    {data.result === 'Win' ? 'Seier' : 'Tap'}
-                                                </span>
-                                            </p>
-                                            <p style={{ margin: '0' }}>Dato: {data.date}</p>
-                                        </div>
-                                    )
-                                }
-                                return null
+                                const point = firstPayload<EloHistoryPoint>(payload)
+                                if (!active || !point) return null
+
+                                const isWin = point.result === 'Win'
+
+                                return (
+                                    <ChartTooltip title={`Kamp ${label}`} chartColors={chartColors} isMobile={isMobile}>
+                                        <ChartTooltipRow>ELO: {point.elo}</ChartTooltipRow>
+                                        <ChartTooltipRow>Motstander: {point.opponent}</ChartTooltipRow>
+                                        <ChartTooltipRow>
+                                            Resultat:{' '}
+                                            <span
+                                                style={{
+                                                    color: isWin
+                                                        ? chartColors.tooltipSuccess
+                                                        : chartColors.tooltipDanger,
+                                                    fontWeight: 'bold',
+                                                }}
+                                            >
+                                                {isWin ? 'Seier' : 'Tap'}
+                                            </span>
+                                        </ChartTooltipRow>
+                                        <ChartTooltipRow last>Dato: {point.date}</ChartTooltipRow>
+                                    </ChartTooltip>
+                                )
                             }}
                         />
                         <Line

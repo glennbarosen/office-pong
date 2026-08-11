@@ -1,49 +1,71 @@
 import { DescriptionList, DescriptionTerm, DescriptionDetail } from '@fremtind/jokul/description-list'
 import { Card } from '@fremtind/jokul/card'
 import { usePlayers } from '../hooks/usePlayers'
-import { RATING_CONFIG, type Match } from '../types/pong'
+import { RATING_CONFIG, type Match, type Player } from '../types/pong'
 import { useMatches } from '../hooks/useMatches'
 import { MatchCard } from '../components/match-card/MatchCard'
 import { PlayerMetrics } from '../components/player-metrics/PlayerMetrics'
 import { InfoMessage } from '@fremtind/jokul/message'
+import { QueryState } from '../components/common/QueryState'
+import { NotFound } from '../components/common/NotFound'
+import { PLAYER_NOT_FOUND } from '../lib/messages'
+import { createLeaderboardEntries, createPlayerMap, formatDate, resolveMatchPlayers } from '../utils/gameUtils'
 
 interface ProfileProps {
     id: string
 }
 
 export function Profile({ id }: ProfileProps) {
-    const { data: players = [] } = usePlayers()
-    const { data: matches = [] } = useMatches()
+    const playersQuery = usePlayers()
+    const matchesQuery = useMatches()
+    const players = playersQuery.data ?? []
+    const matches = matchesQuery.data ?? []
 
     const player = players.find((p) => p.id === id)
 
-    if (!player) {
-        return (
-            <div className="py-6 mx-auto max-w-md px-4">
-                <div className="p-6 text-center">
-                    <h1 className="heading-3 mb-2">Spiller ikke funnet</h1>
-                    <p className="text-text-subdued">Spilleren du leter etter finnes ikke.</p>
-                </div>
-            </div>
-        )
-    }
+    // The !player branch must sit inside QueryState, not before it: both queries
+    // default to [], so while they are pending an absent player is
+    // indistinguishable from one that does not exist. Checking first is what
+    // made every profile visit flash "Spiller ikke funnet".
+    //
+    // The route loader throws notFound() for an unknown id, so the miss below
+    // is only reachable in edge cases — a player deleted while the page is open.
+    return (
+        <QueryState queries={[playersQuery, matchesQuery]}>
+            {player ? (
+                <ProfileDetails player={player} players={players} matches={matches} />
+            ) : (
+                <NotFound title={PLAYER_NOT_FOUND.title} description={PLAYER_NOT_FOUND.description} />
+            )}
+        </QueryState>
+    )
+}
 
-    // Get player's matches
-    const playerMatches = matches
-        .filter((match: Match) => match.player1Id === id || match.player2Id === id)
-        .sort((a: Match, b: Match) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime())
+interface ProfileDetailsProps {
+    player: Player
+    players: Player[]
+    matches: Match[]
+}
 
-    const winRate = player.matchesPlayed > 0 ? (player.wins / player.matchesPlayed) * 100 : 0
-    const isEligibleForRanking = player.matchesPlayed >= RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING
+function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
+    // Already newest-first: the query orders by played_at DESC.
+    const rawPlayerMatches = matches.filter(
+        (match: Match) => match.player1Id === player.id || match.player2Id === player.id
+    )
+    const playerMatches = resolveMatchPlayers(rawPlayerMatches, createPlayerMap(players))
+
+    // winRate and eligibility are exactly what createLeaderboardEntries derives;
+    // recomputing them here is how the two definitions drift apart.
+    const entry = createLeaderboardEntries([player])[0]
+    const winRate = entry?.winRate ?? 0
+    const isEligibleForRanking = entry?.isEligibleForRanking ?? false
 
     return (
         <div className="flex flex-col gap-32">
             <Card variant="outlined" className="max-w-[400px] space-y-24">
                 <div>
                     <h1 className="heading-2">{player.name}</h1>
-                    <div className="text-text-subdued">
-                        Medlem siden {new Date(player.createdAt).toLocaleDateString('no-NO')}
-                    </div>
+                    <div className="text-text-subdued">Medlem siden {formatDate(player.createdAt)}</div>
                 </div>
 
                 <DescriptionList>
@@ -70,7 +92,8 @@ export function Profile({ id }: ProfileProps) {
             {/* Player Metrics Charts */}
             <div className="p-6">
                 <h2 className="heading-4 mb-4">Detaljert statistikk</h2>
-                <PlayerMetrics player={player} matches={matches} players={players} />
+                {/* Its own filter would redo the one above. */}
+                <PlayerMetrics player={player} matches={rawPlayerMatches} players={players} />
             </div>
 
             <div className="p-6">
@@ -78,7 +101,7 @@ export function Profile({ id }: ProfileProps) {
                 {playerMatches.length > 0 ? (
                     <div className="space-y-4">
                         {playerMatches.map((match) => (
-                            <MatchCard key={match.id} match={match} currentPlayerId={id} players={players} />
+                            <MatchCard key={match.id} match={match} currentPlayerId={player.id} />
                         ))}
                     </div>
                 ) : (

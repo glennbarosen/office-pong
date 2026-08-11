@@ -1,6 +1,6 @@
 # H5 — Accessibility & UX polish
 
-**Status:** not started
+**Status:** done, on branch `handoff-h3-h7`
 **Depends on:** H4 (same JSX — avoid editing it twice)
 **Touches:** `src/components/**`, `src/pages/**`, `src/routes/__root.tsx`, `src/utils/confetti.ts`
 **Est. size:** M
@@ -23,78 +23,73 @@ This is an internal office tool, so the stakes are lower than a public product �
 
 ### 1. Announce asynchronous state
 
-- [ ] `src/components/common/LoadingSpinner.tsx:6-11` is a plain `<div>` with a `'Laster...'` default. Add `role="status"` and `aria-live="polite"` so the change is announced. Check whether Jøkul ships a loader component first.
-- [ ] The form error at `src/pages/NewMatch.tsx:112` renders silently. Put it in a live region, set `aria-invalid` on the offending fields, and move focus to the error (or the first bad field) on failed submit.
-- [ ] If H4's shared query-state wrapper landed, the error branch there needs the same treatment — one live region for the page rather than per-component.
+- [x] `LoadingSpinner` gets `role="status"` + `aria-live="polite"`.
+- [x] The `/ny-kamp` form error now sits in a `role="alert"` live region, and focus moves to it (`ref` + `tabIndex={-1}`) on a failed submit. `PlayerCard` gained a `hasError` prop that sets `aria-invalid` on both cards' inputs — both, not a guessed single field, since the server reports one message for the whole form.
+- [x] H4's `QueryState` error branch uses `role="alert"` — one live region for the page.
 
 ### 2. Give meaning-bearing emoji text alternatives
 
 These emoji are the *only* signal for their information:
 
-- [ ] Rank medals from `getRankIcon` (`src/utils/gameUtils.ts:24-34`) — 🥇/🥈/🥉 for ranks 1–3, bare numbers after. A screen reader hears nothing useful for the top three. Wrap with visually-hidden text ("1. plass") or add `role="img"` + `aria-label`.
-- [ ] Trophy indicators at `src/pages/Overview.tsx:99,110` marking match winners.
-- [ ] The 🏓 in the header title (`src/components/header/Header.tsx:10`) is decorative — mark it `aria-hidden="true"` so it isn't read as "ping pong paddle" in the page heading.
-
-The distinction matters: decorative emoji get `aria-hidden`, informational emoji get a label.
+- [x] Rank medals: extracted `RankIcon`, labelling the top three `"1./2./3. plass"`. Used by both the leaderboard table and `LeaderboardCard` (H4's extraction), so both renderings of a rank agree. Ranks past third stay bare text (`getRankIcon` already returns e.g. `"4."`, which reads correctly on its own).
+- [x] Trophy indicators — now `aria-label="<name> vant"`, in the consolidated `MatchCard` (see H4 task 3; the trophy exists in exactly one component now, not two).
+- [x] The 🏓 in the header is `aria-hidden="true"`.
 
 ### 3. Landmarks and navigation
 
-- [ ] There is no `<nav>` anywhere — `rg '<nav'` is empty. `src/routes/__root.tsx:49` has `<main>` and that's the only landmark. Wrap the header's navigation links in `<nav>`.
-- [ ] Add a skip link to `<main>` as the first focusable element.
-- [ ] Note that `README.md:15` claims the app has "bottom navigation" and it does not — navigation is the header plus "Se alle" links (`Overview.tsx:78,122`). H7 owns fixing the README; just don't let the claim confuse you into looking for a component that doesn't exist.
+- [x] The "← Hjem" link — the app's actual navigation — is wrapped in a labelled `<nav>`.
+- [x] Added a skip link (`"Hopp til hovedinnhold"`) as the first focusable element, hidden until focused. `<main>` gained `id`/`tabIndex={-1}` so the link moves focus, not just scroll position.
+- [x] README's "bottom navigation" claim — left alone here as scoped; fixed in H7.5.
 
 ### 4. Make the player-type toggle a real control
 
-`src/components/player-card/PlayerCard.tsx:37-52` is two `Button`s whose selected state is purely visual — nothing conveys which of "existing player" / "new player" is active.
-
-- [ ] Convert to a proper radio group: either Jøkul's radio/toggle component (preferred) or `role="radiogroup"` with `aria-checked`. If you keep buttons, `aria-pressed` is the minimum.
+- [x] Converted to Jøkul's `SegmentedControl` / `SegmentedControlButton` — a real fieldset of radio inputs, not `aria-pressed` bolted onto buttons. Verified in the rendered HTML: two `<fieldset>`s, four `type="radio"` inputs, two `checked`.
 
 ### 5. Respect `prefers-reduced-motion`
 
-- [ ] `src/utils/confetti.ts` is ~160 lines of particle bursts (`triggerMatchSuccessConfetti`, `:9`, called from `src/pages/NewMatch.tsx:63`) with **no** reduced-motion guard — `rg 'reduced-motion' src/` is empty. Check `window.matchMedia('(prefers-reduced-motion: reduce)')` and skip the animation (the `onComplete` callback must still fire, since `NewMatch.tsx` sequences the navigation on it).
-- [ ] Jøkul's `useBrowserPreferences` (already used in `src/hooks/useTheme.ts:1,7`) may expose this preference — check before adding a raw `matchMedia` call.
-- [ ] Audit any CSS transitions in `src/styles/` and the SCSS files for the same guard.
+- [x] `triggerMatchSuccessConfetti` checks `window.matchMedia('(prefers-reduced-motion: reduce)')` and returns immediately (calling `onComplete` first) when set.
+- [x] Checked `useBrowserPreferences` first; used raw `matchMedia` instead because this is a plain utility, not a component, and the check needed to live at the source so a future caller can't skip it.
+- [x] Audited `src/styles/` for CSS transitions needing the same guard — there are none; Jøkul owns the only animated components.
 
 ### 6. Replace page-blanking spinners with skeletons
 
-`src/pages/Leaderboard.tsx:20-22`, `Matches.tsx:68-70`, and `Overview.tsx:38-40` each swap the entire page for a text spinner, so every refetch collapses the layout and shifts focus.
-
-- [ ] Render skeleton rows that preserve layout dimensions instead. If H4 extracted a shared query-state wrapper, the skeleton belongs there, parameterized by row count.
-- [ ] Keep the `role="status"` announcement from task 1 — a skeleton is silent to a screen reader otherwise.
+- [x] `QueryState`'s pending branch renders Jøkul `SkeletonElement` rows via `SkeletonAnimation`, parameterized by `skeletonRows` (default 5).
+- [x] Kept the announcement — `role="status"` + `aria-live="polite"` set explicitly on the skeleton container, because `SkeletonAnimation` itself only sets `aria-busy` + `aria-label` (no `role`), which is not dependably exposed on a plain `div`. Caught by a test (`QueryState.test.tsx`) that asserted on the wrong attribute at first.
 
 ### 7. Fix the router typing suppression
 
-- [ ] `src/components/common/PlayerLink.tsx:15` carries `// @ts-expect-error - Router typing issue with params` over `params={{ id: playerId }}` (`:16`). Resolve it properly — this is the generic `Link as={RouterLink}` polymorphism losing route-param types. Options: type the wrapper's props against the route's param type, or use TanStack's `Link` directly with Jøkul styling. If it genuinely can't be typed, keep the suppression but replace the vague comment with a specific explanation and a link to the upstream issue.
+- [x] `PlayerLink` now goes through `JokulRouterLink` (`createLink(Link)`, already in the codebase and used by `__root.tsx`) instead of `<Link as={RouterLink}>`, which is what was losing the param types. The suppression is gone; confirmed the types are real (not just unsuppressed) by temporarily renaming the param key and getting a compile error naming the expected `{ id: string }`. `rg 'ts-expect-error|ts-ignore' src/` now returns nothing.
 
 ### 8. General sweep
 
-- [ ] Verify heading hierarchy — no skipped levels, one `<h1>` per page (`Profile.tsx:24` uses `heading-3` styling on an `<h1>`; that's fine, but check the rest).
-- [ ] Check color contrast on the "Mangler kamper" tag and `text-text-subdued` text in both themes.
-- [ ] Confirm every interactive element is keyboard reachable and has a visible focus ring — tab through `/ny-kamp` end to end.
-- [ ] `<html lang="no">` is already correct (`src/routes/__root.tsx:60`) — leave it.
+- [x] Heading hierarchy: found and fixed a real issue beyond what the doc named — the header's site title was rendered as `<h1>` on *every* page, so `/ny-kamp` and any profile had two `<h1>`s. It's now a styled `<p>` (branding, not a page heading); `Leaderboard.tsx` and `Matches.tsx`, which had no page-level heading of their own, each got one; `Overview.tsx` got a visually-hidden `<h1>` since it's sections rather than a titled document. Verified against a freshly restarted dev server: every route renders exactly one `<h1>`.
+- [x] Contrast: computed light/dark ratios from Jøkul's actual `--jkl-color-*` tokens using the WCAG relative-luminance formula (a Python script, not eyeballing) for body text, subdued text, tooltip text, and the `WarningTag` ("Mangler kamper") pairing. All pass AA (≥4.5:1) in both themes — nothing needed changing.
+- [x] Keyboard reachability: `rg` found no positive `tabindex` and no `outline`-suppressing CSS anywhere in `src/`; every interactive element is a native control or a Jøkul component built on one, so focus order and rings are the platform default rather than anything hand-rolled that could be wrong. This is inspection, not a real tab-through — see Verify below.
+- [x] `<html lang="no">` — confirmed already correct, left alone.
 
 ## Out of scope
 
 | Tempting to fix | Owned by |
 |---|---|
-| Component dedup, shared types, the Profile loading bug | H4 — land that first |
+| Component dedup, shared types, the Profile loading bug | H4 — landed first |
 | Route-level `pendingComponent` | H3 |
 | The `data-theme="light"` SSR flash (`__root.tsx:64`) | H3 |
 | README's false "bottom navigation" claim | H7 |
-| Norwegian string centralization — you'll be adding new user-facing strings here; just inline them consistently with what's around them | H7 |
+| Norwegian string centralization | H7 |
 
 ## Verify
 
 ```bash
 pnpm types:check && pnpm lint && pnpm prettier:check && pnpm vitest run
-pnpm db:up && pnpm dev
 ```
 
-Automated checks only catch part of this. If H6 has landed and added `eslint-plugin-jsx-a11y`, `pnpm lint` covers the static portion. Then:
+All pass.
 
-- **Keyboard only** — unplug the mouse. Tab through `/ny-kamp` and register a complete match. Then tab through `/`, `/ledertavle`, `/kamper`, and a profile. Every control must be reachable with a visible focus ring, and the skip link must work as the first tab stop.
-- **Screen reader** — with VoiceOver (`Cmd+F5`) or Orca, confirm: the leaderboard's top three are announced with their positions, not silence; the loading state is announced; a failed match submit announces the error; the player-type toggle announces which option is selected.
-- **Reduced motion** — enable the OS setting (GNOME: `gsettings set org.gnome.desktop.interface enable-animations false`; or override in devtools' Rendering panel) and register a match. No confetti, and the success flow still completes.
-- **Layout stability** — throttle to Slow 3G and reload each list page. Skeletons should hold the layout; no jump when data arrives.
-- Run Lighthouse's accessibility audit or axe DevTools on each of the five routes and note the remaining findings in this file rather than fixing everything at once.
-- Re-check contrast in both light and dark themes.
+- [ ] **Keyboard only, screen reader, reduced motion (OS setting), Lighthouse/axe** — none of these were run. They require a real browser and/or a screen reader (VoiceOver/Orca), and no browser automation was available in this session. Everything feeding into them was verified at the code/markup level (native controls, ARIA attributes present in rendered HTML, contrast computed from actual tokens, `matchMedia` guard in place) but **nobody has actually tabbed through the app, listened to a screen reader, or watched the reduced-motion setting take effect end-to-end.**
+- [x] **Layout stability:** not throttled to Slow 3G in a real browser, but the mechanism was verified directly — `QueryState`'s pending branch renders fixed-height skeleton rows rather than a centred spinner, confirmed via the component test suite and by reading the rendered markup.
+
+**Residual — the most important gap in this whole handoff.** Everything above that needs a human with a keyboard, a screen reader, or the OS reduced-motion setting is unverified beyond static analysis. This batch should not be considered fully done until someone actually:
+1. Unplugs the mouse and tabs through `/ny-kamp`, then the other four routes.
+2. Runs a screen reader over the leaderboard, a failed form submit, and the player-type toggle.
+3. Confirms the confetti actually skips with the OS reduced-motion setting on (the code path was read, not exercised).
+4. Runs axe DevTools or Lighthouse on each route and files what it finds here rather than assuming this doc's list was exhaustive.

@@ -47,16 +47,19 @@ CREATE TABLE matches (
         CHECK (player1_score >= 0 AND player2_score >= 0),
     CONSTRAINT matches_no_draw_check
         CHECK (player1_score <> player2_score),
-    -- Mirrors matchScoreSchema in src/lib/validation.ts. See the note in
-    -- db/migrations/002_add_constraints.sql: this encodes what the code
-    -- accepts, which is looser than its own comment claims.
+    -- Mirrors matchScoreSchema in src/lib/validation.ts. Deuce (past 11) must
+    -- win by exactly 2 — see db/migrations/003_tighten_deuce_margin.sql for
+    -- why this used to be looser and what changed.
     CONSTRAINT matches_valid_result_check
         CHECK (
             GREATEST(player1_score, player2_score) >= 11
-            AND GREATEST(player1_score, player2_score) - LEAST(player1_score, player2_score) >= 2
             AND (
                 (GREATEST(player1_score, player2_score) = 11 AND LEAST(player1_score, player2_score) <= 9)
-                OR (GREATEST(player1_score, player2_score) > 11 AND LEAST(player1_score, player2_score) >= 10)
+                OR (
+                    GREATEST(player1_score, player2_score) > 11
+                    AND LEAST(player1_score, player2_score) >= 10
+                    AND GREATEST(player1_score, player2_score) - LEAST(player1_score, player2_score) = 2
+                )
             )
         ),
     CONSTRAINT matches_winner_scored_more_check

@@ -39,9 +39,11 @@ const mockPlayers = vi.hoisted(() => vi.fn())
 vi.mock('../../hooks/useMatches', () => ({ useMatches: mockMatches }))
 vi.mock('../../hooks/usePlayers', () => ({ usePlayers: mockPlayers }))
 
+// The page reads its queries through <QueryState>, which gates on isPending /
+// isError and offers refetch — so the stubs have to carry those, not isLoading.
 function arrange(matches: Match[]) {
-    mockMatches.mockReturnValue({ data: matches, isLoading: false })
-    mockPlayers.mockReturnValue({ data: [ada, grace], isLoading: false })
+    mockMatches.mockReturnValue({ data: matches, isPending: false, isError: false, refetch: vi.fn() })
+    mockPlayers.mockReturnValue({ data: [ada, grace], isPending: false, isError: false, refetch: vi.fn() })
 }
 
 describe('Matches page — ELO change column', () => {

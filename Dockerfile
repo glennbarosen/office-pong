@@ -20,7 +20,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# psql, for db/migrate.sh — Dokku's predeploy hook (app.json) runs that script
+# in a one-off container from this image, before traffic moves to it.
+RUN apk add --no-cache postgresql-client
+
 COPY --from=builder --chown=node:node /app/.output ./.output
+COPY --chown=node:node db ./db
 
 USER node
 
