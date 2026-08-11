@@ -74,10 +74,3 @@ export function parseInteger(value: string, fallback = 0): number {
     const parsed = parseInt(value, 10)
     return isNaN(parsed) ? fallback : parsed
 }
-
-/**
- * Check if two players are the same
- */
-export function isSamePlayer(player1Name: string, player2Name: string): boolean {
-    return player1Name.trim().toLowerCase() === player2Name.trim().toLowerCase()
-}

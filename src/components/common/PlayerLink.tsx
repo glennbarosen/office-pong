@@ -4,8 +4,6 @@ import { Link as RouterLink } from '@tanstack/react-router'
 interface PlayerLinkProps {
     playerId: string
     playerName: string
-    className?: string
-    variant?: 'ghost' | 'primary' | 'secondary' | 'tertiary'
 }
 
 export function PlayerLink({ playerId, playerName }: PlayerLinkProps) {

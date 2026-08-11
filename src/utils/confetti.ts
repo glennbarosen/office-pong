@@ -160,28 +160,3 @@ export const triggerMatchSuccessConfetti = (onComplete?: () => void) => {
         }, 3500)
     }
 }
-
-/**
- * Simple confetti burst for smaller celebrations
- */
-export const triggerSimpleConfetti = () => {
-    confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-    })
-}
-
-/**
- * Confetti cannon effect from a specific origin
- */
-export const triggerConfettiCannon = (origin: { x: number; y: number }) => {
-    confetti({
-        particleCount: 150,
-        angle: 90,
-        spread: 45,
-        origin,
-        startVelocity: 50,
-        colors: ['#ff6b35', '#f7931e', '#ffd700', '#32cd32', '#1e90ff']
-    })
-}

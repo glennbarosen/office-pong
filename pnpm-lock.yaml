@@ -23,9 +23,6 @@ importers:
       canvas-confetti:
         specifier: ^1.9.3
         version: 1.9.3
-      date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
       nitro:
         specifier: 3.0.260610-beta
         version: 3.0.260610-beta(chokidar@4.0.3)(vite@7.3.1(@types/node@22.15.21)(sass@1.88.0)(tsx@4.19.4)(yaml@2.7.1))
@@ -81,9 +78,6 @@ importers:
       '@vitejs/plugin-react-swc':
         specifier: ^4.2.3
         version: 4.2.3(@swc/helpers@0.5.17)(vite@7.3.1(@types/node@22.15.21)(sass@1.88.0)(tsx@4.19.4)(yaml@2.7.1))
-      '@vitest/ui':
-        specifier: ^3.2.4
-        version: 3.2.4(vitest@3.2.4)
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.3)
@@ -4447,7 +4441,8 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@polka/url@1.0.0-next.29': {}
+  '@polka/url@1.0.0-next.29':
+    optional: true
 
   '@react-aria/i18n@3.12.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -5239,6 +5234,7 @@ snapshots:
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
       vitest: 3.2.4(@types/node@22.15.21)(@vitest/ui@3.2.4)(happy-dom@18.0.1)(msw@2.8.2(@types/node@22.15.21)(typescript@5.8.3))(sass@1.88.0)(tsx@4.19.4)(yaml@2.7.1)
+    optional: true
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -5562,7 +5558,8 @@ snapshots:
 
   d3-timer@3.0.1: {}
 
-  date-fns@4.1.0: {}
+  date-fns@4.1.0:
+    optional: true
 
   db0@0.3.4: {}
 
@@ -5903,7 +5900,8 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.3
 
-  fflate@0.8.2: {}
+  fflate@0.8.2:
+    optional: true
 
   file-entry-cache@8.0.0:
     dependencies:
@@ -6013,7 +6011,7 @@ snapshots:
   h3@2.0.1-rc.14(crossws@0.4.10(srvx@0.11.22)):
     dependencies:
       rou3: 0.7.12
-      srvx: 0.11.8
+      srvx: 0.11.22
     optionalDependencies:
       crossws: 0.4.10(srvx@0.11.22)
 
@@ -6227,7 +6225,8 @@ snapshots:
 
   minipass@7.1.2: {}
 
-  mrmime@2.0.1: {}
+  mrmime@2.0.1:
+    optional: true
 
   ms@2.1.3: {}
 
@@ -6865,6 +6864,7 @@ snapshots:
       '@polka/url': 1.0.0-next.29
       mrmime: 2.0.1
       totalist: 3.0.1
+    optional: true
 
   source-map-js@1.2.1: {}
 
@@ -7006,7 +7006,8 @@ snapshots:
 
   toidentifier@1.0.1: {}
 
-  totalist@3.0.1: {}
+  totalist@3.0.1:
+    optional: true
 
   tough-cookie@4.1.4:
     dependencies:
