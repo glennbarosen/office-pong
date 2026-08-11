@@ -36,9 +36,9 @@ three merges. Verified green before landing: `lint`, `types:check`,
 `prettier:check`, `build`, and all 63 tests — including the 6 server
 integration tests, run against a real local Postgres rather than skipped.
 
-The old batch branches (`h1-dead-code`, `h6-tooling-ci`, `h2-data-layer`) are
-now fully contained in `main` and can be deleted. No PRs were ever opened for
-them; the work went straight to `main`.
+The batch branches (`h1-dead-code`, `h6-tooling-ci`, `h2-data-layer`,
+`handoff-queue`) have been deleted — their commits all live in `main`. No PRs
+were ever opened for them; the work went straight to `main`.
 
 **Starting H3?** Branch from `main` — it is now the tip and carries H1, H6 and
 H2.
