@@ -5,11 +5,18 @@ import { RATING_CONFIG, type Match, type Player } from '../types/pong'
 import { useMatches } from '../hooks/useMatches'
 import { MatchCard } from '../components/match-card/MatchCard'
 import { PlayerMetrics } from '../components/player-metrics/PlayerMetrics'
+import { HeadToHeadTable } from '../components/head-to-head/HeadToHeadTable'
 import { InfoMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
 import { NotFound } from '../components/common/NotFound'
 import { PLAYER_NOT_FOUND } from '../lib/messages'
-import { createLeaderboardEntries, createPlayerMap, formatDate, resolveMatchPlayers } from '../utils/gameUtils'
+import {
+    createLeaderboardEntries,
+    createOpponentStats,
+    createPlayerMap,
+    formatDate,
+    resolveMatchPlayers,
+} from '../utils/gameUtils'
 
 interface ProfileProps {
     id: string
@@ -53,6 +60,7 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
         (match: Match) => match.player1Id === player.id || match.player2Id === player.id
     )
     const playerMatches = resolveMatchPlayers(rawPlayerMatches, createPlayerMap(players))
+    const opponentStats = createOpponentStats(rawPlayerMatches, player, players)
 
     // winRate and eligibility are exactly what createLeaderboardEntries derives;
     // recomputing them here is how the two definitions drift apart.
@@ -88,6 +96,11 @@ function ProfileDetails({ player, players, matches }: ProfileDetailsProps) {
                     </InfoMessage>
                 )}
             </Card>
+
+            <div className="p-6">
+                <h2 className="heading-4 mb-4">Innbyrdes oppgjør</h2>
+                <HeadToHeadTable stats={opponentStats} />
+            </div>
 
             {/* Player Metrics Charts */}
             <div className="p-6">
