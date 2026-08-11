@@ -35,7 +35,18 @@ function readCookieInBrowser(name: string): string | undefined {
  * every dark-mode user.
  */
 const readCookie = createIsomorphicFn()
-    .server((name: string) => getCookie(name))
+    .server((name: string) => {
+        try {
+            return getCookie(name)
+        } catch {
+            // Dev only: after an HMR update Vite's SSR module graph can hand
+            // this file the client build of @tanstack/react-start/server, where
+            // getCookie does not exist. Losing the theme hint for one render is
+            // survivable — THEME_INIT_SCRIPT still corrects it before paint —
+            // whereas throwing 500s the whole page on every edit.
+            return undefined
+        }
+    })
     .client(readCookieInBrowser)
 
 export function readExplicitTheme(): Theme | undefined {
