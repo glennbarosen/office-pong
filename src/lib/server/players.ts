@@ -1,10 +1,9 @@
 import { createServerFn } from '@tanstack/react-start'
 import { pool } from './db'
 import { mapPlayerRow, type PlayerRow } from './mappers'
+import { PLAYER_COLUMNS } from './columns'
 import { playerNameSchema } from '../validation'
 import { RATING_CONFIG } from '../../types/pong'
-
-export const PLAYER_COLUMNS = 'id, name, avatar, elo_rating, matches_played, wins, losses, created_at, last_played_at'
 
 export const getPlayers = createServerFn({ method: 'GET' }).handler(async () => {
     const result = await pool.query(`SELECT ${PLAYER_COLUMNS} FROM players ORDER BY elo_rating DESC`)

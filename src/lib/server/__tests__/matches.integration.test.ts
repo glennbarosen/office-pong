@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test, beforeEach, afterAll } from 'vitest'
-import { registerMatch } from '../matches'
+import { registerMatch } from '../matchTransaction'
 import { pool } from '../db'
 import { RATING_CONFIG } from '../../../types/pong'
 
