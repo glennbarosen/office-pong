@@ -1,24 +1,23 @@
 import { useBrowserPreferences } from '@fremtind/jokul/hooks'
 import { useEffect, useState } from 'react'
-
-const isServer = typeof window === 'undefined'
+import { readExplicitTheme, resolveTheme, writeExplicitTheme, writeOsThemeHint, type Theme } from '../lib/theme'
 
 export const useTheme = () => {
     const { prefersColorScheme } = useBrowserPreferences()
-    const [theme, setTheme] = useState(() => {
-        if (isServer) return 'light'
-        return localStorage.getItem('theme') ?? prefersColorScheme
-    })
+    // resolveTheme, not prefersColorScheme, so the first client render matches
+    // what the server rendered and hydration has nothing to correct.
+    const [theme, setTheme] = useState<Theme>(resolveTheme)
 
     const isDark = theme === 'dark'
 
     useEffect(() => {
-        const stored = localStorage.getItem('theme')
-        if (stored) {
-            setTheme(stored)
-        } else {
-            setTheme(prefersColorScheme)
-        }
+        // Record the OS preference for the next SSR pass, whether or not it is
+        // what we are currently showing.
+        writeOsThemeHint(prefersColorScheme)
+        // With no explicit choice on record, follow the OS — including the user
+        // changing it mid-session, since useBrowserPreferences is reactive.
+        if (readExplicitTheme()) return
+        setTheme(prefersColorScheme)
     }, [prefersColorScheme])
 
     useEffect(() => {
@@ -26,14 +25,10 @@ export const useTheme = () => {
     }, [theme])
 
     const toggleTheme = () => {
-        if (theme === 'light') {
-            setTheme('dark')
-            localStorage.setItem('theme', 'dark')
-        } else if (theme === 'dark') {
-            setTheme('light')
-            localStorage.setItem('theme', 'light')
-        }
+        const next: Theme = theme === 'dark' ? 'light' : 'dark'
+        setTheme(next)
+        writeExplicitTheme(next)
     }
 
-    return { isDark, toggleTheme }
+    return { isDark, theme, toggleTheme }
 }
