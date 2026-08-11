@@ -14,6 +14,9 @@ interface RouterContext {
     queryClient: QueryClient
 }
 
+/** Skip-link target. */
+const MAIN_CONTENT_ID = 'hovedinnhold'
+
 export const Route = createRootRouteWithContext<RouterContext>()({
     head: () => ({
         meta: [
@@ -41,13 +44,23 @@ function Root() {
 
     return (
         <Container>
+            {/* First focusable element on the page, so a keyboard user can get
+                past the header without tabbing through it. Hidden until
+                focused, which is what makes it a skip link rather than chrome. */}
+            <a
+                href={`#${MAIN_CONTENT_ID}`}
+                className="sr-only focus:not-sr-only focus:absolute focus:left-16 focus:top-16 focus:z-50 focus:rounded focus:bg-background-container-high focus:px-16 focus:py-8"
+            >
+                Hopp til hovedinnhold
+            </a>
             <Header />
             {showBackButton && (
-                <div className="my-16">
+                <nav aria-label="Tilbake" className="my-16">
                     <JokulRouterLink to="/">← Hjem</JokulRouterLink>
-                </div>
+                </nav>
             )}
-            <main className="mb-64">
+            {/* tabIndex allows the skip link to move focus here, not just scroll. */}
+            <main id={MAIN_CONTENT_ID} tabIndex={-1} className="mb-64">
                 <Outlet />
             </main>
         </Container>
