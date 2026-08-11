@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 
 import { usePlayers } from '../hooks/usePlayers'
@@ -26,6 +26,14 @@ export function NewMatch() {
     const [player1Score, setPlayer1Score] = useState('')
     const [player2Score, setPlayer2Score] = useState('')
     const [error, setError] = useState('')
+    const errorRef = useRef<HTMLDivElement>(null)
+
+    // Move focus to the error when a submit fails, so a keyboard or screen
+    // reader user is taken to the problem instead of being left on the button
+    // with nothing announced.
+    useEffect(() => {
+        if (error) errorRef.current?.focus()
+    }, [error])
 
     const playerOptions = players.map((player) => ({
         value: player.id,
@@ -95,6 +103,7 @@ export function NewMatch() {
                             onPlayerIdChange={setPlayer1Id}
                             onPlayerNameChange={setPlayer1Name}
                             onPlayerScoreChange={setPlayer1Score}
+                            hasError={Boolean(error)}
                         />
 
                         <PlayerCard
@@ -108,11 +117,18 @@ export function NewMatch() {
                             onPlayerIdChange={setPlayer2Id}
                             onPlayerNameChange={setPlayer2Name}
                             onPlayerScoreChange={setPlayer2Score}
+                            hasError={Boolean(error)}
                         />
                     </div>
 
                     {/* Error Display */}
-                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                    <div role="alert" aria-live="assertive">
+                        {error && (
+                            <ErrorMessage ref={errorRef} tabIndex={-1}>
+                                {error}
+                            </ErrorMessage>
+                        )}
+                    </div>
 
                     {/* Actions */}
                     <div className="flex gap-12">

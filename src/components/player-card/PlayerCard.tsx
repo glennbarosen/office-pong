@@ -15,6 +15,12 @@ export interface PlayerCardProps {
     onPlayerIdChange: (id: string) => void
     onPlayerNameChange: (name: string) => void
     onPlayerScoreChange: (score: string) => void
+    /**
+     * The submit failed validation. The server reports one message for the
+     * whole form rather than per field, so both inputs are marked rather than
+     * guessing which one is at fault.
+     */
+    hasError?: boolean
 }
 
 export function PlayerCard({
@@ -28,6 +34,7 @@ export function PlayerCard({
     onPlayerIdChange,
     onPlayerNameChange,
     onPlayerScoreChange,
+    hasError = false,
 }: PlayerCardProps) {
     return (
         <Card variant="low" padding="xl">
@@ -61,6 +68,7 @@ export function PlayerCard({
                         label="Velg spiller"
                         value={playerId}
                         onChange={(event) => onPlayerIdChange(event.target.value)}
+                        aria-invalid={hasError || undefined}
                     />
                 ) : (
                     <TextInput
@@ -70,6 +78,7 @@ export function PlayerCard({
                         helpLabel="Bruk gjerne fornavn + etternavn for å unngå duplikater"
                         value={playerName}
                         onChange={(e) => onPlayerNameChange(e.target.value)}
+                        aria-invalid={hasError || undefined}
                     />
                 )}
 
@@ -80,6 +89,7 @@ export function PlayerCard({
                     placeholder="Skriv inn poeng"
                     value={playerScore}
                     onChange={(e) => onPlayerScoreChange(e.target.value)}
+                    aria-invalid={hasError || undefined}
                 />
             </div>
         </Card>

@@ -35,7 +35,10 @@ export function QueryState({ queries, children }: QueryStateProps) {
 
     if (failed.length > 0) {
         return (
-            <ErrorMessage title="Kunne ikke hente data" className="my-24">
+            // One live region for the page's data-loading failure. role="alert"
+            // rather than a polite status: the page is showing nothing useful,
+            // so it is worth interrupting for.
+            <ErrorMessage role="alert" title="Kunne ikke hente data" className="my-24">
                 <p>Vi fikk ikke kontakt med serveren. Sjekk nettforbindelsen og prøv igjen.</p>
                 <Button
                     variant="secondary"
