@@ -19,6 +19,8 @@ Do this second, right after H1: every batch after it benefits from a guard rail,
 - [x] Use Node 24 to match the Dockerfile (`Dockerfile:1,13`).
 - [x] Cache the pnpm store.
 - [x] Don't add a job that needs a database — every existing test is pure logic. If H2's work later wants integration tests, that batch can add a Postgres service container.
+- [ ] **Follow-up, found on the first real CI run (2026-08-11).** The workflow passed, but GitHub annotated it: *"Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: `actions/checkout@v4`, `actions/setup-node@v4`."* Harmless now, breaks when GitHub drops the compatibility shim. Bump both to `@v5`. One-line change, no behavior impact.
+- [ ] **H2 landed integration tests, and CI does not run them.** `src/lib/server/__tests__/matches.integration.test.ts` self-skips without `DATABASE_URL`, so CI silently reports 57 passed / 6 skipped and would not catch a data-layer regression. Add a Postgres service container and set `DATABASE_URL` for the test step — this is exactly the case the item above deferred to "that batch", and that batch has now shipped.
 
 **Acceptance:** the workflow passes on a PR from a clean branch. If it doesn't, H1 wasn't finished.
 
