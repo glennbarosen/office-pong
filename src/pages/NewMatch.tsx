@@ -6,12 +6,12 @@ import { useCreateMatch } from '../hooks/useMatches'
 import { MatchService, type MatchCreationData } from '../lib/matchService'
 import { parseInteger } from '../utils/gameUtils'
 import { triggerMatchSuccessConfetti } from '../utils/confetti'
-import { PlayerCard } from '../components'
+import { PlayerCard } from '../components/player-card/PlayerCard'
 import { Button } from '@fremtind/jokul/button'
 import { ErrorMessage, InfoMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
 
-export default function NewMatch() {
+export function NewMatch() {
     const navigate = useNavigate()
     const playersQuery = usePlayers()
     const players = playersQuery.data ?? []

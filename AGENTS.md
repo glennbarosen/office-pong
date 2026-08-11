@@ -20,7 +20,7 @@ React 18 + TypeScript, **TanStack Start** (full-stack SSR, migrated off a plain 
 - `src/lib/server/*.ts` — `createServerFn` definitions, the only place DB access happens: `db.ts` (`pg.Pool` singleton), `players.ts`, `matches.ts`.
 - `src/lib/{eloService,matchService,validation}.ts` — pure business logic, no server/DOM dependency.
 - `src/hooks/*` — TanStack Query hooks wrapping the server functions (`usePlayers`, `useMatches`) plus `useTheme`. Components always go through these — never call a server function or `fetch` directly from a component.
-- `src/components/` — domain-grouped folders, barrel-exported via `src/components/index.ts`.
+- `src/components/` — domain-grouped folders. **Import components by their full path** (`../components/common/EmptyState`), never through a barrel. There was a `src/components/index.ts`; two files used it and twenty-six used deep paths, so it was deleted rather than adopted — a barrel that re-exports every component pulls the whole tree into any module that touches one of them.
 - `src/types/pong.ts` — all domain types; extend here and re-export via `src/types/index.ts`, don't declare ad hoc types in components.
 
 ## Commands

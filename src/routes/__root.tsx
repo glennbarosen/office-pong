@@ -5,7 +5,7 @@ import { Container } from '../components/layout/Container'
 import { RootErrorComponent } from '../components/errors/RootErrorComponent'
 import { Header } from '../components/header/Header'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { JokulRouterLink } from '../components'
+import { JokulRouterLink } from '../components/links/JokulRouterLink'
 import { resolveTheme, THEME_INIT_SCRIPT } from '../lib/theme'
 
 import '../styles/global.scss'
