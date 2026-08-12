@@ -50,17 +50,15 @@ This app is deployed on a self-hosted Dokku server on Hetzner Cloud.
 
 ### Prerequisites
 
-- SSH access to the Dokku server
-- `dokku` git remote configured (should already be set up)
+- None — deployment is automatic on merge to `main` via GitHub Actions
+  (`.github/workflows/deploy.yml`)
 
 ### Deploying a new version
 
-After making changes and committing locally:
-
-```bash
-# Push to both GitHub (backup) and Dokku (deploy)
-git push origin main && git push dokku main
-```
+Merging to `main` deploys automatically. The GitHub Actions workflow pushes
+to Dokku using a dedicated CI deploy key (registered on the Dokku host via
+`dokku ssh-keys:add`, stored as the `DOKKU_SSH_PRIVATE_KEY` repo secret —
+separate from any personal machine's key so it can be revoked independently).
 
 The Dokku server will automatically:
 1. Detect the new commits
@@ -70,9 +68,17 @@ The Dokku server will automatically:
    hook) — if this fails, the deploy stops here and the old container keeps
    serving traffic
 5. Start a new container
-6. Run healthchecks to verify the app is working
+6. Run healthchecks against `/api/health` (`app.json`'s `healthchecks.web`) to
+   verify the app is working
 7. Redirect traffic to the new container
 8. Gracefully shut down the old container after 60 seconds
+
+If CI is down, deploy manually from a machine with SSH access to the Dokku
+host:
+
+```bash
+ssh personal 'sudo dokku git:sync --build office-pong https://github.com/glennbarosen/office-pong.git main'
+```
 
 ### Database migrations
 

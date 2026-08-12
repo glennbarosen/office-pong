@@ -3,5 +3,17 @@
         "dokku": {
             "predeploy": "sh db/migrate.sh"
         }
+    },
+    "healthchecks": {
+        "web": [
+            {
+                "type": "startup",
+                "name": "web check",
+                "description": "Verifies the app responds without touching the database",
+                "path": "/api/health",
+                "port": 3000,
+                "attempts": 3
+            }
+        ]
     }
 }
