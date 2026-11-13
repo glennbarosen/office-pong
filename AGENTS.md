@@ -14,7 +14,7 @@ React 18 + TypeScript, **TanStack Start** (full-stack SSR, migrated off a plain 
 - `src/lib/server/*.ts` — `createServerFn` definitions, the only place DB access happens: `db.ts` (`pg.Pool` singleton), `players.ts`, `matches.ts`.
 - `src/lib/{eloService,matchService,validation}.ts` — pure business logic, no server/DOM dependency.
 - `src/hooks/*` — TanStack Query hooks wrapping the server functions (`usePlayers`, `useMatches`) plus `useTheme`. Components always go through these — never call a server function or `fetch` directly from a component.
-- `src/components/` — domain-grouped folders. **Import components by their full path** (`../components/common/EmptyState`), never through a barrel. There was a `src/components/index.ts`; two files used it and twenty-six used deep paths, so it was deleted rather than adopted — a barrel that re-exports every component pulls the whole tree into any module that touches one of them.
+- `src/components/` — domain-grouped folders. App shell in `header/` (`Header`, `MobileTabBar`, shared `navItems`) and `layout/` (`Container`, `PageHeader`, `SectionHeader`). **Import components by their full path** (`../components/common/EmptyState`), never through a barrel. There was a `src/components/index.ts`; two files used it and twenty-six used deep paths, so it was deleted rather than adopted — a barrel that re-exports every component pulls the whole tree into any module that touches one of them.
 - `src/types/pong.ts` — all domain types; extend here and re-export via `src/types/index.ts`, don't declare ad hoc types in components.
 
 ## Commands
@@ -42,6 +42,10 @@ Row shapes are declared once in `src/lib/server/mappers.ts` (`PlayerRow`/`MatchR
 ## Gotchas
 
 - `createServerFn(...).inputValidator()` — **not** `.validator()`. The latter is an older API name common in training data; using it silently breaks (root cause of a past bug, see `src/lib/server/matches.ts` for the correct usage).
+- Tailwind runs on the Jøkul preset, which **replaces** (not extends) colours, spacing, font sizes/weights and screens. There is no `text-white`, `text-sm`, `font-medium`, `mb-2` or `mb-6`: spacing is 0/2/4/8/12/16/24/32/40/64/104/168, colours are token names (`text-text-subdued`, `bg-background-container-low`), type is `heading-1..5`/`body`/`small`, and `sm`/`md`/`lg` are 680/1200/1600px. An unknown class silently does nothing.
+- `@tailwind utilities` is loaded **after** Jøkul's CSS (`src/styles/tailwind-utilities.scss`): a utility and a Jøkul class have equal specificity, so the later one wins — otherwise `flex` on a `<Card>` loses to `.jkl-card { display: block }`.
+- Dates are formatted in `Europe/Oslo` explicitly (`TIME_ZONE` in `gameUtils.ts`), never the runtime zone: the server renders in UTC, so anything else is a hydration mismatch.
+- Colours that are not Jøkul tokens (`--tier-*`, `--delta-*`) live in `global.scss` per `[data-theme]`, each verified >= 4.5:1 against every surface it sits on.
 - SSR: guard any browser-only API (`localStorage`, `window`) with `typeof window === 'undefined'` — see `src/hooks/useTheme.ts`.
 
 ## Testing

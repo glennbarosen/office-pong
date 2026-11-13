@@ -52,7 +52,7 @@ export function HeadToHeadTable({ stats }: HeadToHeadTableProps) {
                             {stat.eloChange > 0 ? `+${stat.eloChange}` : stat.eloChange}
                         </TableCell>
                         <TableCell data-th="Sist spilt">
-                            <span className="text-sm text-text-subdued">{formatDate(stat.lastMatch)}</span>
+                            <span className="small text-text-subdued">{formatDate(stat.lastMatch)}</span>
                         </TableCell>
                     </TableRow>
                 ))}
