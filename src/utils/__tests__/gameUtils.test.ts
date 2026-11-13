@@ -11,6 +11,8 @@ import {
     formatDayLabel,
     groupMatchesByDay,
     createOverviewStats,
+    createTournamentStandings,
+    findActiveTournament,
     parseInteger,
     initialsForName,
 } from '../gameUtils'
@@ -457,5 +459,60 @@ describe('createOverviewStats', () => {
         const stats = createOverviewStats([ada, grace], matches, createFormByPlayer(matches), now)
 
         expect(stats.hottestStreak).toBeNull()
+    })
+})
+
+describe('tournaments', () => {
+    const [ada, grace, linus, kari] = ['ada', 'grace', 'linus', 'kari'].map((id) =>
+        makePlayer({ id, name: id.charAt(0).toUpperCase() + id.slice(1) })
+    ) as [Player, Player, Player, Player]
+    const playerMap = createPlayerMap([ada, grace, linus, kari])
+
+    const running = { id: 't1', name: 'Høstturnering', createdAt: '2026-11-01T00:00:00.000Z' }
+    const ended = { ...running, endedAt: '2026-11-20T00:00:00.000Z' }
+
+    const match = (id: string, winner: Player, loser: Player, playedAt: string, tournamentId?: string): Match => ({
+        id,
+        player1Id: winner.id,
+        player2Id: loser.id,
+        winnerId: winner.id,
+        loserId: loser.id,
+        player1Score: 11,
+        player2Score: 5,
+        playedAt,
+        eloChanges: {},
+        tournamentId,
+    })
+
+    test('findActiveTournament picks the one without an end date', () => {
+        expect(findActiveTournament([ended, { ...running, id: 't2' }])?.id).toBe('t2')
+        expect(findActiveTournament([ended])).toBeUndefined()
+    })
+
+    test('a loss knocks a player out; only tournament matches count', () => {
+        const matches = [
+            match('m1', ada, grace, '2026-11-02T10:00:00.000Z', 't1'),
+            match('m2', linus, kari, '2026-11-02T11:00:00.000Z', 't1'),
+            // A friendly: Ada losing it does not knock her out.
+            match('m3', grace, ada, '2026-11-03T10:00:00.000Z'),
+        ]
+
+        const standings = createTournamentStandings(running, matches, playerMap)
+
+        expect(standings.participants.map((p) => p.id)).toEqual(['ada', 'grace', 'linus', 'kari'])
+        expect(standings.remaining.map((p) => p.id)).toEqual(['ada', 'linus'])
+        expect(standings.eliminated.map((p) => p.id)).toEqual(['grace', 'kari'])
+        expect(standings.champion).toBeNull()
+    })
+
+    test('names a champion only once the tournament has ended with one player left', () => {
+        const matches = [
+            match('m1', ada, grace, '2026-11-02T10:00:00.000Z', 't1'),
+            match('m2', linus, kari, '2026-11-02T11:00:00.000Z', 't1'),
+            match('m3', ada, linus, '2026-11-05T10:00:00.000Z', 't1'),
+        ]
+
+        expect(createTournamentStandings(running, matches, playerMap).champion).toBeNull()
+        expect(createTournamentStandings(ended, matches, playerMap).champion?.id).toBe('ada')
     })
 })

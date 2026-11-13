@@ -2,10 +2,10 @@ import { Link } from '@tanstack/react-router'
 import { Icon } from '@fremtind/jokul/icon'
 import { NAV_ITEMS } from './navItems'
 
-const [overview, leaderboard, matches] = NAV_ITEMS
+const [overview, leaderboard, matches, tournament] = NAV_ITEMS
 
 /**
- * Bottom navigation for phones: the three destinations plus "Ny kamp" in the
+ * Bottom navigation for phones: the four destinations plus "Ny kamp" in the
  * middle, since registering a match at the table is the app's main job.
  * Hidden from `sm` up, where the header carries the same links.
  */
@@ -26,6 +26,7 @@ export function MobileTabBar() {
                     </Link>
                 </li>
                 <TabItem {...matches} />
+                <TabItem {...tournament} />
             </ul>
         </nav>
     )

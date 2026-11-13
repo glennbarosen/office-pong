@@ -6,6 +6,11 @@ const RESULT_LABEL: Record<MatchResult, string> = { win: 'seier', loss: 'tap' }
 interface FormIndicatorProps {
     /** Absent for a player createFormByPlayer never saw — nobody with 0 matches. */
     form: PlayerForm | undefined
+    /**
+     * Show the "3 seire på rad" tag. Off in compact rows, where it crowds out
+     * the player's name; the streak is still in the aria-label.
+     */
+    showStreakTag?: boolean
 }
 
 /**
@@ -18,7 +23,7 @@ interface FormIndicatorProps {
  * property rather than a resolved value — unlike Recharts' SVG attributes,
  * a DOM element can use var() directly, so no JS is needed to track the theme.
  */
-export function FormIndicator({ form }: FormIndicatorProps) {
+export function FormIndicator({ form, showStreakTag = true }: FormIndicatorProps) {
     if (!form || form.recent.length === 0) {
         return <span className="text-text-subdued">–</span>
     }
@@ -49,6 +54,7 @@ export function FormIndicator({ form }: FormIndicatorProps) {
                 ))}
             </span>
             {hasStreak &&
+                showStreakTag &&
                 (streak.type === 'win' ? (
                     <SuccessTag>{streak.count} seire på rad</SuccessTag>
                 ) : (

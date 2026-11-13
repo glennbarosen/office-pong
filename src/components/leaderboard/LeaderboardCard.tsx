@@ -55,7 +55,7 @@ export function LeaderboardCard({ player, rank, form }: LeaderboardCardProps) {
                     </div>
 
                     <div className="hidden md:block">
-                        <FormIndicator form={form} />
+                        <FormIndicator form={form} showStreakTag={false} />
                     </div>
 
                     <div className="shrink-0 text-right">

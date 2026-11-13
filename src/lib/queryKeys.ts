@@ -7,4 +7,5 @@
 export const queryKeys = {
     players: ['players'] as const,
     matches: ['matches'] as const,
+    tournaments: ['tournaments'] as const,
 } as const

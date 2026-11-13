@@ -13,7 +13,7 @@ import { RATING_CONFIG } from '../../../types/pong'
  * (which deliberately runs no database) and for anyone without Docker up.
  * Run them with: pnpm db:up && pnpm test:run
  *
- * These truncate both tables, so point DATABASE_URL at a local database only.
+ * These empty every table, so point DATABASE_URL at a local database only.
  */
 const hasDatabase = Boolean(process.env.DATABASE_URL)
 
@@ -41,6 +41,7 @@ describe.skipIf(!hasDatabase)('registerMatch', () => {
     beforeEach(async () => {
         await query('DELETE FROM matches')
         await query('DELETE FROM players')
+        await query('DELETE FROM tournaments')
     })
 
     afterAll(async () => {
@@ -195,5 +196,49 @@ describe.skipIf(!hasDatabase)('registerMatch', () => {
         // would overwrite the first from a stale read and this would be +1.
         expect(adaAfter?.matches_played).toBe(adaBefore + 2)
         expect(adaAfter?.wins).toBe((ada?.wins ?? 0) + 2)
+    })
+
+    describe('tournaments', () => {
+        const startTournament = async (name = 'Høstturnering') =>
+            (await query<{ id: string }>('INSERT INTO tournaments (name) VALUES ($1) RETURNING id', [name]))[0]?.id ??
+            ''
+
+        test('tags a match to a running tournament, and still updates ELO', async () => {
+            const tournamentId = await startTournament()
+
+            const match = await registerMatch({
+                player1: { type: 'new', name: 'Ada' },
+                player2: { type: 'new', name: 'Grace' },
+                player1Score: 11,
+                player2Score: 7,
+                tournamentId,
+            })
+
+            expect(match.tournamentId).toBe(tournamentId)
+            expect((await playerByName('Ada'))?.elo_rating).toBeGreaterThan(RATING_CONFIG.STARTING_ELO)
+        })
+
+        test('rejects a match for an ended tournament and writes nothing', async () => {
+            const tournamentId = await startTournament()
+            await query('UPDATE tournaments SET ended_at = now() WHERE id = $1', [tournamentId])
+
+            await expect(
+                registerMatch({
+                    player1: { type: 'new', name: 'Ada' },
+                    player2: { type: 'new', name: 'Grace' },
+                    player1Score: 11,
+                    player2Score: 7,
+                    tournamentId,
+                })
+            ).rejects.toThrow('Turneringen er avsluttet')
+
+            expect(await playerByName('Ada')).toBeUndefined()
+            expect(await query('SELECT id FROM matches')).toHaveLength(0)
+        })
+
+        test('allows only one running tournament at a time', async () => {
+            await startTournament('Vår')
+            await expect(startTournament('Høst')).rejects.toMatchObject({ code: '23505' })
+        })
     })
 })

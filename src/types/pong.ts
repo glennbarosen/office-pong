@@ -22,6 +22,32 @@ export interface Match {
     eloChanges: {
         [playerId: string]: number
     }
+    /** Set when the match was played in a tournament. */
+    tournamentId?: string
+}
+
+/**
+ * A named tournament. Matches are tagged with it; the draw happens outside
+ * the app, so there is no bracket here — only which matches belong to it.
+ */
+export interface Tournament {
+    id: string
+    name: string
+    createdAt: string
+    /** Absent while the tournament is running. At most one runs at a time. */
+    endedAt?: string
+}
+
+/** Who is still in a knockout tournament, derived from its matches. */
+export interface TournamentStandings {
+    /** Every player who has played a match in it, in order of first appearance. */
+    participants: Player[]
+    /** Played and not yet lost a tournament match. */
+    remaining: Player[]
+    /** Lost a tournament match — out, in a knockout. */
+    eliminated: Player[]
+    /** The one undefeated player, once the tournament has ended with exactly one. */
+    champion: Player | null
 }
 
 export interface LeaderboardEntry extends Player {

@@ -24,6 +24,19 @@ CREATE TABLE players (
         CHECK (length(trim(name)) BETWEEN 2 AND 50)
 );
 
+CREATE TABLE tournaments (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    ended_at timestamptz,
+
+    -- Mirrors tournamentNameSchema in src/lib/validation.ts.
+    CONSTRAINT tournaments_name_length_check
+        CHECK (length(trim(name)) BETWEEN 2 AND 60),
+    CONSTRAINT tournaments_ended_after_created_check
+        CHECK (ended_at IS NULL OR ended_at >= created_at)
+);
+
 CREATE TABLE matches (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     player1_id uuid NOT NULL REFERENCES players(id),
@@ -34,6 +47,8 @@ CREATE TABLE matches (
     player2_score integer NOT NULL,
     played_at timestamptz NOT NULL DEFAULT now(),
     elo_changes jsonb NOT NULL DEFAULT '{}'::jsonb,
+    -- Set when the match was played as part of a tournament (004).
+    tournament_id uuid REFERENCES tournaments(id),
 
     CONSTRAINT matches_distinct_players_check
         CHECK (player1_id <> player2_id),
@@ -76,3 +91,7 @@ CREATE INDEX players_elo_rating_desc_idx ON players (elo_rating DESC);
 -- Name uniqueness, case-insensitive. Previously enforced only in app code
 -- against a client-side player list, so concurrent registrations could both win.
 CREATE UNIQUE INDEX players_lower_name_key ON players (lower(name));
+
+-- At most one tournament running at a time.
+CREATE UNIQUE INDEX tournaments_one_active_idx ON tournaments ((true)) WHERE ended_at IS NULL;
+CREATE INDEX matches_tournament_id_idx ON matches (tournament_id);

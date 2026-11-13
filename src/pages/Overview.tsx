@@ -3,14 +3,17 @@ import { Card } from '@fremtind/jokul/card'
 import { Link } from '@tanstack/react-router'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches } from '../hooks/useMatches'
+import { useTournaments } from '../hooks/useTournaments'
 import {
     createFormByPlayer,
     createLeaderboardEntries,
     createOverviewStats,
     createPlayerMap,
+    createTournamentStandings,
+    findActiveTournament,
     resolveMatchPlayers,
 } from '../utils/gameUtils'
-import { RATING_CONFIG, type LeaderboardEntry, type PlayerForm } from '../types/pong'
+import { RATING_CONFIG, type LeaderboardEntry, type PlayerForm, type TournamentStandings } from '../types/pong'
 import { QueryState } from '../components/common/QueryState'
 import { EmptyState } from '../components/common/EmptyState'
 import { NO_PLAYERS_EMPTY_STATE } from '../lib/messages'
@@ -39,6 +42,11 @@ export function Overview() {
     const recentMatches = resolveMatchPlayers(matches, createPlayerMap(players)).slice(0, OVERVIEW_LIMIT)
     const champion = ranked[0]
 
+    const activeTournament = findActiveTournament(useTournaments().data ?? [])
+    const tournamentStandings = activeTournament
+        ? createTournamentStandings(activeTournament, matches, createPlayerMap(players))
+        : undefined
+
     return (
         <QueryState queries={[playersQuery, matchesQuery]}>
             {/* The front page shows sections rather than a titled document, so
@@ -49,6 +57,9 @@ export function Overview() {
                 <EmptyState {...NO_PLAYERS_EMPTY_STATE} />
             ) : (
                 <div className="flex flex-col gap-40 sm:gap-64">
+                    {activeTournament && tournamentStandings && (
+                        <TournamentBanner name={activeTournament.name} standings={tournamentStandings} />
+                    )}
                     <section aria-label="Status" className="grid gap-12 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
                         {champion ? (
                             <ChampionCard player={champion} form={formByPlayer.get(champion.id)} />
@@ -147,6 +158,34 @@ function NoChampionCard() {
                     Registrer kamp
                 </Button>
             </div>
+        </Card>
+    )
+}
+
+/** Shown while a tournament runs: the one place everyone looks first. */
+function TournamentBanner({ name, standings }: { name: string; standings: TournamentStandings }) {
+    const played = standings.participants.length > 0
+
+    return (
+        <Card variant="outlined" padding="m" clickable asChild className="lift">
+            <Link to="/turnering" className="no-underline">
+                <div className="flex items-center gap-16">
+                    <span className="leading-none text-[2rem]" aria-hidden="true">
+                        🏆
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="small font-bold uppercase tracking-wider text-text-subdued">
+                            Turnering pågår
+                        </span>
+                        <span className="heading-4 truncate">{name}</span>
+                    </div>
+                    <span className="small hidden text-right text-text-subdued sm:block">
+                        {played
+                            ? `${standings.remaining.length} fortsatt med · ${standings.eliminated.length} slått ut`
+                            : 'Ingen kamper ennå'}
+                    </span>
+                </div>
+            </Link>
         </Card>
     )
 }

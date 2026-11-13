@@ -14,6 +14,8 @@ interface MatchCardProps {
     currentPlayerId?: string
     /** Show the date as well as the time; off when the caller already groups by day. */
     showDate?: boolean
+    /** Name of the tournament the match belongs to, shown as a tag. */
+    tournamentName?: string
 }
 
 /**
@@ -21,12 +23,12 @@ interface MatchCardProps {
  * whom") or one player's history row ("who did I play and did I win"). One
  * component with one data shape, so the two do not drift apart.
  */
-export function MatchCard({ match, currentPlayerId, showDate = true }: MatchCardProps) {
+export function MatchCard({ match, currentPlayerId, showDate = true, tournamentName }: MatchCardProps) {
     if (currentPlayerId) {
         return <PlayerCentricMatchCard match={match} currentPlayerId={currentPlayerId} />
     }
 
-    return <NeutralMatchCard match={match} showDate={showDate} />
+    return <NeutralMatchCard match={match} showDate={showDate} tournamentName={tournamentName} />
 }
 
 function deltaClass(change: number | undefined): string {
@@ -81,7 +83,15 @@ function PlayerCentricMatchCard({ match, currentPlayerId }: { match: MatchWithPl
     )
 }
 
-function NeutralMatchCard({ match, showDate }: { match: MatchWithPlayers; showDate: boolean }) {
+function NeutralMatchCard({
+    match,
+    showDate,
+    tournamentName,
+}: {
+    match: MatchWithPlayers
+    showDate: boolean
+    tournamentName?: string
+}) {
     const isPlayer1Winner = match.winner.id === match.player1.id
 
     return (
@@ -106,6 +116,12 @@ function NeutralMatchCard({ match, showDate }: { match: MatchWithPlayers; showDa
                     <time dateTime={match.playedAt} className="tabular small text-text-subdued">
                         {showDate ? formatDate(match.playedAt, { includeTime: true }) : formatTime(match.playedAt)}
                     </time>
+                    {tournamentName && (
+                        <span className="small mt-4 inline-flex items-center gap-4 font-bold text-text-subdued">
+                            <span aria-hidden="true">🏆</span>
+                            {tournamentName}
+                        </span>
+                    )}
                 </div>
 
                 <ScoreboardSide

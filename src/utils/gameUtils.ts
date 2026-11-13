@@ -7,6 +7,8 @@ import {
     type OpponentStats,
     type MatchResult,
     type PlayerForm,
+    type Tournament,
+    type TournamentStandings,
 } from '../types/pong'
 
 /** How many recent results the "form" (e.g. WWLWW) shows. */
@@ -37,6 +39,7 @@ export function resolveMatchPlayers(matches: Match[], playerMap: Map<string, Pla
                 player2Score: match.player2Score,
                 playedAt: match.playedAt,
                 eloChanges: match.eloChanges,
+                tournamentId: match.tournamentId,
                 player1,
                 player2,
                 winner,
@@ -361,4 +364,51 @@ export function createOverviewStats(
 export function parseInteger(value: string, fallback = 0): number {
     const parsed = parseInt(value, 10)
     return isNaN(parsed) ? fallback : parsed
+}
+
+/** The running tournament, if any. The database allows at most one. */
+export function findActiveTournament(tournaments: Tournament[]): Tournament | undefined {
+    return tournaments.find((tournament) => !tournament.endedAt)
+}
+
+/**
+ * Who is still in a knockout tournament: anyone who has played in it and not
+ * lost a match in it. The draw happens outside the app, so players who have
+ * not played yet are unknown here — `participants` only grows as matches are
+ * recorded.
+ *
+ * `champion` is only named once the tournament has ended and exactly one
+ * player is undefeated; while it runs, "undefeated" just means "still in".
+ */
+export function createTournamentStandings(
+    tournament: Tournament,
+    matches: Match[],
+    playerMap: Map<string, Player>
+): TournamentStandings {
+    const ordered = matches
+        .filter((match) => match.tournamentId === tournament.id)
+        .sort((a, b) => a.playedAt.localeCompare(b.playedAt))
+
+    const participantIds: string[] = []
+    const losers = new Set<string>()
+
+    for (const match of ordered) {
+        for (const id of [match.player1Id, match.player2Id]) {
+            if (!participantIds.includes(id)) participantIds.push(id)
+        }
+        losers.add(match.loserId)
+    }
+
+    const toPlayers = (ids: string[]) =>
+        ids.flatMap((id) => {
+            const player = playerMap.get(id)
+            return player ? [player] : []
+        })
+
+    const participants = toPlayers(participantIds)
+    const remaining = participants.filter((player) => !losers.has(player.id))
+    const eliminated = participants.filter((player) => losers.has(player.id))
+    const champion = tournament.endedAt && remaining.length === 1 ? (remaining[0] ?? null) : null
+
+    return { participants, remaining, eliminated, champion }
 }

@@ -1,4 +1,4 @@
-import type { Player, Match } from '../../types/pong'
+import type { Player, Match, Tournament } from '../../types/pong'
 
 /**
  * Shapes of the rows the queries in this directory select, mirroring the
@@ -31,6 +31,14 @@ export interface MatchRow {
     player2_score: number
     played_at: Date | string
     elo_changes: Record<string, number> | null
+    tournament_id: string | null
+}
+
+export interface TournamentRow {
+    id: string
+    name: string
+    created_at: Date | string
+    ended_at: Date | string | null
 }
 
 /** `timestamptz` arrives as a Date from pg but as a string from JSON payloads. */
@@ -61,5 +69,15 @@ export function mapMatchRow(row: MatchRow): Match {
         player2Score: row.player2_score,
         playedAt: toIsoString(row.played_at),
         eloChanges: row.elo_changes ?? {},
+        tournamentId: row.tournament_id ?? undefined,
+    }
+}
+
+export function mapTournamentRow(row: TournamentRow): Tournament {
+    return {
+        id: row.id,
+        name: row.name,
+        createdAt: toIsoString(row.created_at),
+        endedAt: row.ended_at ? toIsoString(row.ended_at) : undefined,
     }
 }

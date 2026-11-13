@@ -1,5 +1,6 @@
 import { useMatches } from '../hooks/useMatches'
 import { usePlayers } from '../hooks/usePlayers'
+import { useTournaments } from '../hooks/useTournaments'
 import { createPlayerMap, groupMatchesByDay, resolveMatchPlayers } from '../utils/gameUtils'
 import { MatchCard } from '../components/match-card/MatchCard'
 import { EmptyState } from '../components/common/EmptyState'
@@ -11,6 +12,8 @@ export function Matches() {
     const playersQuery = usePlayers()
     const matches = matchesQuery.data ?? []
     const players = playersQuery.data ?? []
+    const tournamentsQuery = useTournaments()
+    const tournamentNames = new Map((tournamentsQuery.data ?? []).map((tournament) => [tournament.id, tournament.name]))
 
     // No client-side sort: the query already returns ORDER BY played_at DESC.
     const matchesWithPlayers = resolveMatchPlayers(matches, createPlayerMap(players))
@@ -40,7 +43,13 @@ export function Matches() {
                             <ul className="m-0 flex list-none flex-col gap-8 p-0">
                                 {day.matches.map((match) => (
                                     <li key={match.id}>
-                                        <MatchCard match={match} showDate={false} />
+                                        <MatchCard
+                                            match={match}
+                                            showDate={false}
+                                            tournamentName={
+                                                match.tournamentId ? tournamentNames.get(match.tournamentId) : undefined
+                                            }
+                                        />
                                     </li>
                                 ))}
                             </ul>

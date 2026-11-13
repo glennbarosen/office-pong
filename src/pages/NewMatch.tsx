@@ -2,15 +2,24 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 
 import { usePlayers } from '../hooks/usePlayers'
+import { useMatches } from '../hooks/useMatches'
+import { useTournaments } from '../hooks/useTournaments'
 import { useCreateMatch } from '../hooks/useMatches'
 import { RATING_CONFIG, type Player } from '../types/pong'
 import { MatchService, type MatchCreationData } from '../lib/matchService'
 import { EloService } from '../lib/eloService'
-import { formatEloChange, parseInteger } from '../utils/gameUtils'
+import {
+    createPlayerMap,
+    createTournamentStandings,
+    findActiveTournament,
+    formatEloChange,
+    parseInteger,
+} from '../utils/gameUtils'
 import { triggerMatchSuccessConfetti } from '../utils/confetti'
 import { PlayerCard } from '../components/player-card/PlayerCard'
 import { Button } from '@fremtind/jokul/button'
-import { ErrorMessage } from '@fremtind/jokul/message'
+import { ErrorMessage, WarningMessage } from '@fremtind/jokul/message'
+import { Checkbox } from '@fremtind/jokul/checkbox'
 import { QueryState } from '../components/common/QueryState'
 import { PageHeader } from '../components/layout/PageHeader'
 
@@ -58,6 +67,13 @@ export function NewMatch() {
     const playersQuery = usePlayers()
     const players = playersQuery.data ?? []
     const createMatch = useCreateMatch()
+    const tournamentsQuery = useTournaments()
+    const matchesQuery = useMatches()
+    const activeTournament = findActiveTournament(tournamentsQuery.data ?? [])
+    // On by default while a tournament runs: during one, most matches are
+    // tournament matches, and forgetting the tick is the likelier mistake.
+    const [isTournamentMatch, setIsTournamentMatch] = useState(true)
+    const tagToTournament = Boolean(activeTournament) && isTournamentMatch
 
     const [player1Type, setPlayer1Type] = useState<'existing' | 'new'>('existing')
     const [player2Type, setPlayer2Type] = useState<'existing' | 'new'>('existing')
@@ -98,6 +114,15 @@ export function NewMatch() {
     }
     const preview = player1Score && player2Score ? previewMatch(matchCreationData, players) : null
 
+    // A knocked-out player in a tournament match is probably a mistake, but the
+    // app is trust-based: warn, do not block.
+    const eliminatedNames =
+        tagToTournament && activeTournament
+            ? createTournamentStandings(activeTournament, matchesQuery.data ?? [], createPlayerMap(players))
+                  .eliminated.filter((player) => player.id === player1Id || player.id === player2Id)
+                  .map((player) => player.name)
+            : []
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
@@ -107,7 +132,9 @@ export function NewMatch() {
             // and does every insert in one transaction.
             const matchInput = MatchService.validateMatchCreation(matchCreationData, players)
 
-            await createMatch.mutateAsync(matchInput)
+            await createMatch.mutateAsync(
+                tagToTournament && activeTournament ? { ...matchInput, tournamentId: activeTournament.id } : matchInput
+            )
 
             triggerMatchSuccessConfetti(() => {
                 void navigate({ to: '/' })
@@ -125,7 +152,7 @@ export function NewMatch() {
                 subtitle={`Første til 11, vinn med to. Vi stoler på at du registrerer ærlig — ${RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper gir plass på tavla.`}
             />
 
-            <QueryState queries={[playersQuery]} skeletonRows={3}>
+            <QueryState queries={[playersQuery, tournamentsQuery]} skeletonRows={3}>
                 <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-24">
                     <div className="grid items-stretch gap-12 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-16">
                         <PlayerCard
@@ -164,6 +191,24 @@ export function NewMatch() {
                             hasError={Boolean(error)}
                         />
                     </div>
+
+                    {activeTournament && (
+                        <div className="flex flex-col items-center gap-12">
+                            <Checkbox
+                                name="tournament"
+                                value={activeTournament.id}
+                                checked={isTournamentMatch}
+                                onChange={(event) => setIsTournamentMatch(event.target.checked)}
+                            >
+                                Turneringskamp – {activeTournament.name}
+                            </Checkbox>
+                            {eliminatedNames.length > 0 && (
+                                <WarningMessage>
+                                    {eliminatedNames.join(' og ')} er allerede slått ut av turneringen.
+                                </WarningMessage>
+                            )}
+                        </div>
+                    )}
 
                     {/* Polite: it updates on every keystroke and must not
                         interrupt typing the score. */}
