@@ -22,7 +22,9 @@ const PALETTE = [
 
 const SIZES = {
     sm: { diameter: 24, fontSize: 11 },
+    md: { diameter: 40, fontSize: 15 },
     lg: { diameter: 64, fontSize: 24 },
+    xl: { diameter: 88, fontSize: 32 },
 } as const
 
 interface PlayerAvatarProps {
@@ -49,7 +51,7 @@ export function PlayerAvatar({ player, size = 'sm' }: PlayerAvatarProps) {
                 src={player.avatar}
                 alt=""
                 aria-hidden="true"
-                className="rounded-full object-cover"
+                className="shrink-0 rounded-full object-cover"
                 style={{ width: diameter, height: diameter }}
             />
         )
@@ -58,11 +60,13 @@ export function PlayerAvatar({ player, size = 'sm' }: PlayerAvatarProps) {
     return (
         <span
             aria-hidden="true"
-            className="text-white inline-flex shrink-0 items-center justify-center rounded-full font-bold"
+            className="inline-flex shrink-0 items-center justify-center rounded-full font-bold"
             style={{
                 width: diameter,
                 height: diameter,
                 fontSize,
+                // Fixed white, not a theme token: the swatch is fixed too.
+                color: '#ffffff',
                 backgroundColor: colorForName(player.name),
             }}
         >

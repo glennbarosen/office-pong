@@ -1,32 +1,37 @@
+import type { CSSProperties } from 'react'
 import { Card } from '@fremtind/jokul/card'
-import { DescriptionDetail, DescriptionList, DescriptionTerm } from '@fremtind/jokul/description-list'
 import { Link } from '@tanstack/react-router'
-import type { MatchWithPlayers } from '../../types'
-import { formatDate } from '../../utils/gameUtils'
+import type { MatchWithPlayers, Player } from '../../types'
+import { formatDate, formatEloChange, formatTime } from '../../utils/gameUtils'
+import { PlayerAvatar } from '../common/PlayerAvatar'
 
 interface MatchCardProps {
     match: MatchWithPlayers
     /**
      * Render from one player's point of view — opponent, win/loss, their score
-     * first. Omit for the neutral "A vs B" view.
+     * first. Omit for the neutral "A vs B" scoreboard.
      */
     currentPlayerId?: string
+    /** Show the date as well as the time; off when the caller already groups by day. */
+    showDate?: boolean
 }
 
 /**
- * A match as a card, in one of two modes.
- *
- * The overview used to hand-roll the neutral variant inline while this file
- * held the player-centric one. They render different things — "who did I play
- * and did I win" versus "who played whom" — but they are one component with
- * one data shape, so they live together rather than drifting apart.
+ * A match as a card, in one of two modes: a neutral scoreboard ("who played
+ * whom") or one player's history row ("who did I play and did I win"). One
+ * component with one data shape, so the two do not drift apart.
  */
-export function MatchCard({ match, currentPlayerId }: MatchCardProps) {
+export function MatchCard({ match, currentPlayerId, showDate = true }: MatchCardProps) {
     if (currentPlayerId) {
         return <PlayerCentricMatchCard match={match} currentPlayerId={currentPlayerId} />
     }
 
-    return <NeutralMatchCard match={match} />
+    return <NeutralMatchCard match={match} showDate={showDate} />
+}
+
+function deltaClass(change: number | undefined): string {
+    if (change === undefined || change === 0) return 'text-text-subdued'
+    return change > 0 ? 'text-delta-up' : 'text-delta-down'
 }
 
 function PlayerCentricMatchCard({ match, currentPlayerId }: { match: MatchWithPlayers; currentPlayerId: string }) {
@@ -35,70 +40,120 @@ function PlayerCentricMatchCard({ match, currentPlayerId }: { match: MatchWithPl
     const isWin = match.winner.id === currentPlayerId
     const playerScore = isPlayer1 ? match.player1Score : match.player2Score
     const opponentScore = isPlayer1 ? match.player2Score : match.player1Score
+    const change = match.eloChanges[currentPlayerId]
 
     return (
-        <Card variant="low" padding="m">
-            <DescriptionList>
-                <DescriptionTerm>Motstander</DescriptionTerm>
-                <DescriptionDetail>{opponent.name}</DescriptionDetail>
-                <DescriptionTerm>Resultat</DescriptionTerm>
-                <DescriptionDetail>
-                    {isWin ? 'Seier' : 'Tap'} ({playerScore} - {opponentScore})
-                </DescriptionDetail>
-                <DescriptionTerm>Dato</DescriptionTerm>
-                <DescriptionDetail>{formatDate(match.playedAt)}</DescriptionDetail>
-            </DescriptionList>
-        </Card>
-    )
-}
-
-function NeutralMatchCard({ match }: { match: MatchWithPlayers }) {
-    const isPlayer1Winner = match.winner.id === match.player1.id
-
-    return (
-        <Card variant="low" padding="xl">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
+        <Card
+            variant="low"
+            padding="m"
+            className="accent-edge"
+            style={{ '--accent-color': isWin ? 'var(--delta-up)' : 'var(--delta-down)' } as CSSProperties}
+        >
+            <div className="flex items-center gap-12">
+                <span className={`small w-40 shrink-0 font-bold ${isWin ? 'text-delta-up' : 'text-delta-down'}`}>
+                    {isWin ? 'Seier' : 'Tap'}
+                </span>
+                <PlayerAvatar player={opponent} />
+                <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate">
+                        <span className="text-text-subdued">mot </span>
                         <Link
                             to="/profil/$id"
-                            params={{ id: match.player1.id }}
-                            className="font-medium text-text-interactive hover:underline"
+                            params={{ id: opponent.id }}
+                            className="font-bold text-text-default underline-offset-4 hover:underline"
                         >
-                            {match.player1.name}
+                            {opponent.name}
                         </Link>
-                        {isPlayer1Winner && <WinnerTrophy playerName={match.player1.name} />}
-                    </div>
-                    <span className="text-text-subdued">vs</span>
-                    <div className="flex items-center gap-4">
-                        <Link
-                            to="/profil/$id"
-                            params={{ id: match.player2.id }}
-                            className="font-medium text-text-interactive hover:underline"
-                        >
-                            {match.player2.name}
-                        </Link>
-                        {/* The overview's copy of this lacked the colour on
-                            player 2's trophy only; an oversight, not a rule. */}
-                        {!isPlayer1Winner && <WinnerTrophy playerName={match.player2.name} />}
-                    </div>
+                    </span>
+                    <span className="small text-text-subdued">{formatDate(match.playedAt)}</span>
                 </div>
-                <div className="body font-bold">
-                    {match.player1Score} - {match.player2Score}
+                <div className="flex shrink-0 flex-col items-end">
+                    <span className="tabular body font-bold">
+                        {playerScore}–{opponentScore}
+                    </span>
+                    <span className={`tabular small ${deltaClass(change)}`}>
+                        {formatEloChange(change)}
+                        <span className="sr-only"> ELO</span>
+                    </span>
                 </div>
             </div>
         </Card>
     )
 }
 
-/**
- * The trophy is the only thing marking which player won, so it needs a text
- * alternative rather than being decorative.
- */
-function WinnerTrophy({ playerName }: { playerName: string }) {
+function NeutralMatchCard({ match, showDate }: { match: MatchWithPlayers; showDate: boolean }) {
+    const isPlayer1Winner = match.winner.id === match.player1.id
+
     return (
-        <span role="img" aria-label={`${playerName} vant`} className="text-green-600">
-            🏆
-        </span>
+        <Card variant="low" padding="m">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-12 sm:gap-24">
+                <ScoreboardSide
+                    player={match.player1}
+                    isWinner={isPlayer1Winner}
+                    change={match.eloChanges[match.player1.id]}
+                    align="left"
+                />
+
+                <div className="flex flex-col items-center">
+                    <span className="tabular heading-3 whitespace-nowrap">
+                        <span className={isPlayer1Winner ? '' : 'text-text-subdued'}>{match.player1Score}</span>
+                        <span className="px-4 text-text-subdued" aria-hidden="true">
+                            –
+                        </span>
+                        <span className="sr-only"> mot </span>
+                        <span className={isPlayer1Winner ? 'text-text-subdued' : ''}>{match.player2Score}</span>
+                    </span>
+                    <time dateTime={match.playedAt} className="tabular small text-text-subdued">
+                        {showDate ? formatDate(match.playedAt, { includeTime: true }) : formatTime(match.playedAt)}
+                    </time>
+                </div>
+
+                <ScoreboardSide
+                    player={match.player2}
+                    isWinner={!isPlayer1Winner}
+                    change={match.eloChanges[match.player2.id]}
+                    align="right"
+                />
+            </div>
+        </Card>
+    )
+}
+
+interface ScoreboardSideProps {
+    player: Player
+    isWinner: boolean
+    change: number | undefined
+    align: 'left' | 'right'
+}
+
+/**
+ * One player's half of the scoreboard. The winner is marked by weight and a
+ * screen-reader "vant", never by colour alone.
+ */
+function ScoreboardSide({ player, isWinner, change, align }: ScoreboardSideProps) {
+    const isRight = align === 'right'
+
+    return (
+        <div className={`flex min-w-0 items-center gap-8 sm:gap-12 ${isRight ? 'flex-row-reverse text-right' : ''}`}>
+            <span className="hidden sm:inline-flex">
+                <PlayerAvatar player={player} size="md" />
+            </span>
+            <div className={`flex min-w-0 flex-col ${isRight ? 'items-end' : 'items-start'}`}>
+                <Link
+                    to="/profil/$id"
+                    params={{ id: player.id }}
+                    className={`max-w-full truncate underline-offset-4 hover:underline ${
+                        isWinner ? 'font-bold text-text-default' : 'text-text-subdued'
+                    }`}
+                >
+                    {player.name}
+                </Link>
+                {isWinner && <span className="sr-only">vant</span>}
+                <span className={`tabular small ${deltaClass(change)}`}>
+                    {formatEloChange(change)}
+                    <span className="sr-only"> ELO</span>
+                </span>
+            </div>
+        </div>
     )
 }

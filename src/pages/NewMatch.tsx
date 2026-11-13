@@ -3,14 +3,55 @@ import { useNavigate } from '@tanstack/react-router'
 
 import { usePlayers } from '../hooks/usePlayers'
 import { useCreateMatch } from '../hooks/useMatches'
-import { RATING_CONFIG } from '../types/pong'
+import { RATING_CONFIG, type Player } from '../types/pong'
 import { MatchService, type MatchCreationData } from '../lib/matchService'
-import { parseInteger } from '../utils/gameUtils'
+import { EloService } from '../lib/eloService'
+import { formatEloChange, parseInteger } from '../utils/gameUtils'
 import { triggerMatchSuccessConfetti } from '../utils/confetti'
 import { PlayerCard } from '../components/player-card/PlayerCard'
 import { Button } from '@fremtind/jokul/button'
-import { ErrorMessage, InfoMessage } from '@fremtind/jokul/message'
+import { ErrorMessage } from '@fremtind/jokul/message'
 import { QueryState } from '../components/common/QueryState'
+import { PageHeader } from '../components/layout/PageHeader'
+
+interface Preview {
+    winnerName: string
+    loserName: string
+    winnerChange: number
+    loserChange: number
+}
+
+/**
+ * What submitting would record, or null while the form is not yet valid.
+ *
+ * Display only — runs the same validation the submit does, and the same
+ * EloService the server uses, but the server recomputes everything from the
+ * ratings it has at commit time, so this is an estimate.
+ */
+function previewMatch(data: MatchCreationData, players: Player[]): Preview | null {
+    try {
+        const input = MatchService.validateMatchCreation(data, players)
+        const asPlayer = (ref: typeof input.player1): Player =>
+            ref.type === 'existing'
+                ? (players.find((player) => player.id === ref.id) as Player)
+                : {
+                      id: '',
+                      name: ref.name,
+                      eloRating: RATING_CONFIG.STARTING_ELO,
+                      matchesPlayed: 0,
+                      wins: 0,
+                      losses: 0,
+                      createdAt: '',
+                  }
+        const p1 = asPlayer(input.player1)
+        const p2 = asPlayer(input.player2)
+        const [winner, loser] = input.player1Score > input.player2Score ? [p1, p2] : [p2, p1]
+        const { winnerChange, loserChange } = EloService.calculateEloChanges(winner, loser)
+        return { winnerName: winner.name, loserName: loser.name, winnerChange, loserChange }
+    } catch {
+        return null
+    }
+}
 
 export function NewMatch() {
     const navigate = useNavigate()
@@ -45,32 +86,29 @@ export function NewMatch() {
     const player1Options = playerOptions.filter((option) => option.value !== player2Id)
     const player2Options = playerOptions.filter((option) => option.value !== player1Id)
 
+    const matchCreationData: MatchCreationData = {
+        player1Type,
+        player2Type,
+        player1Id,
+        player2Id,
+        player1Name,
+        player2Name,
+        player1Score: parseInteger(player1Score),
+        player2Score: parseInteger(player2Score),
+    }
+    const preview = player1Score && player2Score ? previewMatch(matchCreationData, players) : null
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
 
-        const score1 = parseInteger(player1Score)
-        const score2 = parseInteger(player2Score)
-
         try {
-            const matchCreationData: MatchCreationData = {
-                player1Type,
-                player2Type,
-                player1Id,
-                player2Id,
-                player1Name,
-                player2Name,
-                player1Score: score1,
-                player2Score: score2,
-            }
-
             // Validate here for immediate feedback; the server validates again
             // and does every insert in one transaction.
             const matchInput = MatchService.validateMatchCreation(matchCreationData, players)
 
             await createMatch.mutateAsync(matchInput)
 
-            // Trigger extreme celebratory confetti animation
             triggerMatchSuccessConfetti(() => {
                 void navigate({ to: '/' })
             })
@@ -81,18 +119,15 @@ export function NewMatch() {
     }
 
     return (
-        <div className="space-y-24">
-            <h1 className="heading-2 mb-2">Registrer ny kamp</h1>
+        <div>
+            <PageHeader
+                title="Registrer kamp"
+                subtitle={`Første til 11, vinn med to. Vi stoler på at du registrerer ærlig — ${RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper gir plass på tavla.`}
+            />
 
-            <QueryState queries={[playersQuery]}>
-                <InfoMessage title="Tillitsbasert system" className="mb-6">
-                    Vi stoler på at du registrerer kampen ærlig. Systemet krever minimum{' '}
-                    {RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper for å være kvalifisert for ledertavlen.
-                </InfoMessage>
-
-                <form onSubmit={(e) => void handleSubmit(e)} className="space-y-8">
-                    {/* Player Cards */}
-                    <div className="grid gap-8 md:grid-cols-2 md:gap-12">
+            <QueryState queries={[playersQuery]} skeletonRows={3}>
+                <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-24">
+                    <div className="grid items-stretch gap-12 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-16">
                         <PlayerCard
                             playerNumber={1}
                             playerType={player1Type}
@@ -100,12 +135,19 @@ export function NewMatch() {
                             playerName={player1Name}
                             playerScore={player1Score}
                             playerOptions={player1Options}
+                            selectedPlayer={players.find((player) => player.id === player1Id)}
                             onPlayerTypeChange={setPlayer1Type}
                             onPlayerIdChange={setPlayer1Id}
                             onPlayerNameChange={setPlayer1Name}
                             onPlayerScoreChange={setPlayer1Score}
                             hasError={Boolean(error)}
                         />
+
+                        <div className="flex items-center justify-center" aria-hidden="true">
+                            <span className="small flex h-40 w-40 items-center justify-center rounded-full border border-solid border-border-separator font-bold text-text-subdued">
+                                VS
+                            </span>
+                        </div>
 
                         <PlayerCard
                             playerNumber={2}
@@ -114,6 +156,7 @@ export function NewMatch() {
                             playerName={player2Name}
                             playerScore={player2Score}
                             playerOptions={player2Options}
+                            selectedPlayer={players.find((player) => player.id === player2Id)}
                             onPlayerTypeChange={setPlayer2Type}
                             onPlayerIdChange={setPlayer2Id}
                             onPlayerNameChange={setPlayer2Name}
@@ -122,7 +165,22 @@ export function NewMatch() {
                         />
                     </div>
 
-                    {/* Error Display */}
+                    {/* Polite: it updates on every keystroke and must not
+                        interrupt typing the score. */}
+                    <div aria-live="polite" className="min-h-24">
+                        {preview && (
+                            <p className="body text-center">
+                                <strong>{preview.winnerName}</strong> vinner ·{' '}
+                                <span className="tabular text-delta-up">{formatEloChange(preview.winnerChange)}</span>
+                                {' / '}
+                                <span className="tabular text-delta-down">
+                                    {formatEloChange(preview.loserChange)}
+                                </span>{' '}
+                                <span className="text-text-subdued">ELO (ca.)</span>
+                            </p>
+                        )}
+                    </div>
+
                     <div role="alert" aria-live="assertive">
                         {error && (
                             <ErrorMessage ref={errorRef} tabIndex={-1}>
@@ -131,8 +189,7 @@ export function NewMatch() {
                         )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-12">
+                    <div className="flex flex-wrap justify-center gap-12">
                         <Button
                             variant="primary"
                             type="submit"
@@ -145,7 +202,7 @@ export function NewMatch() {
                         >
                             Registrer kamp
                         </Button>
-                        <Button variant="tertiary" type="button" onClick={() => void navigate({ to: '/' })}>
+                        <Button variant="ghost" type="button" onClick={() => void navigate({ to: '/' })}>
                             Avbryt
                         </Button>
                     </div>

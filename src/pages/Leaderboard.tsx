@@ -1,16 +1,16 @@
-import { TableHead, TableRow, TableHeader, TableBody, TableCell } from '@fremtind/jokul/table'
-import { WarningTag } from '@fremtind/jokul/tag'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches } from '../hooks/useMatches'
-import { createFormByPlayer, createLeaderboardEntries, formatDate } from '../utils/gameUtils'
-import { PlayerLink } from '../components/common/PlayerLink'
-import { RankIcon } from '../components/leaderboard/RankIcon'
-import { FormIndicator } from '../components/leaderboard/FormIndicator'
-import { TierBadge } from '../components/leaderboard/TierBadge'
+import { createFormByPlayer, createLeaderboardEntries } from '../utils/gameUtils'
+import { RATING_CONFIG } from '../types/pong'
 import { EmptyState } from '../components/common/EmptyState'
 import { NO_PLAYERS_EMPTY_STATE } from '../lib/messages'
 import { QueryState } from '../components/common/QueryState'
-import { CollapsibleTable } from '../components/common/CollapsibleTable'
+import { PageHeader } from '../components/layout/PageHeader'
+import { SectionHeader } from '../components/layout/SectionHeader'
+import { LeaderboardCard } from '../components/leaderboard/LeaderboardCard'
+import { Podium } from '../components/leaderboard/Podium'
+
+const PODIUM_SIZE = 3
 
 export function Leaderboard() {
     const playersQuery = usePlayers()
@@ -18,69 +18,61 @@ export function Leaderboard() {
     const players = playersQuery.data ?? []
     const matches = matchesQuery.data ?? []
 
-    // Filter and sort players for leaderboard
-    const leaderboardData = createLeaderboardEntries(players)
+    // Eligible first, then by rating — so ranked players are a prefix.
+    const entries = createLeaderboardEntries(players)
+    const ranked = entries.filter((entry) => entry.isEligibleForRanking)
+    const unranked = entries.filter((entry) => !entry.isEligibleForRanking)
     const formByPlayer = createFormByPlayer(matches)
 
     return (
         <QueryState queries={[playersQuery, matchesQuery]}>
-            <div className="space-y-8">
-                {leaderboardData.length > 0 && (
-                    <div>
-                        <h1 className="heading-4 mb-4">Ledertavle</h1>
+            <PageHeader
+                title="Ledertavle"
+                subtitle={`Rangert etter ELO. Spill ${RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper for å komme på tavla.`}
+            />
 
-                        <CollapsibleTable>
-                            <TableHead>
-                                <TableRow>
-                                    <TableHeader>Plassering</TableHeader>
-                                    <TableHeader>Spiller</TableHeader>
-                                    <TableHeader>ELO rating</TableHeader>
-                                    <TableHeader>Kamper</TableHeader>
-                                    <TableHeader>Seire</TableHeader>
-                                    <TableHeader>Tap</TableHeader>
-                                    <TableHeader>Seiersprosent</TableHeader>
-                                    <TableHeader>Form</TableHeader>
-                                    <TableHeader>Sist spilt</TableHeader>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {leaderboardData.map((player, index: number) => (
-                                    <TableRow key={player.id}>
-                                        <TableCell data-th="Plassering">
-                                            <RankIcon rank={index + 1} />
-                                        </TableCell>
-                                        <TableCell data-th="Spiller">
-                                            <PlayerLink playerId={player.id} playerName={player.name} />
-                                        </TableCell>
-                                        <TableCell data-th="ELO rating">
-                                            {player.eloRating}{' '}
-                                            {player.isEligibleForRanking ? (
-                                                <TierBadge rating={player.eloRating} />
-                                            ) : (
-                                                <WarningTag>Mangler kamper</WarningTag>
-                                            )}
-                                        </TableCell>
-                                        <TableCell data-th="Kamper">{player.matchesPlayed}</TableCell>
-                                        <TableCell data-th="Seire">{player.wins}</TableCell>
-                                        <TableCell data-th="Tap">{player.losses}</TableCell>
-                                        <TableCell data-th="Seiersprosent">{player.winRate.toFixed(1)}%</TableCell>
-                                        <TableCell data-th="Form">
-                                            <FormIndicator form={formByPlayer.get(player.id)} />
-                                        </TableCell>
-                                        <TableCell data-th="Sist spilt">
-                                            <span className="text-sm text-text-subdued">
-                                                {player.lastPlayedAt ? formatDate(player.lastPlayedAt) : '-'}
-                                            </span>
-                                        </TableCell>
-                                    </TableRow>
+            {players.length === 0 ? (
+                <EmptyState {...NO_PLAYERS_EMPTY_STATE} />
+            ) : (
+                <div className="flex flex-col gap-40">
+                    {ranked.length > 0 ? (
+                        <>
+                            <Podium players={ranked} formByPlayer={formByPlayer} />
+                            {ranked.length > PODIUM_SIZE && (
+                                <ol aria-label="Resten av tavla" className="m-0 flex list-none flex-col gap-8 p-0">
+                                    {ranked.slice(PODIUM_SIZE).map((player, index) => (
+                                        <li key={player.id}>
+                                            <LeaderboardCard
+                                                player={player}
+                                                rank={index + PODIUM_SIZE + 1}
+                                                form={formByPlayer.get(player.id)}
+                                            />
+                                        </li>
+                                    ))}
+                                </ol>
+                            )}
+                        </>
+                    ) : (
+                        <EmptyState
+                            title="Ingen er rangert ennå"
+                            description={`Første spiller med ${RATING_CONFIG.MINIMUM_MATCHES_FOR_RANKING} kamper tar plassen på toppen.`}
+                        />
+                    )}
+
+                    {unranked.length > 0 && (
+                        <section aria-labelledby="ikke-rangert">
+                            <SectionHeader id="ikke-rangert" title="Ikke rangert ennå" />
+                            <ul className="m-0 flex list-none flex-col gap-8 p-0">
+                                {unranked.map((player) => (
+                                    <li key={player.id}>
+                                        <LeaderboardCard player={player} form={formByPlayer.get(player.id)} />
+                                    </li>
                                 ))}
-                            </TableBody>
-                        </CollapsibleTable>
-                    </div>
-                )}
-
-                {players.length === 0 && <EmptyState {...NO_PLAYERS_EMPTY_STATE} />}
-            </div>
+                            </ul>
+                        </section>
+                    )}
+                </div>
+            )}
         </QueryState>
     )
 }
