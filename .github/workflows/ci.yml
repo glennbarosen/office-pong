@@ -76,9 +76,6 @@ jobs:
         env:
             # A throwaway service container: these are not secrets.
             DATABASE_URL: postgresql://postgres:postgres@localhost:5432/office_pong
-            # pg_dump must match the server's major version; the runner image
-            # ships several, so pin the one for postgres:16.
-            PG_BIN: /usr/lib/postgresql/16/bin
 
         steps:
             - uses: actions/checkout@v4
@@ -94,32 +91,39 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            - name: Install PostgreSQL 16 client
+            # psql and pg_dump from the service's own image, so the client is
+            # always the server's version: pg_dump refuses a newer server, and
+            # the runner image's bundled clients change between releases. Tiny
+            # wrappers on PATH let db/migrate.sh call `psql` unchanged.
+            - name: PostgreSQL client (from postgres:16-alpine)
               run: |
-                  if [ ! -x "$PG_BIN/pg_dump" ]; then
-                      sudo apt-get update -qq
-                      sudo apt-get install -y -qq postgresql-client-16
-                  fi
-                  "$PG_BIN/psql" --version
+                  mkdir -p "$RUNNER_TEMP/pgbin"
+                  for tool in psql pg_dump; do
+                      printf '#!/bin/sh\nexec docker run --rm -i --network host -v "$PWD:$PWD" -w "$PWD" postgres:16-alpine %s "$@"\n' "$tool" > "$RUNNER_TEMP/pgbin/$tool"
+                      chmod +x "$RUNNER_TEMP/pgbin/$tool"
+                  done
+                  echo "$RUNNER_TEMP/pgbin" >> "$GITHUB_PATH"
 
             # A fresh install, exactly as `pnpm db:up` creates it.
             - name: Apply db/init.sql
-              run: '"$PG_BIN/psql" "$DATABASE_URL" --set ON_ERROR_STOP=1 --quiet -f db/init.sql'
+              run: |
+                  psql --version
+                  psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --quiet -f db/init.sql
 
             # pg_dump (16.10+) writes a random `\restrict <key>` line into every
             # dump, so it is filtered out or no two dumps would ever match.
             - name: Snapshot schema
               run: |
-                  "$PG_BIN/pg_dump" --schema-only --no-owner "$DATABASE_URL" | grep -vE '^\\(un)?restrict ' > schema-before.sql
+                  pg_dump --schema-only --no-owner "$DATABASE_URL" | grep -vE '^\\(un)?restrict ' > schema-before.sql
 
             # What the deploy runs. On a fresh install every migration must be
             # a no-op: re-runnable, and already reflected in init.sql.
             - name: Run migrations (db/migrate.sh)
-              run: PATH="$PG_BIN:$PATH" sh db/migrate.sh
+              run: sh db/migrate.sh
 
             - name: Migrations converge with init.sql
               run: |
-                  "$PG_BIN/pg_dump" --schema-only --no-owner "$DATABASE_URL" | grep -vE '^\\(un)?restrict ' > schema-after.sql
+                  pg_dump --schema-only --no-owner "$DATABASE_URL" | grep -vE '^\\(un)?restrict ' > schema-after.sql
                   if ! diff -u schema-before.sql schema-after.sql; then
                       echo "::error::db/migrate.sh changed a fresh init.sql schema. Mirror the migration in db/init.sql (or make it idempotent)."
                       exit 1
