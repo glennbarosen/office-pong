@@ -20,13 +20,8 @@ export const Header = () => {
                 {/* Not a heading: the site name is on every page, and each page
                     owns its own <h1>. */}
                 <Link to="/" className="flex items-center gap-12 text-text-default no-underline">
-                    <span
-                        className="flex h-32 w-32 items-center justify-center rounded-full bg-background-action text-text-on-action"
-                        aria-hidden="true"
-                    >
-                        <Icon variant="small" bold>
-                            sports_tennis
-                        </Icon>
+                    <span className="leading-none text-[1.75rem]" aria-hidden="true">
+                        🏓
                     </span>
                     <span className="heading-5 font-bold">Kontorpong</span>
                 </Link>
