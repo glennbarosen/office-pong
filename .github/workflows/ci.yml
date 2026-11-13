@@ -41,9 +41,91 @@ jobs:
             - name: Check formatting
               run: pnpm prettier:check
 
-            # Every test is pure logic today, so no database service is needed.
+            # Pure-logic tests only; the database tests self-skip here without
+            # DATABASE_URL and run in the `database` job below.
             - name: Test
               run: pnpm test:run --coverage
 
             - name: Build
               run: pnpm build
+
+    # Migrations run on every deploy (app.json's Dokku predeploy hook), so a
+    # broken one would otherwise first fail in production. This applies the
+    # schema and migrations to a real Postgres, checks they converge, and runs
+    # the integration tests that need a database.
+    database:
+        name: Schema, migrations & DB tests
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                # Same major version as docker-compose.yml.
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: office_pong
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U postgres -d office_pong"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 10
+
+        env:
+            # A throwaway service container: these are not secrets.
+            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/office_pong
+            # pg_dump must match the server's major version; the runner image
+            # ships several, so pin the one for postgres:16.
+            PG_BIN: /usr/lib/postgresql/16/bin
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Enable corepack
+              run: corepack enable
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .node-version
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Install PostgreSQL 16 client
+              run: |
+                  if [ ! -x "$PG_BIN/pg_dump" ]; then
+                      sudo apt-get update -qq
+                      sudo apt-get install -y -qq postgresql-client-16
+                  fi
+                  "$PG_BIN/psql" --version
+
+            # A fresh install, exactly as `pnpm db:up` creates it.
+            - name: Apply db/init.sql
+              run: '"$PG_BIN/psql" "$DATABASE_URL" --set ON_ERROR_STOP=1 --quiet -f db/init.sql'
+
+            # pg_dump (16.10+) writes a random `\restrict <key>` line into every
+            # dump, so it is filtered out or no two dumps would ever match.
+            - name: Snapshot schema
+              run: |
+                  "$PG_BIN/pg_dump" --schema-only --no-owner "$DATABASE_URL" | grep -vE '^\\(un)?restrict ' > schema-before.sql
+
+            # What the deploy runs. On a fresh install every migration must be
+            # a no-op: re-runnable, and already reflected in init.sql.
+            - name: Run migrations (db/migrate.sh)
+              run: PATH="$PG_BIN:$PATH" sh db/migrate.sh
+
+            - name: Migrations converge with init.sql
+              run: |
+                  "$PG_BIN/pg_dump" --schema-only --no-owner "$DATABASE_URL" | grep -vE '^\\(un)?restrict ' > schema-after.sql
+                  if ! diff -u schema-before.sql schema-after.sql; then
+                      echo "::error::db/migrate.sh changed a fresh init.sql schema. Mirror the migration in db/init.sql (or make it idempotent)."
+                      exit 1
+                  fi
+
+            # Runs everything, including src/lib/server/__tests__/*.integration.test.ts,
+            # which self-skip unless DATABASE_URL is set.
+            - name: Integration tests
+              run: pnpm test:run src/lib/server

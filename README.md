@@ -93,6 +93,12 @@ is safe to re-run — already-applied changes are no-ops. The runtime Docker
 image installs `postgresql-client` and copies `db/` in specifically so this
 script has what it needs at predeploy time (see `Dockerfile`).
 
+CI checks migrations **before** they can reach a deploy: the `database` job in
+`.github/workflows/ci.yml` loads `db/init.sql` into a Postgres 16 service
+container, runs `db/migrate.sh` on top, and fails if the schema changes — every
+migration must be re-runnable and already mirrored in `init.sql`. The same job
+runs the database integration tests.
+
 Constraints are added **validated**, so a migration aborts if existing rows
 violate one rather than modifying them. That is deliberate — the match history
 is the point of the app. Each migration lists pre-flight `SELECT`s in its header

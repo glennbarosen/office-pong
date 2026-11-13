@@ -23,7 +23,7 @@ React 18 + TypeScript, **TanStack Start** (full-stack SSR, migrated off a plain 
 
 Local Postgres via Docker Compose: `pnpm db:up` (starts it, applies `db/init.sql` on first run), `pnpm db:down`, `pnpm db:reset` (wipes + recreates), `pnpm db:logs`, `pnpm db:migrate` (applies `db/migrations/` to `$DATABASE_URL`).
 
-CI (`.github/workflows/ci.yml`) runs lint, types:check, prettier:check, tests and build on every PR.
+CI (`.github/workflows/ci.yml`) runs lint, types:check, prettier:check, tests and build on every PR, plus a `database` job against a Postgres 16 service: `init.sql`, then `migrate.sh`, a schema diff proving they converge, then the integration tests.
 
 ## Database
 
@@ -54,5 +54,5 @@ Row shapes are declared once in `src/lib/server/mappers.ts` (`PlayerRow`/`MatchR
 
 - Pure logic: `src/lib/__tests__/` and `src/utils/__tests__/`.
 - Components: mount through `src/test/renderWithProviders.tsx`, which supplies a query client and a memory-history router. It is **async** — `await renderWithProviders(<Thing />)` — because the router renders nothing until its initial match resolves. Only smoke tests use it so far.
-- `src/lib/server/__tests__/*.integration.test.ts` need a real database and self-skip unless `DATABASE_URL` is set. They truncate both tables, so point them at a local database only: `pnpm db:up && pnpm test:run`.
+- `src/lib/server/__tests__/*.integration.test.ts` need a real database and self-skip unless `DATABASE_URL` is set. They empty every table, so point them at a local database only: `pnpm db:up && pnpm test:run`. CI runs them in the `database` job.
 - **No Playwright/E2E framework is installed** — don't assume E2E coverage exists or add one unprompted.
