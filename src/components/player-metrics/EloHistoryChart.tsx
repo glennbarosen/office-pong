@@ -18,7 +18,7 @@ export function EloHistoryChart({ data, chartColors, currentTheme }: EloHistoryC
 
     return (
         <Card padding="m">
-            <h3 className="text-base sm:text-lg font-semibold mb-16">ELO-utvikling over tid</h3>
+            <h3 className="heading-5 mb-16">ELO-utvikling over tid</h3>
             <div className="h-[300px] w-full overflow-hidden sm:h-[400px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart

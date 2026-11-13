@@ -19,7 +19,7 @@ export function OpponentStatsChart({ data, chartColors, currentTheme, selectedOp
 
     return (
         <Card padding="m">
-            <h3 className="text-base sm:text-lg font-semibold mb-16">
+            <h3 className="heading-5 mb-16">
                 Motstanderstatistikk
                 {selectedOpponent !== 'all' && ' (filtrert)'}
             </h3>

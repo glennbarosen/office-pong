@@ -117,6 +117,8 @@ export const createMatchInputSchema = z
     .object({
         player1: playerRefSchema,
         player2: playerRefSchema,
+        /** Tag the match to this tournament. The server checks it is still running. */
+        tournamentId: z.uuid('Ugyldig turnerings-ID').optional(),
     })
     .and(matchScoreSchema)
     .refine(
@@ -133,3 +135,16 @@ export const createMatchInputSchema = z
     )
 
 export type CreateMatchInput = z.infer<typeof createMatchInputSchema>
+
+/** A tournament's name. Mirrors tournaments_name_length_check in db/init.sql. */
+export const tournamentNameSchema = z
+    .string()
+    .trim()
+    .min(2, 'Navnet må være minst 2 tegn')
+    .max(60, 'Navnet kan ikke være lengre enn 60 tegn')
+
+export const startTournamentInputSchema = z.object({ name: tournamentNameSchema })
+export type StartTournamentInput = z.infer<typeof startTournamentInputSchema>
+
+export const endTournamentInputSchema = z.object({ id: z.uuid('Ugyldig turnerings-ID') })
+export type EndTournamentInput = z.infer<typeof endTournamentInputSchema>

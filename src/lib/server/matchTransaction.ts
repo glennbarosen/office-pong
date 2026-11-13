@@ -58,6 +58,18 @@ export async function registerMatch(data: CreateMatchInput): Promise<Match> {
     try {
         await client.query('BEGIN')
 
+        if (data.tournamentId) {
+            // FOR SHARE so the tournament cannot be ended between this check
+            // and the insert below.
+            const tournament = await client.query(
+                `SELECT 1 FROM tournaments WHERE id = $1 AND ended_at IS NULL FOR SHARE`,
+                [data.tournamentId]
+            )
+            if (tournament.rowCount === 0) {
+                throw new Error('Turneringen er avsluttet. Registrer kampen uten turnering.')
+            }
+        }
+
         const player1Id = await resolvePlayerId(client, data.player1)
         const player2Id = await resolvePlayerId(client, data.player2)
 
@@ -96,8 +108,8 @@ export async function registerMatch(data: CreateMatchInput): Promise<Match> {
         }
 
         const matchResult = await client.query(
-            `INSERT INTO matches (player1_id, player2_id, winner_id, loser_id, player1_score, player2_score, elo_changes)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
+            `INSERT INTO matches (player1_id, player2_id, winner_id, loser_id, player1_score, player2_score, elo_changes, tournament_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
              RETURNING ${MATCH_COLUMNS}`,
             [
                 player1Id,
@@ -107,6 +119,7 @@ export async function registerMatch(data: CreateMatchInput): Promise<Match> {
                 data.player1Score,
                 data.player2Score,
                 JSON.stringify(eloChanges),
+                data.tournamentId ?? null,
             ]
         )
 

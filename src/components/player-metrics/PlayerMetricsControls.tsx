@@ -52,7 +52,7 @@ export function PlayerMetricsControls({
                         variant={showEloHistory ? 'primary' : 'secondary'}
                         density="compact"
                         onClick={onToggleEloHistory}
-                        className="text-xs sm:text-sm"
+                        aria-pressed={showEloHistory}
                     >
                         ELO-utvikling
                     </Button>
@@ -60,7 +60,7 @@ export function PlayerMetricsControls({
                         variant={showWinLossRatio ? 'primary' : 'secondary'}
                         density="compact"
                         onClick={onToggleWinLossRatio}
-                        className="text-xs sm:text-sm"
+                        aria-pressed={showWinLossRatio}
                     >
                         Seier/tap-forhold
                     </Button>
@@ -68,7 +68,7 @@ export function PlayerMetricsControls({
                         variant={showOpponentStats ? 'primary' : 'secondary'}
                         density="compact"
                         onClick={onToggleOpponentStats}
-                        className="text-xs sm:text-sm"
+                        aria-pressed={showOpponentStats}
                     >
                         Motstanderstatistikk
                     </Button>

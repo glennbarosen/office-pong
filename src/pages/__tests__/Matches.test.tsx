@@ -46,14 +46,14 @@ function arrange(matches: Match[]) {
     mockPlayers.mockReturnValue({ data: [ada, grace], isPending: false, isError: false, refetch: vi.fn() })
 }
 
-describe('Matches page — ELO change column', () => {
-    test('shows the recorded change with an explicit sign', async () => {
+describe('Matches page', () => {
+    test('shows each player’s recorded ELO change with an explicit sign', async () => {
         arrange([{ ...baseMatch, id: 'match-1', eloChanges: { [ada.id]: 16, [grace.id]: -16 } }])
 
         await renderWithProviders(<Matches />)
 
-        expect(screen.getByText('Ada: +16')).toBeInTheDocument()
-        expect(screen.getByText('Grace: -16')).toBeInTheDocument()
+        expect(screen.getByText('+16')).toBeInTheDocument()
+        expect(screen.getByText('−16')).toBeInTheDocument()
     })
 
     test('renders a dash, not NaN, for a row with no recorded change', async () => {
@@ -63,8 +63,25 @@ describe('Matches page — ELO change column', () => {
 
         await renderWithProviders(<Matches />)
 
-        expect(screen.getByText('Ada: –')).toBeInTheDocument()
-        expect(screen.getByText('Grace: –')).toBeInTheDocument()
+        expect(screen.getAllByText('–', { selector: 'span.small' })).toHaveLength(2)
         expect(screen.queryByText(/NaN/)).not.toBeInTheDocument()
+    })
+
+    test('marks the winner for screen readers, not by colour alone', async () => {
+        arrange([{ ...baseMatch, id: 'match-3', eloChanges: {} }])
+
+        await renderWithProviders(<Matches />)
+
+        expect(screen.getAllByText('vant')).toHaveLength(1)
+        expect(screen.getByRole('link', { name: 'Ada' })).toBeInTheDocument()
+    })
+
+    test('groups matches under a day heading', async () => {
+        arrange([{ ...baseMatch, id: 'match-4', eloChanges: {} }])
+
+        await renderWithProviders(<Matches />)
+
+        expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument()
+        expect(screen.getByText('1 kamp registrert')).toBeInTheDocument()
     })
 })

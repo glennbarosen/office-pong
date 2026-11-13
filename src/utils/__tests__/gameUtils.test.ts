@@ -3,9 +3,16 @@ import {
     createLeaderboardEntries,
     createOpponentStats,
     createFormByPlayer,
-    getRankIcon,
     createPlayerMap,
     formatDate,
+    formatTime,
+    formatEloChange,
+    dayKey,
+    formatDayLabel,
+    groupMatchesByDay,
+    createOverviewStats,
+    createTournamentStandings,
+    findActiveTournament,
     parseInteger,
     initialsForName,
 } from '../gameUtils'
@@ -89,19 +96,6 @@ describe('createLeaderboardEntries', () => {
 
     test('returns an empty list for no players', () => {
         expect(createLeaderboardEntries([])).toEqual([])
-    })
-})
-
-describe('getRankIcon', () => {
-    test('returns medals for the top three', () => {
-        expect(getRankIcon(1)).toBe('🥇')
-        expect(getRankIcon(2)).toBe('🥈')
-        expect(getRankIcon(3)).toBe('🥉')
-    })
-
-    test('returns a numbered rank below the podium', () => {
-        expect(getRankIcon(4)).toBe('4.')
-        expect(getRankIcon(27)).toBe('27.')
     })
 })
 
@@ -374,5 +368,151 @@ describe('initialsForName', () => {
 
     test('returns an empty string for an empty name', () => {
         expect(initialsForName('   ')).toBe('')
+    })
+})
+
+describe('Oslo-time date helpers', () => {
+    test('dayKey uses the office day, not UTC', () => {
+        // 23:30 UTC on 14 March is 00:30 on 15 March in Oslo (CET, UTC+1).
+        expect(dayKey('2026-03-14T23:30:00.000Z')).toBe('2026-03-15')
+        expect(dayKey('2026-03-14T09:05:00.000Z')).toBe('2026-03-14')
+    })
+
+    test('formatTime renders Oslo wall-clock time', () => {
+        expect(formatTime('2026-03-14T09:05:00.000Z')).toMatch(/^10[:.]05$/)
+    })
+
+    test('formatDayLabel names today and yesterday', () => {
+        const now = new Date('2026-03-14T12:00:00.000Z')
+        expect(formatDayLabel('2026-03-14', now)).toBe('I dag')
+        expect(formatDayLabel('2026-03-13', now)).toBe('I går')
+        const older = formatDayLabel('2026-03-09', now)
+        expect(older).toContain('9')
+        expect(older).not.toContain('2026')
+        expect(formatDayLabel('2025-12-01', now)).toContain('2025')
+    })
+
+    test('groupMatchesByDay keeps input order and buckets by office day', () => {
+        const now = new Date('2026-03-15T12:00:00.000Z')
+        const groups = groupMatchesByDay(
+            [
+                { id: 'a', playedAt: '2026-03-15T08:00:00.000Z' },
+                { id: 'b', playedAt: '2026-03-14T23:30:00.000Z' }, // Oslo: the 15th
+                { id: 'c', playedAt: '2026-03-14T10:00:00.000Z' },
+            ],
+            now
+        )
+
+        expect(groups.map((group) => group.label)).toEqual(['I dag', 'I går'])
+        expect(groups[0]?.matches.map((match) => match.id)).toEqual(['a', 'b'])
+        expect(groups[1]?.matches.map((match) => match.id)).toEqual(['c'])
+    })
+})
+
+describe('formatEloChange', () => {
+    test('signs positive and negative changes', () => {
+        expect(formatEloChange(16)).toBe('+16')
+        expect(formatEloChange(-16)).toBe('\u221216')
+        expect(formatEloChange(0)).toBe('±0')
+    })
+
+    test('renders a dash, not NaN, for a missing change', () => {
+        expect(formatEloChange(undefined)).toBe('–')
+        expect(formatEloChange(Number.NaN)).toBe('–')
+    })
+})
+
+describe('createOverviewStats', () => {
+    // Saturday 14 March 2026; that week's Monday is the 9th.
+    const now = new Date('2026-03-14T12:00:00.000Z')
+    const ada = makePlayer({ id: 'ada', name: 'Ada', lastPlayedAt: '2026-03-13T10:00:00.000Z' })
+    const grace = makePlayer({ id: 'grace', name: 'Grace', lastPlayedAt: '2026-01-01T10:00:00.000Z' })
+
+    const match = (id: string, playedAt: string): Match => ({
+        id,
+        player1Id: 'ada',
+        player2Id: 'grace',
+        winnerId: 'ada',
+        loserId: 'grace',
+        player1Score: 11,
+        player2Score: 5,
+        playedAt,
+        eloChanges: {},
+    })
+
+    test('counts this Monday-based week and recently active players', () => {
+        const matches = [
+            match('m1', '2026-03-13T10:00:00.000Z'),
+            match('m2', '2026-03-09T07:00:00.000Z'),
+            match('m3', '2026-03-08T10:00:00.000Z'), // the Sunday before
+        ]
+        const stats = createOverviewStats([ada, grace], matches, createFormByPlayer(matches), now)
+
+        expect(stats.totalMatches).toBe(3)
+        expect(stats.matchesThisWeek).toBe(2)
+        expect(stats.activePlayers).toBe(1)
+        expect(stats.hottestStreak).toEqual({ player: ada, count: 3 })
+    })
+
+    test('reports no streak below two wins', () => {
+        const matches = [match('m1', '2026-03-13T10:00:00.000Z')]
+        const stats = createOverviewStats([ada, grace], matches, createFormByPlayer(matches), now)
+
+        expect(stats.hottestStreak).toBeNull()
+    })
+})
+
+describe('tournaments', () => {
+    const [ada, grace, linus, kari] = ['ada', 'grace', 'linus', 'kari'].map((id) =>
+        makePlayer({ id, name: id.charAt(0).toUpperCase() + id.slice(1) })
+    ) as [Player, Player, Player, Player]
+    const playerMap = createPlayerMap([ada, grace, linus, kari])
+
+    const running = { id: 't1', name: 'Høstturnering', createdAt: '2026-11-01T00:00:00.000Z' }
+    const ended = { ...running, endedAt: '2026-11-20T00:00:00.000Z' }
+
+    const match = (id: string, winner: Player, loser: Player, playedAt: string, tournamentId?: string): Match => ({
+        id,
+        player1Id: winner.id,
+        player2Id: loser.id,
+        winnerId: winner.id,
+        loserId: loser.id,
+        player1Score: 11,
+        player2Score: 5,
+        playedAt,
+        eloChanges: {},
+        tournamentId,
+    })
+
+    test('findActiveTournament picks the one without an end date', () => {
+        expect(findActiveTournament([ended, { ...running, id: 't2' }])?.id).toBe('t2')
+        expect(findActiveTournament([ended])).toBeUndefined()
+    })
+
+    test('a loss knocks a player out; only tournament matches count', () => {
+        const matches = [
+            match('m1', ada, grace, '2026-11-02T10:00:00.000Z', 't1'),
+            match('m2', linus, kari, '2026-11-02T11:00:00.000Z', 't1'),
+            // A friendly: Ada losing it does not knock her out.
+            match('m3', grace, ada, '2026-11-03T10:00:00.000Z'),
+        ]
+
+        const standings = createTournamentStandings(running, matches, playerMap)
+
+        expect(standings.participants.map((p) => p.id)).toEqual(['ada', 'grace', 'linus', 'kari'])
+        expect(standings.remaining.map((p) => p.id)).toEqual(['ada', 'linus'])
+        expect(standings.eliminated.map((p) => p.id)).toEqual(['grace', 'kari'])
+        expect(standings.champion).toBeNull()
+    })
+
+    test('names a champion only once the tournament has ended with one player left', () => {
+        const matches = [
+            match('m1', ada, grace, '2026-11-02T10:00:00.000Z', 't1'),
+            match('m2', linus, kari, '2026-11-02T11:00:00.000Z', 't1'),
+            match('m3', ada, linus, '2026-11-05T10:00:00.000Z', 't1'),
+        ]
+
+        expect(createTournamentStandings(running, matches, playerMap).champion).toBeNull()
+        expect(createTournamentStandings(ended, matches, playerMap).champion?.id).toBe('ada')
     })
 })

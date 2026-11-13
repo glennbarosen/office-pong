@@ -8,4 +8,6 @@
 export const PLAYER_COLUMNS = 'id, name, avatar, elo_rating, matches_played, wins, losses, created_at, last_played_at'
 
 export const MATCH_COLUMNS =
-    'id, player1_id, player2_id, winner_id, loser_id, player1_score, player2_score, played_at, elo_changes'
+    'id, player1_id, player2_id, winner_id, loser_id, player1_score, player2_score, played_at, elo_changes, tournament_id'
+
+export const TOURNAMENT_COLUMNS = 'id, name, created_at, ended_at'

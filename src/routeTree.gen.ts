@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TurneringRouteImport } from './routes/turnering'
 import { Route as NyKampRouteImport } from './routes/ny-kamp'
 import { Route as LedertavleRouteImport } from './routes/ledertavle'
 import { Route as KamperRouteImport } from './routes/kamper'
@@ -16,6 +17,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfilIdRouteImport } from './routes/profil.$id'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 
+const TurneringRoute = TurneringRouteImport.update({
+  id: '/turnering',
+  path: '/turnering',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NyKampRoute = NyKampRouteImport.update({
   id: '/ny-kamp',
   path: '/ny-kamp',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/kamper': typeof KamperRoute
   '/ledertavle': typeof LedertavleRoute
   '/ny-kamp': typeof NyKampRoute
+  '/turnering': typeof TurneringRoute
   '/api/health': typeof ApiHealthRoute
   '/profil/$id': typeof ProfilIdRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/kamper': typeof KamperRoute
   '/ledertavle': typeof LedertavleRoute
   '/ny-kamp': typeof NyKampRoute
+  '/turnering': typeof TurneringRoute
   '/api/health': typeof ApiHealthRoute
   '/profil/$id': typeof ProfilIdRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/kamper': typeof KamperRoute
   '/ledertavle': typeof LedertavleRoute
   '/ny-kamp': typeof NyKampRoute
+  '/turnering': typeof TurneringRoute
   '/api/health': typeof ApiHealthRoute
   '/profil/$id': typeof ProfilIdRoute
 }
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/kamper'
     | '/ledertavle'
     | '/ny-kamp'
+    | '/turnering'
     | '/api/health'
     | '/profil/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/kamper'
     | '/ledertavle'
     | '/ny-kamp'
+    | '/turnering'
     | '/api/health'
     | '/profil/$id'
   id:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/kamper'
     | '/ledertavle'
     | '/ny-kamp'
+    | '/turnering'
     | '/api/health'
     | '/profil/$id'
   fileRoutesById: FileRoutesById
@@ -104,12 +116,20 @@ export interface RootRouteChildren {
   KamperRoute: typeof KamperRoute
   LedertavleRoute: typeof LedertavleRoute
   NyKampRoute: typeof NyKampRoute
+  TurneringRoute: typeof TurneringRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ProfilIdRoute: typeof ProfilIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/turnering': {
+      id: '/turnering'
+      path: '/turnering'
+      fullPath: '/turnering'
+      preLoaderRoute: typeof TurneringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ny-kamp': {
       id: '/ny-kamp'
       path: '/ny-kamp'
@@ -160,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   KamperRoute: KamperRoute,
   LedertavleRoute: LedertavleRoute,
   NyKampRoute: NyKampRoute,
+  TurneringRoute: TurneringRoute,
   ApiHealthRoute: ApiHealthRoute,
   ProfilIdRoute: ProfilIdRoute,
 }
