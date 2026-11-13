@@ -1,5 +1,13 @@
 import type { PropsWithChildren } from 'react'
 
-export const Container = ({ children }: PropsWithChildren) => (
-    <div className="mx-auto flex max-w-screen-lg flex-col px-16">{children}</div>
+interface ContainerProps extends PropsWithChildren {
+    className?: string
+}
+
+/**
+ * The page's content column. One width for the header, the bottom bar and the
+ * page itself, so their edges line up.
+ */
+export const Container = ({ children, className = '' }: ContainerProps) => (
+    <div className={`mx-auto w-full max-w-[72rem] px-16 sm:px-24 ${className}`}>{children}</div>
 )

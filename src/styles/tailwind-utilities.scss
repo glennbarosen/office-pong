@@ -1,0 +1,4 @@
+// Loaded after Jøkul's stylesheets (see global.scss): a utility class has the
+// same specificity as a Jøkul component class, so whichever comes last wins,
+// and `flex` on a <Card> must beat `.jkl-card { display: block }`.
+@tailwind utilities;
