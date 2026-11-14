@@ -19,3 +19,8 @@ jobs:
               with:
                   git_remote_url: 'ssh://dokku@46.62.135.107:22/office-pong'
                   ssh_private_key: ${{ secrets.DOKKU_SSH_PRIVATE_KEY }}
+                  # The action pushes to `master` by default, but this Dokku app
+                  # deploys from `main`. Pushing to `master` only updates that
+                  # branch: Dokku warns "deploy did not complete, you must push to
+                  # main", builds nothing, and the job still exits green.
+                  branch: main
